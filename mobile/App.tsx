@@ -10,7 +10,7 @@ import CourseDetailScreen from './src/screens/CourseDetailScreen';
 import VideoLessonScreen from './src/screens/VideoLessonScreen';
 import QuizScreen from './src/screens/QuizScreen';
 import CertificateScreen from './src/screens/CertificateScreen';
-import JobsMockupScreen from './src/screens/JobsMockupScreen';
+import JobsScreen from './src/screens/JobsScreen';
 import ProgressScreen from './src/screens/ProgressScreen';
 import { RootStackParamList } from './src/types/navigation';
 
@@ -61,8 +61,8 @@ function App() {
           options={{ headerShown: false }}
         />
         <Stack.Screen
-          name="JobsMockup"
-          component={JobsMockupScreen as any}
+          name="Jobs"
+          component={JobsScreen as any}
           options={{ headerShown: false }}
         />
         <Stack.Screen

@@ -426,19 +426,41 @@ export const notFoundHandler = (req: Request, res: Response): void => {
 }
 
 // Rate limiting by user (for authenticated routes)
+const userRequestBuckets = new Map<string, { count: number; resetAt: number }>()
+
 export const userRateLimit = (): express.RequestHandler => {
-  return (req: AuthenticatedRequest, _res: Response, next: NextFunction): void => {
+  const windowMs = 15 * 60 * 1000
+  const maxRequests = 120
+
+  return (req: AuthenticatedRequest, res: Response, next: NextFunction): void => {
     if (!req.user) {
       next()
       return
     }
 
-    // In a real implementation, you would use Redis or a database to track user requests
-    // For now, we'll use a simple in-memory approach for demonstration
-    // const userKey = `user_rate_limit_${req.user.anonymousCode}_${Math.floor(Date.now() / windowMs)}`
+    const now = Date.now()
+    const key = req.user.anonymousCode
+    const current = userRequestBuckets.get(key)
 
-    // This would typically be stored in Redis
-    // For demo purposes, we'll skip the actual implementation
+    if (!current || current.resetAt <= now) {
+      userRequestBuckets.set(key, {
+        count: 1,
+        resetAt: now + windowMs
+      })
+      next()
+      return
+    }
+
+    if (current.count >= maxRequests) {
+      res.status(429).json({
+        error: 'Limite de requisições por usuário excedido. Tente novamente mais tarde.',
+        retryAfter: Math.ceil((current.resetAt - now) / 1000)
+      })
+      return
+    }
+
+    current.count += 1
+    userRequestBuckets.set(key, current)
 
     next()
   }

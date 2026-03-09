@@ -48,7 +48,7 @@ class CourseModel {
           id: 1,
           title: 'Preparação de Máquina Industrial',
           duration: '45 min',
-          videoUrl: 'https://example.com/costura-mod1.mp4',
+          videoUrl: 'https://cdn.wira.training/costura-mod1.mp4',
           downloadable: true,
           description: 'Aprenda a configurar e preparar máquinas industriais para costura de uniformes escolares.'
         },
@@ -56,7 +56,7 @@ class CourseModel {
           id: 2,
           title: 'Técnicas de Costura Reta',
           duration: '60 min',
-          videoUrl: 'https://example.com/costura-mod2.mp4',
+          videoUrl: 'https://cdn.wira.training/costura-mod2.mp4',
           downloadable: true,
           description: 'Domine as técnicas fundamentais de costura reta em diferentes tipos de tecidos.'
         },
@@ -64,7 +64,7 @@ class CourseModel {
           id: 3,
           title: 'Costura de Bolsos',
           duration: '50 min',
-          videoUrl: 'https://example.com/costura-mod3.mp4',
+          videoUrl: 'https://cdn.wira.training/costura-mod3.mp4',
           downloadable: true,
           description: 'Aprenda a costurar diferentes tipos de bolsos em uniformes escolares.'
         },
@@ -72,7 +72,7 @@ class CourseModel {
           id: 4,
           title: 'Montagem de Camisas',
           duration: '75 min',
-          videoUrl: 'https://example.com/costura-mod4.mp4',
+          videoUrl: 'https://cdn.wira.training/costura-mod4.mp4',
           downloadable: true,
           description: 'Técnica completa de montagem de camisas escolares passo a passo.'
         },
@@ -80,7 +80,7 @@ class CourseModel {
           id: 5,
           title: 'Acabamentos Profissionais',
           duration: '40 min',
-          videoUrl: 'https://example.com/costura-mod5.mp4',
+          videoUrl: 'https://cdn.wira.training/costura-mod5.mp4',
           downloadable: true,
           description: 'Acabamentos profissionais que elevam a qualidade dos uniformes escolares.'
         },
@@ -88,7 +88,7 @@ class CourseModel {
           id: 6,
           title: 'Controle de Qualidade',
           duration: '30 min',
-          videoUrl: 'https://example.com/costura-mod6.mp4',
+          videoUrl: 'https://cdn.wira.training/costura-mod6.mp4',
           downloadable: true,
           description: 'Sistema de controle de qualidade para produção em massa de uniformes.'
         },
@@ -96,7 +96,7 @@ class CourseModel {
           id: 7,
           title: 'Produtividade e Prazos',
           duration: '35 min',
-          videoUrl: 'https://example.com/costura-mod7.mp4',
+          videoUrl: 'https://cdn.wira.training/costura-mod7.mp4',
           downloadable: true,
           description: 'Técnicas para aumentar produtividade e cumprir prazos de entrega.'
         },
@@ -104,7 +104,7 @@ class CourseModel {
           id: 8,
           title: 'Avaliação Final',
           duration: '60 min',
-          videoUrl: 'https://example.com/costura-mod8.mp4',
+          videoUrl: 'https://cdn.wira.training/costura-mod8.mp4',
           downloadable: true,
           description: 'Avaliação prática final do curso de costura avançada.'
         }
@@ -114,7 +114,7 @@ class CourseModel {
           id: 1,
           title: 'Técnicas de Corte',
           duration: '40 min',
-          videoUrl: 'https://example.com/culinaria-mod1.mp4',
+          videoUrl: 'https://cdn.wira.training/culinaria-mod1.mp4',
           downloadable: true,
           description: 'Técnicas profissionais de corte de alimentos para cozinha moçambicana.'
         },
@@ -122,7 +122,7 @@ class CourseModel {
           id: 2,
           title: 'Cozinha Moçambicana',
           duration: '50 min',
-          videoUrl: 'https://example.com/culinaria-mod2.mp4',
+          videoUrl: 'https://cdn.wira.training/culinaria-mod2.mp4',
           downloadable: true,
           description: 'Pratos tradicionais moçambicanos e técnicas de preparo.'
         },
@@ -130,7 +130,7 @@ class CourseModel {
           id: 3,
           title: 'Segurança Alimentar',
           duration: '45 min',
-          videoUrl: 'https://example.com/culinaria-mod3.mp4',
+          videoUrl: 'https://cdn.wira.training/culinaria-mod3.mp4',
           downloadable: true,
           description: 'Normas de segurança e higiene na manipulação de alimentos.'
         },
@@ -138,7 +138,7 @@ class CourseModel {
           id: 4,
           title: 'Apresentação',
           duration: '30 min',
-          videoUrl: 'https://example.com/culinaria-mod4.mp4',
+          videoUrl: 'https://cdn.wira.training/culinaria-mod4.mp4',
           downloadable: true,
           description: 'Técnicas de apresentação e embelezamento de pratos.'
         },
@@ -146,7 +146,7 @@ class CourseModel {
           id: 5,
           title: 'Cardápios Escolares',
           duration: '55 min',
-          videoUrl: 'https://example.com/culinaria-mod5.mp4',
+          videoUrl: 'https://cdn.wira.training/culinaria-mod5.mp4',
           downloadable: true,
           description: 'Planejamento e execução de cardápios para escolas.'
         },
@@ -154,7 +154,7 @@ class CourseModel {
           id: 6,
           title: 'Custo-Benefício',
           duration: '35 min',
-          videoUrl: 'https://example.com/culinaria-mod6.mp4',
+          videoUrl: 'https://cdn.wira.training/culinaria-mod6.mp4',
           downloadable: true,
           description: 'Gestão de custos e otimização de ingredientes.'
         },
@@ -162,7 +162,7 @@ class CourseModel {
           id: 7,
           title: 'Avaliação Final',
           duration: '50 min',
-          videoUrl: 'https://example.com/culinaria-mod7.mp4',
+          videoUrl: 'https://cdn.wira.training/culinaria-mod7.mp4',
           downloadable: true,
           description: 'Avaliação prática final do curso de culinária profissional.'
         }
@@ -172,7 +172,7 @@ class CourseModel {
           id: 1,
           title: 'Preparação do Solo',
           duration: '35 min',
-          videoUrl: 'https://example.com/agricultura-mod1.mp4',
+          videoUrl: 'https://cdn.wira.training/agricultura-mod1.mp4',
           downloadable: true,
           description: 'Técnicas de preparação e conservação do solo para agricultura sustentável.'
         },
@@ -180,7 +180,7 @@ class CourseModel {
           id: 2,
           title: 'Plantio',
           duration: '40 min',
-          videoUrl: 'https://example.com/agricultura-mod2.mp4',
+          videoUrl: 'https://cdn.wira.training/agricultura-mod2.mp4',
           downloadable: true,
           description: 'Técnicas de plantio de milho e hortaliças adaptadas ao clima moçambicano.'
         },
@@ -188,7 +188,7 @@ class CourseModel {
           id: 3,
           title: 'Irrigação',
           duration: '45 min',
-          videoUrl: 'https://example.com/agricultura-mod3.mp4',
+          videoUrl: 'https://cdn.wira.training/agricultura-mod3.mp4',
           downloadable: true,
           description: 'Sistemas de irrigação eficientes e econômicos para pequenos agricultores.'
         },
@@ -196,7 +196,7 @@ class CourseModel {
           id: 4,
           title: 'Controle de Pragas',
           duration: '30 min',
-          videoUrl: 'https://example.com/agricultura-mod4.mp4',
+          videoUrl: 'https://cdn.wira.training/agricultura-mod4.mp4',
           downloadable: true,
           description: 'Métodos orgânicos de controle de pragas e doenças.'
         },
@@ -204,7 +204,7 @@ class CourseModel {
           id: 5,
           title: 'Colheita',
           duration: '35 min',
-          videoUrl: 'https://example.com/agricultura-mod5.mp4',
+          videoUrl: 'https://cdn.wira.training/agricultura-mod5.mp4',
           downloadable: true,
           description: 'Técnicas adequadas de colheita e pós-colheita.'
         },
@@ -212,7 +212,7 @@ class CourseModel {
           id: 6,
           title: 'Armazenamento',
           duration: '30 min',
-          videoUrl: 'https://example.com/agricultura-mod6.mp4',
+          videoUrl: 'https://cdn.wira.training/agricultura-mod6.mp4',
           downloadable: true,
           description: 'Métodos de armazenamento que preservam a qualidade dos alimentos.'
         }

@@ -2,26 +2,55 @@ import { Request, Response } from 'express';
 import { logger } from '../middleware/security';
 import CertificateModel from '../models/Certificate';
 import { CertificateGenerationRequest, CertificateVerificationResponse } from '../types';
+import prismaService from '../services/prisma';
+
+const prisma = prismaService.getClient();
 
 class CertificateController {
   static async generate(req: Request, res: Response): Promise<void> {
     const { anonymousCode, courseId, score } = req.body as CertificateGenerationRequest;
 
-    
     try {
+      const [user, course] = await Promise.all([
+        prisma.user.findUnique({ where: { anonymous_code: anonymousCode } }),
+        prisma.course.findUnique({ where: { id: courseId } })
+      ]);
+
+      if (!user || !course) {
+        res.status(400).json({
+          success: false,
+          error: 'Usuário ou curso inválido'
+        });
+        return;
+      }
+
+      if (score < 70) {
+        res.status(400).json({
+          success: false,
+          error: 'Pontuação insuficiente para gerar certificado'
+        });
+        return;
+      }
+
+      const verificationCode = `WIRA-${anonymousCode}-${courseId.toUpperCase()}-${new Date().getFullYear()}-${Date.now().toString().slice(-4)}`;
+      const qrCode = `${process.env.CERTIFICATE_VERIFY_BASE_URL ?? 'https://verify.wira.org'}/${verificationCode}`;
+
       const certificate = await CertificateModel.create({
         anonymous_code: anonymousCode,
         course_id: courseId,
-        course_title: `Curso ${courseId}`, 
+        course_title: course.title,
+        verification_code: verificationCode,
+        qr_code: qrCode,
         score,
         max_score: 100,
-        instructor: 'Centro de Acolhimento Maputo',
-        institution: 'Centro de Acolhimento Maputo'
+        instructor: course.instructor ?? 'WIRA Academy',
+        institution: 'WIRA Academy'
       });
 
       res.json({
         success: true,
         verificationCode: certificate.verification_code,
+        qrCode: certificate.qr_code,
         message: 'Certificado gerado com sucesso'
       });
     } catch (error) {
@@ -32,6 +61,41 @@ class CertificateController {
       });
       res.status(500).json({
         error: 'Erro ao gerar certificado'
+      });
+    }
+  }
+
+  static async getByUser(req: Request, res: Response): Promise<void> {
+    const { anonymousCode } = req.params;
+
+    try {
+      const certificates = await prisma.certificate.findMany({
+        where: {
+          anonymous_code: anonymousCode,
+          revoked: false
+        },
+        orderBy: { issue_date: 'desc' }
+      });
+
+      res.json({
+        success: true,
+        certificates: certificates.map((item: any) => ({
+          id: item.id,
+          verificationCode: item.verification_code,
+          courseId: item.course_id,
+          courseTitle: item.course_title,
+          issueDate: item.issue_date.toISOString(),
+          score: item.score,
+          qrCode: item.qr_code
+        }))
+      });
+    } catch (error) {
+      logger.error('Error fetching user certificates', {
+        error: (error as Error).message,
+        anonymousCode
+      });
+      res.status(500).json({
+        error: 'Erro ao buscar certificados do usuário'
       });
     }
   }

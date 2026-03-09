@@ -14,6 +14,10 @@ import certificatesRoutes from './routes/certificates'
 import ngosRoutes from './routes/ngos'
 import auditLogsRoutes from './routes/audit-logs'
 import ussdRoutes from './routes/ussd'
+import usersRoutes from './routes/users'
+import dashboardRoutes from './routes/dashboard'
+import jobsRoutes from './routes/jobs'
+import smsRoutes from './routes/sms'
 
 // Import middleware
 import {
@@ -28,7 +32,8 @@ import {
   developmentErrorHandler,
   productionErrorHandler,
   notFoundHandler,
-  authenticateToken
+  authenticateToken,
+  userRateLimit
 } from './middleware/security'
 
 // Import services
@@ -78,11 +83,15 @@ app.use('/api/', generalLimiter)
 // Routes
 app.use('/api/auth', authRoutes)
 app.use('/api/courses', coursesRoutes)
-app.use('/api/progress', authenticateToken, progressRoutes)
+app.use('/api/progress', authenticateToken, userRateLimit(), progressRoutes)
 app.use('/api/certificates', certificatesRoutes)
-app.use('/api/ngos', authenticateToken, ngosRoutes)
-app.use('/api/audit-logs', authenticateToken, auditLogsRoutes)
+app.use('/api/ngos', authenticateToken, userRateLimit(), ngosRoutes)
+app.use('/api/audit-logs', authenticateToken, userRateLimit(), auditLogsRoutes)
 app.use('/api/ussd', ussdLimiter, ussdRoutes)
+app.use('/api/sms', authenticateToken, userRateLimit(), smsRoutes)
+app.use('/api/users', authenticateToken, userRateLimit(), usersRoutes)
+app.use('/api/dashboard', authenticateToken, userRateLimit(), dashboardRoutes)
+app.use('/api/jobs', authenticateToken, userRateLimit(), jobsRoutes)
 
 // Enhanced health check endpoint
 app.get('/health', async (_req: express.Request, res: express.Response): Promise<void> => {
@@ -148,6 +157,7 @@ app.get('/api', (_req: express.Request, res: express.Response): void => {
         'POST /api/courses/:id/invalidate-cache': 'Invalidar cache do curso'
       },
       progress: {
+        'GET /api/progress/user/:userCode': 'Obter progresso agregado do usuário',
         'GET /api/progress/user/:userCode/course/:courseId': 'Obter progresso do usuário em curso',
         'PUT /api/progress/user/:userCode/course/:courseId': 'Atualizar progresso do usuário em curso'
       },
@@ -155,7 +165,24 @@ app.get('/api', (_req: express.Request, res: express.Response): void => {
         'POST /api/certificates/generate': 'Gerar certificado',
         'GET /api/certificates/verify/:code': 'Verificar certificado',
         'POST /api/certificates/revoke/:code': 'Revogar certificado',
+        'GET /api/certificates/user/:anonymousCode': 'Listar certificados por usuário',
         'GET /api/certificates/user/:anonymousCode/course/:courseId': 'Obter certificado por usuário e curso'
+      },
+      jobs: {
+        'GET /api/jobs': 'Listar vagas ativas',
+        'POST /api/jobs/matching': 'Calcular matching de vagas por perfil',
+        'POST /api/jobs/:id/apply': 'Candidatar-se a uma vaga'
+      },
+      dashboard: {
+        'GET /api/dashboard/stats': 'Estatísticas do dashboard ONG',
+        'GET /api/dashboard/activity': 'Atividade recente'
+      },
+      users: {
+        'GET /api/users': 'Listar beneficiárias',
+        'GET /api/users/:id': 'Detalhar beneficiária',
+        'POST /api/users/generate-code': 'Gerar código anônimo',
+        'POST /api/users/activate': 'Ativar beneficiária',
+        'PATCH /api/users/:id/activation': 'Ativar/desativar beneficiária'
       },
       ngos: {
         'GET /api/ngos': 'Listar ONGs',

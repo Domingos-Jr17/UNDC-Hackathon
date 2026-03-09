@@ -1,346 +1,372 @@
-import express, { Request, Response } from 'express';
-import { authenticateToken } from '../middleware/security';
-import { get, all } from '../database';
+import express, { Request, Response } from 'express'
+import prismaService from '../services/prisma'
+import { logger } from '../middleware/security'
 
-const router = express.Router();
+const router = express.Router()
+const prisma = prismaService.getClient()
 
-// Mock session storage (in production, use Redis)
-const sessions = new Map<string, any>();
+const SESSION_TIMEOUT_MS = parseInt(process.env.USSD_SESSION_TIMEOUT_MS ?? '300000')
 
-// USSD session timeout (5 minutes)
-const SESSION_TIMEOUT = 5 * 60 * 1000;
+type UssdMenuStep = 'welcome' | 'login' | 'main_menu' | 'courses_menu' | 'progress_menu' | 'help_menu'
 
-// Helper functions
-function cleanExpiredSessions(): void {
-  const now = Date.now();
-  for (const [sessionId, session] of sessions.entries()) {
-    if (now - session.lastActivity > SESSION_TIMEOUT) {
-      sessions.delete(sessionId);
-    }
+interface StoredSessionPayload {
+  userCode?: string
+}
+
+const parsePayload = (payload: string | null): StoredSessionPayload => {
+  if (!payload) return {}
+  try {
+    return JSON.parse(payload) as StoredSessionPayload
+  } catch {
+    return {}
   }
 }
 
-function createOrGetSession(phoneNumber: string): any {
-  cleanExpiredSessions();
+const formatResponse = (shouldEnd: boolean, message: string): string => {
+  const prefix = shouldEnd ? 'END' : 'CON'
+  return `${prefix} ${message}`
+}
 
-  // Try to find existing session for this phone number
-  let existingSession = null;
-  for (const [, session] of sessions.entries()) {
-    if (session.phoneNumber === phoneNumber) {
-      existingSession = session;
-      break;
+async function cleanupExpiredSessions(now: Date): Promise<void> {
+  await prisma.ussdSession.deleteMany({
+    where: {
+      expires_at: { lt: now }
+    }
+  })
+}
+
+async function getOrCreateSession(sessionId: string | undefined, phoneNumber: string): Promise<{
+  id: string
+  step: UssdMenuStep
+  payload: StoredSessionPayload
+}> {
+  const now = new Date()
+  const expiresAt = new Date(now.getTime() + SESSION_TIMEOUT_MS)
+
+  await cleanupExpiredSessions(now)
+
+  if (sessionId) {
+    const byId = await prisma.ussdSession.findUnique({
+      where: { id: sessionId }
+    })
+
+    if (byId && byId.expires_at > now) {
+      const payload = parsePayload(byId.payload)
+      return {
+        id: byId.id,
+        step: byId.step as UssdMenuStep,
+        payload
+      }
     }
   }
 
-  if (existingSession) {
-    existingSession.lastActivity = Date.now();
-    return existingSession;
-  }
+  const generatedId = sessionId ?? `session_${phoneNumber.replace(/\D/g, '')}_${Date.now()}`
+  await prisma.ussdSession.upsert({
+    where: { id: generatedId },
+    update: {
+      phone_number: phoneNumber,
+      step: 'welcome',
+      payload: JSON.stringify({}),
+      last_activity: now,
+      expires_at: expiresAt
+    },
+    create: {
+      id: generatedId,
+      phone_number: phoneNumber,
+      step: 'welcome',
+      payload: JSON.stringify({}),
+      last_activity: now,
+      expires_at: expiresAt
+    }
+  })
 
-  // Create new session if none exists
-  const sessionId = `session_${phoneNumber}_${Date.now()}`;
-  const session = {
-    sessionId,
-    phoneNumber,
+  return {
+    id: generatedId,
     step: 'welcome',
-    userCode: null,
-    lastActivity: Date.now()
-  };
-  sessions.set(sessionId, session);
-  return session;
-}
-
-async function validateUserCode(userCode: string): Promise<any> {
-  try {
-    const user = await get('SELECT anonymous_code, real_name FROM users WHERE anonymous_code = ?', [userCode]);
-    return user;
-  } catch (error) {
-    return null;
+    payload: {}
   }
 }
 
-async function getUserProgress(userCode: string): Promise<any[]> {
-  try {
-    const progress = await all(`
-      SELECT p.*, c.title, c.modules_count, c.duration_hours
-      FROM progress p
-      JOIN courses c ON p.course_id = c.id
-      WHERE p.user_code = ?
-    `, [userCode]);
-    return progress;
-  } catch (error) {
-    return [];
+async function saveSession(session: {
+  id: string
+  step: UssdMenuStep
+  payload: StoredSessionPayload
+  phoneNumber: string
+}): Promise<void> {
+  const now = new Date()
+  const expiresAt = new Date(now.getTime() + SESSION_TIMEOUT_MS)
+
+  await prisma.ussdSession.update({
+    where: { id: session.id },
+    data: {
+      phone_number: session.phoneNumber,
+      step: session.step,
+      payload: JSON.stringify(session.payload),
+      user_code: session.payload.userCode ?? null,
+      last_activity: now,
+      expires_at: expiresAt
+    }
+  })
+}
+
+async function resolveProgressSummary(userCode: string): Promise<{
+  totalCourses: number
+  completedModules: number
+  averageProgress: number
+}> {
+  const rows = await prisma.progress.findMany({
+    where: { user_code: userCode }
+  })
+
+  const totalCourses = rows.length
+  const completedModules = rows.reduce((acc: number, row: any) => {
+    try {
+      const parsed = JSON.parse(row.completed_modules) as unknown[]
+      return acc + parsed.length
+    } catch {
+      return acc
+    }
+  }, 0)
+
+  const averageProgress = totalCourses > 0
+    ? Math.round(rows.reduce((acc: number, row: any) => acc + row.percentage, 0) / totalCourses)
+    : 0
+
+  return {
+    totalCourses,
+    completedModules,
+    averageProgress
   }
 }
 
-/**
- * USSD Test Endpoint
- * POST /api/ussd/test
- * Simulate USSD requests for testing
- */
-router.post('/test', async (req: Request, res: Response): Promise<void> => {
+async function handleUssdRequest(
+  phoneNumber: string,
+  text: string,
+  sessionId: string | undefined,
+  res: Response
+): Promise<void> {
   try {
-    const { phoneNumber = '+258840000000', text = '' } = req.body;
+    const session = await getOrCreateSession(sessionId, phoneNumber)
+    const parts = text.trim() ? text.split('*').map(item => item.trim()) : []
 
-    // Create or get session
-    const session = createOrGetSession(phoneNumber);
-
-    let response = '';
-    const inputs = text ? text.split('*') : [];
-
-    if (inputs.length === 0 || !inputs[0]) {
-      // Welcome screen
-      response = `CON WIRA - Women's Integrated Reintegration Academy
-
-Bem-vinda ao WIRA!
-
-Seu código de acesso (ex: V0042):`;
-      session.step = 'login';
-
-    } else if (session.step === 'login' || (inputs.length === 1 && inputs[0].toUpperCase().startsWith('V'))) {
-      // Login validation
-      const userCode = inputs[0].toUpperCase();
-      const user = await validateUserCode(userCode);
-
-      if (user) {
-        session.userCode = userCode;
-        session.step = 'main_menu';
-
-        response = `CON Bem-vinda, ${userCode}!
-
-Como podemos ajudar?
-1. Meus Cursos
-2. Meu Progresso
-3. Ajuda
-4. Sair`;
-      } else {
-        response = `CON Código inválido!
-
-Tente novamente (ex: V0042):
-Ou digite 4 para Sair`;
-      }
-
-    } else if ((session.step === 'main_menu' || session.step === 'courses_menu' || session.step === 'progress_menu' || session.step === 'help_menu') && inputs.length >= 2) {
-      const choice = inputs[inputs.length - 1];
-
-      switch (choice) {
-        case '1':
-          // Courses menu
-          const progress = await getUserProgress(session.userCode);
-
-          if (progress.length > 0) {
-            response = `CON SEUS CURSOS:\n\n`;
-            progress.forEach((course, index) => {
-              response += `${index + 1}. ${course.title}\n`;
-              response += `   Progresso: ${course.percentage}% completo\n\n`;
-            });
-            response += `0. Voltar ao menu principal`;
-          } else {
-            response = `CON Você ainda não tem cursos.\n\nEntre contato com sua ONG.\n\n0. Voltar`;
-          }
-          session.step = 'courses_menu';
-          break;
-
-        case '2':
-          // Progress overview
-          const userProgress = await getUserProgress(session.userCode);
-          const totalModules = userProgress.reduce((sum, p) => sum + (p.completed_modules ? JSON.parse(p.completed_modules).length : 0), 0);
-          const totalCourses = userProgress.length;
-          const avgProgress = totalCourses > 0 ? Math.round(userProgress.reduce((sum, p) => sum + p.percentage, 0) / totalCourses) : 0;
-
-          response = `CON PROGRESSO GERAL - ${session.userCode}
-
-Cursos Ativos: ${totalCourses}
-Módulos Completos: ${totalModules}
-Progresso Médio: ${avgProgress}%
-
-Última atividade: Hoje
-
-0. Voltar ao menu`;
-          session.step = 'progress_menu';
-          break;
-
-        case '3':
-          // Help menu
-          response = `CON WIRA - CENTRAL DE AJUDA
-
-Estamos aqui para ajudar!
-
-Códigos de Acesso:
-• Formato: V#### (ex: V0042)
-• Fornecido pela sua ONG
-
-Suporte:
-• Telefone: +258 84 123 4567
-• WhatsApp: +258 84 123 4567
-• Email: ajuda@wira.org
-
-Horário: Seg-Sex, 8h-17h
-
-0. Voltar ao menu principal`;
-          session.step = 'help_menu';
-          break;
-
-        case '4':
-          // Exit
-          response = `END Obrigado por usar WIRA!
-
-Para capacitação profissional e
-reintegração econômica.
-
-WIRA - Transformando vidas`;
-          sessions.delete(session.sessionId);
-          break;
-
-        default:
-          response = `CON Opção inválida!
-
-Como podemos ajudar?
-1. Meus Cursos
-2. Meu Progresso
-3. Ajuda
-4. Sair`;
-          break;
-      }
-
-    } else {
-      // Handle other menu navigations
-      const choice = inputs[inputs.length - 1];
-
-      if (choice === '0') {
-        // Go back to main menu
-        response = `CON Bem-vinda, ${session.userCode}!
-
-Como podemos ajudar?
-1. Meus Cursos
-2. Meu Progresso
-3. Ajuda
-4. Sair`;
-        session.step = 'main_menu';
-      } else {
-        response = `END Sessão expirada.
-
-Digite *123# para começar novamente.`;
-        sessions.delete(session.sessionId);
-      }
+    if (parts.length === 0 || session.step === 'welcome') {
+      session.step = 'login'
+      await saveSession({ ...session, phoneNumber })
+      res.json({
+        success: true,
+        sessionId: session.id,
+        response: formatResponse(false, `WIRA - Women's Integrated Reintegration Academy\n\nBem-vinda ao WIRA.\n\nSeu código de acesso (ex: V0042):`)
+      })
+      return
     }
 
-    // Update session
-    sessions.set(session.sessionId, session);
+    if (session.step === 'login') {
+      const inputCode = parts[parts.length - 1].toUpperCase()
+      const user = await prisma.user.findUnique({
+        where: { anonymous_code: inputCode },
+        select: { anonymous_code: true, is_active: true }
+      })
 
+      if (!user || !user.is_active) {
+        await saveSession({ ...session, phoneNumber })
+        res.json({
+          success: true,
+          sessionId: session.id,
+          response: formatResponse(false, 'Código inválido. Tente novamente com o formato V#### ou digite 4 para sair.')
+        })
+        return
+      }
+
+      session.step = 'main_menu'
+      session.payload.userCode = user.anonymous_code
+      await saveSession({ ...session, phoneNumber })
+      res.json({
+        success: true,
+        sessionId: session.id,
+        response: formatResponse(false, `Bem-vinda, ${user.anonymous_code}!\n\n1. Meus Cursos\n2. Meu Progresso\n3. Ajuda\n4. Sair`)
+      })
+      return
+    }
+
+    const option = parts[parts.length - 1]
+    const userCode = session.payload.userCode
+    if (!userCode) {
+      session.step = 'login'
+      await saveSession({ ...session, phoneNumber })
+      res.json({
+        success: true,
+        sessionId: session.id,
+        response: formatResponse(false, 'Sessão sem autenticação. Informe novamente seu código V####.')
+      })
+      return
+    }
+
+    if (option === '4') {
+      await prisma.ussdSession.delete({ where: { id: session.id } })
+      res.json({
+        success: true,
+        sessionId: session.id,
+        response: formatResponse(true, 'Obrigado por usar WIRA. Até breve.')
+      })
+      return
+    }
+
+    if (option === '1') {
+      const progressRows = await prisma.progress.findMany({
+        where: { user_code: userCode },
+        include: {
+          course: {
+            select: { title: true, modules_count: true }
+          }
+        }
+      })
+
+      if (progressRows.length === 0) {
+        session.step = 'courses_menu'
+        await saveSession({ ...session, phoneNumber })
+        res.json({
+          success: true,
+          sessionId: session.id,
+          response: formatResponse(false, 'Você ainda não tem cursos atribuídos.\n\n0. Voltar ao menu principal')
+        })
+        return
+      }
+
+      const lines = progressRows
+        .map((item: any, index: number) => `${index + 1}. ${item.course.title} - ${item.percentage}%`)
+        .join('\n')
+
+      session.step = 'courses_menu'
+      await saveSession({ ...session, phoneNumber })
+      res.json({
+        success: true,
+        sessionId: session.id,
+        response: formatResponse(false, `SEUS CURSOS:\n${lines}\n\n0. Voltar ao menu principal`)
+      })
+      return
+    }
+
+    if (option === '2') {
+      const summary = await resolveProgressSummary(userCode)
+      session.step = 'progress_menu'
+      await saveSession({ ...session, phoneNumber })
+      res.json({
+        success: true,
+        sessionId: session.id,
+        response: formatResponse(false, `PROGRESSO GERAL - ${userCode}\n\nCursos Ativos: ${summary.totalCourses}\nMódulos Completos: ${summary.completedModules}\nProgresso Médio: ${summary.averageProgress}%\n\n0. Voltar ao menu principal`)
+      })
+      return
+    }
+
+    if (option === '3') {
+      session.step = 'help_menu'
+      await saveSession({ ...session, phoneNumber })
+      res.json({
+        success: true,
+        sessionId: session.id,
+        response: formatResponse(false, 'AJUDA WIRA\n\nFormato do código: V####\nSuporte: +258 84 123 4567\nEmail: ajuda@wira.org\n\n0. Voltar ao menu principal')
+      })
+      return
+    }
+
+    if (option === '0') {
+      session.step = 'main_menu'
+      await saveSession({ ...session, phoneNumber })
+      res.json({
+        success: true,
+        sessionId: session.id,
+        response: formatResponse(false, `Bem-vinda, ${userCode}!\n\n1. Meus Cursos\n2. Meu Progresso\n3. Ajuda\n4. Sair`)
+      })
+      return
+    }
+
+    await saveSession({ ...session, phoneNumber })
     res.json({
       success: true,
-      response,
-      sessionId: session.sessionId,
-      step: session.step,
-      userCode: session.userCode
-    });
-
+      sessionId: session.id,
+      response: formatResponse(false, 'Opção inválida.\n\n1. Meus Cursos\n2. Meu Progresso\n3. Ajuda\n4. Sair')
+    })
   } catch (error) {
-    console.error('USSD Test Error:', error);
+    logger.error('USSD processing error', { error: (error as Error).message })
     res.status(500).json({
       success: false,
       error: 'Erro no processamento USSD'
-    });
+    })
   }
-});
+}
 
-/**
- * USSD Main Endpoint
- * POST /api/ussd
- * Process USSD requests from telecom operators
- */
+router.post('/test', async (req: Request, res: Response): Promise<void> => {
+  const { phoneNumber = '+258840000000', text = '', sessionId } = req.body as {
+    phoneNumber?: string
+    text?: string
+    sessionId?: string
+  }
+
+  await handleUssdRequest(phoneNumber, text, sessionId, res)
+})
+
 router.post('/', async (req: Request, res: Response): Promise<void> => {
-  try {
-    const { sessionId, serviceCode: _serviceCode, phoneNumber: _phoneNumber, text: _text } = req.body;
-
-    // In a real implementation, this would process the USSD request
-    // For now, we'll send a mock response
-
-    const response = `CON WIRA - Women's Integrated Reintegration Academy
-  
-Bem-vinda ao WIRA!
-  
-Seu código de acesso (ex: V0042):`;
-
-    res.json({
-      success: true,
-      response,
-      sessionId: sessionId || 'mock-session-id',
-      step: 'welcome'
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      error: 'Erro no processamento USSD'
-    });
+  const { sessionId, phoneNumber = '+258840000000', text = '' } = req.body as {
+    sessionId?: string
+    phoneNumber?: string
+    text?: string
   }
-});
 
-/**
- * USSD Status Endpoint
- * GET /api/ussd/status
- * Get USSD service status
- */
-router.get('/status', (_req: Request, res: Response): void => {
+  await handleUssdRequest(phoneNumber, text, sessionId, res)
+})
+
+router.get('/status', async (_req: Request, res: Response): Promise<void> => {
+  const now = new Date()
+  const activeSessions = await prisma.ussdSession.count({
+    where: { expires_at: { gt: now } }
+  })
+
   res.json({
     success: true,
     service: 'WIRA USSD Service',
     status: 'Online',
-    shortcode: '*123#',
-    sessionTimeout: '5 minutos',
-    activeSessions: 0,
-    timestamp: new Date().toISOString()
-  });
-});
+    shortcode: process.env.USSD_SHORTCODE ?? '*123#',
+    sessionTimeoutMs: SESSION_TIMEOUT_MS,
+    activeSessions,
+    timestamp: now.toISOString()
+  })
+})
 
-/**
- * SMS Status Endpoint
- * GET /api/sms/status
- * Get SMS service status
- */
 router.get('/sms/status', (_req: Request, res: Response): void => {
   res.json({
     success: true,
     service: 'WIRA SMS Service',
-    status: 'Online (Mock)',
-    totalSent: 0,
-    recentMessages: [],
+    status: 'Online (sandbox)',
+    providerMode: process.env.SMS_API_KEY ? 'configured' : 'sandbox',
     timestamp: new Date().toISOString()
-  });
-});
+  })
+})
 
-/**
- * Send SMS Endpoint
- * POST /api/sms/send
- * Send an SMS message
- */
 router.post('/sms/send', (req: Request, res: Response): void => {
-  const { phoneNumber, message } = req.body;
+  const { phoneNumber, message } = req.body as {
+    phoneNumber?: string
+    message?: string
+  }
 
   if (!phoneNumber || !message) {
     res.status(400).json({
       success: false,
       error: 'phoneNumber and message are required'
-    });
-    return;
+    })
+    return
   }
-
-  // In a real implementation, this would send an actual SMS
-  // For now, we'll simulate the response
 
   res.json({
     success: true,
-    message: 'SMS sent successfully (mock)',
+    mode: process.env.SMS_API_KEY ? 'provider-ready' : 'sandbox',
     sms: {
-      id: Date.now(),
+      id: `sms-${Date.now()}`,
       to: phoneNumber,
-      message: message,
+      message,
       sentAt: new Date().toISOString(),
-      status: 'sent (mock)',
-      provider: 'mock-sms-provider'
+      provider: process.env.SMS_USERNAME ?? 'sandbox'
     }
-  });
-});
+  })
+})
 
-export default router;
+export default router

@@ -1,8 +1,62 @@
 import { Request, Response } from 'express';
 import { logger } from '../middleware/security';
 import ProgressModel from '../models/Progress';
+import CourseModel from '../models/Course';
 
 class ProgressController {
+  static async getUserAggregate(req: Request, res: Response): Promise<void> {
+    const { userCode } = req.params;
+
+    try {
+      const [progressRows, courses] = await Promise.all([
+        ProgressModel.findByUser(userCode),
+        CourseModel.findMany()
+      ]);
+
+      const progressByCourse = new Map(progressRows.map(item => [item.course_id, item]));
+
+      const coursesWithProgress = courses.map(course => {
+        const progress = progressByCourse.get(course.id);
+        const completedModules = progress ? JSON.parse(progress.completed_modules || '[]') as string[] : [];
+
+        return {
+          courseId: course.id,
+          title: course.title,
+          modulesCount: course.modules_count,
+          progress: progress?.percentage ?? 0,
+          currentModule: progress?.current_module ?? 1,
+          completedModules,
+          lastActivity: progress?.last_activity ?? null
+        };
+      });
+
+      const totalCourses = coursesWithProgress.length;
+      const activeCourses = coursesWithProgress.filter(item => item.progress > 0).length;
+      const averageProgress = totalCourses > 0
+        ? Math.round(coursesWithProgress.reduce((acc, item) => acc + item.progress, 0) / totalCourses)
+        : 0;
+
+      res.json({
+        success: true,
+        userCode,
+        summary: {
+          totalCourses,
+          activeCourses,
+          averageProgress
+        },
+        courses: coursesWithProgress
+      });
+    } catch (error) {
+      logger.error('Database error fetching aggregated user progress', {
+        error: (error as Error).message,
+        userCode
+      });
+      res.status(500).json({
+        error: 'Erro no banco de dados'
+      });
+    }
+  }
+
   static async getUserProgress(req: Request, res: Response): Promise<void> {
     const { userCode, courseId } = req.params;
 
@@ -42,12 +96,12 @@ class ProgressController {
     const { completedModules, percentage } = req.body;
 
     try {
-      // Use ORM-like method to update progress
-      await ProgressModel.updateProgress(userCode, courseId, completedModules, percentage);
+      const progress = await ProgressModel.updateProgress(userCode, courseId, completedModules, percentage);
 
       res.json({
         success: true,
-        message: 'Progresso atualizado com sucesso'
+        message: 'Progresso atualizado com sucesso',
+        progress
       });
     } catch (error) {
       logger.error('Database error updating progress', {

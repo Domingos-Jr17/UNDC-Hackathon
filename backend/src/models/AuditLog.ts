@@ -1,147 +1,140 @@
-import { get, all, run } from '../database';
-import { AuditLog } from '../types';
+import prismaService from '../services/prisma'
+import { AuditLog } from '../types'
+
+const prisma = prismaService.getClient()
+
+const toAuditLog = (row: {
+  id: number
+  user_code: string | null
+  action: string
+  table_name: string | null
+  record_id: string | null
+  old_values: string | null
+  new_values: string | null
+  ip_address: string | null
+  user_agent: string | null
+  timestamp: Date
+}): AuditLog => {
+  const item: AuditLog = {
+    id: row.id,
+    action: row.action,
+    timestamp: row.timestamp.toISOString()
+  }
+
+  if (row.user_code) item.user_code = row.user_code
+  if (row.table_name) item.table_name = row.table_name
+  if (row.record_id) item.record_id = row.record_id
+  if (row.old_values) item.old_values = row.old_values
+  if (row.new_values) item.new_values = row.new_values
+  if (row.ip_address) item.ip_address = row.ip_address
+  if (row.user_agent) item.user_agent = row.user_agent
+
+  return item
+}
 
 class AuditLogModel {
   static async create(logData: Partial<AuditLog>): Promise<void> {
-    const query = `
-      INSERT INTO audit_logs (
-        user_code, action, table_name, record_id, old_values, new_values, ip_address, user_agent, timestamp
-      )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
-    `;
-
-    await run(query, [
-      logData.user_code,
-      logData.action,
-      logData.table_name,
-      logData.record_id,
-      logData.old_values,
-      logData.new_values,
-      logData.ip_address,
-      logData.user_agent
-    ]);
+    await prisma.auditLog.create({
+      data: {
+        user_code: logData.user_code ?? null,
+        action: logData.action ?? 'UNSPECIFIED_ACTION',
+        table_name: logData.table_name ?? null,
+        record_id: logData.record_id ?? null,
+        old_values: logData.old_values ?? null,
+        new_values: logData.new_values ?? null,
+        ip_address: logData.ip_address ?? null,
+        user_agent: logData.user_agent ?? null
+      }
+    })
   }
 
-  static async findByUser(userCode: string, limit: number = 50): Promise<AuditLog[]> {
-    const query = `
-      SELECT * FROM audit_logs 
-      WHERE user_code = ? 
-      ORDER BY timestamp DESC 
-      LIMIT ?
-    `;
-    return await all<AuditLog>(query, [userCode, limit]);
+  static async findByUser(userCode: string, limit = 50): Promise<AuditLog[]> {
+    const rows = await prisma.auditLog.findMany({
+      where: { user_code: userCode },
+      orderBy: { timestamp: 'desc' },
+      take: limit
+    })
+    return rows.map(toAuditLog)
   }
 
-  static async findByAction(action: string, limit: number = 50): Promise<AuditLog[]> {
-    const query = `
-      SELECT * FROM audit_logs 
-      WHERE action = ? 
-      ORDER BY timestamp DESC 
-      LIMIT ?
-    `;
-    return await all<AuditLog>(query, [action, limit]);
+  static async findByAction(action: string, limit = 50): Promise<AuditLog[]> {
+    const rows = await prisma.auditLog.findMany({
+      where: { action },
+      orderBy: { timestamp: 'desc' },
+      take: limit
+    })
+    return rows.map(toAuditLog)
   }
 
-  static async findByTable(tableName: string, limit: number = 50): Promise<AuditLog[]> {
-    const query = `
-      SELECT * FROM audit_logs 
-      WHERE table_name = ? 
-      ORDER BY timestamp DESC 
-      LIMIT ?
-    `;
-    return await all<AuditLog>(query, [tableName, limit]);
+  static async findByTable(tableName: string, limit = 50): Promise<AuditLog[]> {
+    const rows = await prisma.auditLog.findMany({
+      where: { table_name: tableName },
+      orderBy: { timestamp: 'desc' },
+      take: limit
+    })
+    return rows.map(toAuditLog)
   }
 
-  // New ORM-like methods
   static async findMany(args?: {
-    where?: Partial<AuditLog>;
-    orderBy?: { timestamp: 'asc' | 'desc' };
-    take?: number;
-    skip?: number;
+    where?: Partial<AuditLog>
+    orderBy?: { timestamp: 'asc' | 'desc' }
+    take?: number
+    skip?: number
   }): Promise<AuditLog[]> {
-    let query = 'SELECT * FROM audit_logs';
-    const conditions: string[] = [];
-    const values: any[] = [];
-
-    if (args?.where) {
-      Object.entries(args.where).forEach(([key, value]) => {
-        conditions.push(`${key} = ?`);
-        values.push(value);
-      });
-
-      if (conditions.length > 0) {
-        query += ` WHERE ${conditions.join(' AND ')}`;
-      }
-    }
-
-    if (args?.orderBy) {
-      query += ` ORDER BY timestamp ${args.orderBy.timestamp === 'asc' ? 'ASC' : 'DESC'}`;
-    } else {
-      query += ' ORDER BY timestamp DESC';
-    }
-
-    if (args?.take) {
-      query += ` LIMIT ${args.take}`;
-      if (args.skip) {
-        query += ` OFFSET ${args.skip}`;
-      }
-    }
-
-    return await all<AuditLog>(query, values);
+    const rows = await prisma.auditLog.findMany({
+      where: {
+        user_code: args?.where?.user_code,
+        action: args?.where?.action,
+        table_name: args?.where?.table_name
+      },
+      orderBy: { timestamp: args?.orderBy?.timestamp ?? 'desc' },
+      take: args?.take,
+      skip: args?.skip
+    })
+    return rows.map(toAuditLog)
   }
 
   static async createWithPrisma(data: Omit<AuditLog, 'id' | 'timestamp'>): Promise<AuditLog> {
-    // In a real implementation with Prisma, this would be:
-    // return await prisma.auditLog.create({ data });
-
-    // For now, we'll simulate the behavior
-    const auditLog: AuditLog = {
-      id: Date.now(),
-      user_code: data.user_code || 'system', // Provide default for undefined
-      action: data.action,
-      table_name: data.table_name || '',
-      record_id: data.record_id || '',
-      old_values: data.old_values || '',
-      new_values: data.new_values || '',
-      ip_address: data.ip_address || '',
-      user_agent: data.user_agent || '',
-      timestamp: new Date().toISOString()
-    };
-
-    return auditLog;
+    const row = await prisma.auditLog.create({
+      data: {
+        user_code: data.user_code ?? null,
+        action: data.action,
+        table_name: data.table_name ?? null,
+        record_id: data.record_id ?? null,
+        old_values: data.old_values ?? null,
+        new_values: data.new_values ?? null,
+        ip_address: data.ip_address ?? null,
+        user_agent: data.user_agent ?? null
+      }
+    })
+    return toAuditLog(row)
   }
 
   static async findFirst(args: {
-    where?: Partial<AuditLog>;
-    orderBy?: { timestamp: 'asc' | 'desc' };
+    where?: Partial<AuditLog>
+    orderBy?: { timestamp: 'asc' | 'desc' }
   }): Promise<AuditLog | null> {
-    const results = await this.findMany({
-      ...args,
-      take: 1
-    });
+    const row = await prisma.auditLog.findFirst({
+      where: {
+        user_code: args.where?.user_code,
+        action: args.where?.action,
+        table_name: args.where?.table_name
+      },
+      orderBy: { timestamp: args.orderBy?.timestamp ?? 'desc' }
+    })
 
-    return results.length > 0 ? results[0] : null;
+    return row ? toAuditLog(row) : null
   }
 
   static async count(where?: Partial<AuditLog>): Promise<number> {
-    let query = 'SELECT COUNT(*) as count FROM audit_logs';
-    const values: any[] = [];
-
-    if (where) {
-      const conditions: string[] = [];
-      Object.entries(where).forEach(([key, value]) => {
-        conditions.push(`${key} = ?`);
-        values.push(value);
-      });
-
-      if (conditions.length > 0) {
-        query += ` WHERE ${conditions.join(' AND ')}`;
+    return prisma.auditLog.count({
+      where: {
+        user_code: where?.user_code,
+        action: where?.action,
+        table_name: where?.table_name
       }
-    }
-
-    const result = await get<{ count: number }>(query, values);
-    return result ? result.count : 0;
+    })
   }
 }
 
-export default AuditLogModel;
+export default AuditLogModel

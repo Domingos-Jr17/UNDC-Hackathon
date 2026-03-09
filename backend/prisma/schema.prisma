@@ -6,8 +6,9 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
+  shadowDatabaseUrl = env("SHADOW_DATABASE_URL")
 }
 
 model User {
@@ -30,6 +31,10 @@ model User {
   progresses      Progress[]
   certificates    Certificate[]
   audit_logs      AuditLog[]
+  job_applications JobApplication[]
+
+  @@index([ngo_id])
+  @@index([role, is_active])
 }
 
 enum UserRole {
@@ -50,6 +55,7 @@ model NGO {
   created_at      DateTime  @default(now())
   updated_at      DateTime? @updatedAt
   users           User[]
+  jobs            Job[]
 }
 
 model Course {
@@ -66,6 +72,8 @@ model Course {
   updated_at      DateTime? @updatedAt
   progresses      Progress[]
   certificates    Certificate[]
+
+  @@index([is_active])
 }
 
 model Progress {
@@ -82,6 +90,8 @@ model Progress {
   user              User      @relation(fields: [user_code], references: [anonymous_code])
   course            Course    @relation(fields: [course_id], references: [id])
   @@unique([user_code, course_id])
+  @@index([user_code])
+  @@index([course_id])
 }
 
 model Certificate {
@@ -104,6 +114,8 @@ model Certificate {
   created_at          DateTime  @default(now())
   user                User      @relation(fields: [anonymous_code], references: [anonymous_code])
   course              Course    @relation(fields: [course_id], references: [id])
+
+  @@index([anonymous_code, course_id])
 }
 
 model AuditLog {
@@ -119,4 +131,72 @@ model AuditLog {
   user_agent  String?
   timestamp   DateTime  @default(now())
   user        User?     @relation(fields: [user_code], references: [anonymous_code])
+
+  @@index([user_code, timestamp])
+  @@index([action, timestamp])
+}
+
+model Employer {
+  id            String   @id
+  name          String
+  contact_name  String?
+  contact_phone String?
+  contact_email String?
+  location      String?
+  is_active     Boolean  @default(true)
+  created_at    DateTime @default(now())
+  updated_at    DateTime? @updatedAt
+  jobs          Job[]
+}
+
+model Job {
+  id              String           @id
+  title           String
+  description     String
+  location        String
+  required_skills String
+  contract_type   String
+  schedule        String?
+  salary_range    String?
+  is_active       Boolean          @default(true)
+  ngo_id          String?
+  employer_id     String?
+  created_at      DateTime         @default(now())
+  updated_at      DateTime?        @updatedAt
+  ngo             NGO?             @relation(fields: [ngo_id], references: [id])
+  employer        Employer?        @relation(fields: [employer_id], references: [id])
+  applications    JobApplication[]
+
+  @@index([is_active, location])
+  @@index([ngo_id])
+}
+
+model JobApplication {
+  id             Int      @id @default(autoincrement())
+  job_id         String
+  anonymous_code String
+  status         String   @default("PENDING")
+  score          Int      @default(0)
+  notes          String?
+  applied_at     DateTime @default(now())
+  updated_at     DateTime? @updatedAt
+  job            Job      @relation(fields: [job_id], references: [id])
+  user           User     @relation(fields: [anonymous_code], references: [anonymous_code])
+
+  @@unique([job_id, anonymous_code])
+  @@index([anonymous_code, status])
+}
+
+model UssdSession {
+  id            String   @id
+  phone_number  String
+  step          String
+  user_code     String?
+  payload       String?
+  last_activity DateTime @default(now())
+  created_at    DateTime @default(now())
+  expires_at    DateTime
+
+  @@index([phone_number])
+  @@index([expires_at])
 }

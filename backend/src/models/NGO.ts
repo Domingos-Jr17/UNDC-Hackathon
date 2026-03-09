@@ -1,134 +1,143 @@
-import { get, all, run } from '../database';
-import { NGO } from '../types';
+import prismaService from '../services/prisma'
+import { NGO } from '../types'
+
+const prisma = prismaService.getClient()
+
+const toNGO = (row: {
+  id: string
+  name: string
+  contact_person: string | null
+  phone: string | null
+  email: string | null
+  address: string | null
+  license_number: string | null
+  is_active: boolean
+  created_at: Date
+  updated_at: Date | null
+}): NGO => {
+  const ngo: NGO = {
+    id: row.id,
+    name: row.name,
+    is_active: row.is_active,
+    created_at: row.created_at.toISOString()
+  }
+
+  if (row.contact_person) ngo.contact_person = row.contact_person
+  if (row.phone) ngo.phone = row.phone
+  if (row.email) ngo.email = row.email
+  if (row.address) ngo.address = row.address
+  if (row.license_number) ngo.license_number = row.license_number
+  if (row.updated_at) ngo.updated_at = row.updated_at.toISOString()
+
+  return ngo
+}
 
 class NGOModel {
   static async findById(id: string): Promise<NGO | null> {
-    const query = 'SELECT * FROM ngos WHERE id = ?';
-    return await get<NGO>(query, [id]);
+    const row = await prisma.nGO.findUnique({ where: { id } })
+    return row ? toNGO(row) : null
   }
 
   static async findAll(): Promise<NGO[]> {
-    const query = 'SELECT * FROM ngos WHERE is_active = 1';
-    return await all<NGO>(query);
+    const rows = await prisma.nGO.findMany({
+      where: { is_active: true },
+      orderBy: { name: 'asc' }
+    })
+    return rows.map(toNGO)
   }
 
   static async create(ngoData: Partial<NGO>): Promise<string> {
-    const id = `ngo-${Date.now()}`;
-
-    const query = `
-      INSERT INTO ngos (id, name, contact_person, phone, email, address, license_number, created_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
-    `;
-
-    await run(query, [
-      id,
-      ngoData.name,
-      ngoData.contact_person,
-      ngoData.phone,
-      ngoData.email,
-      ngoData.address,
-      ngoData.license_number
-    ]);
-
-    return id;
+    const id = ngoData.id ?? `ngo-${Date.now()}`
+    await prisma.nGO.create({
+      data: {
+        id,
+        name: ngoData.name ?? 'ONG sem nome',
+        contact_person: ngoData.contact_person ?? null,
+        phone: ngoData.phone ?? null,
+        email: ngoData.email ?? null,
+        address: ngoData.address ?? null,
+        license_number: ngoData.license_number ?? null
+      }
+    })
+    return id
   }
 
   static async update(id: string, ngoData: Partial<NGO>): Promise<void> {
-    const updates: string[] = [];
-    const values: (string | number | boolean | null)[] = [];
-
-    Object.entries(ngoData).forEach(([key, value]) => {
-      if (key !== 'id' && key !== 'created_at') {
-        updates.push(`${key} = ?`);
-        values.push(value as string | number | boolean | null);
+    await prisma.nGO.update({
+      where: { id },
+      data: {
+        name: ngoData.name,
+        contact_person: ngoData.contact_person,
+        phone: ngoData.phone,
+        email: ngoData.email,
+        address: ngoData.address,
+        license_number: ngoData.license_number,
+        updated_at: new Date()
       }
-    });
-
-    if (updates.length === 0) return;
-
-    values.push(id);
-
-    const query = `
-      UPDATE ngos
-      SET ${updates.join(', ')}, updated_at = CURRENT_TIMESTAMP
-      WHERE id = ?
-    `;
-
-    await run(query, values);
+    })
   }
 
   static async deactivate(id: string): Promise<void> {
-    const query = `
-      UPDATE ngos 
-      SET is_active = 0, updated_at = CURRENT_TIMESTAMP
-      WHERE id = ?
-    `;
-    await run(query, [id]);
+    await prisma.nGO.update({
+      where: { id },
+      data: {
+        is_active: false,
+        updated_at: new Date()
+      }
+    })
   }
 
-  // New ORM-like methods
   static async findUnique(where: { id: string }): Promise<NGO | null> {
-    return await this.findById(where.id);
+    return this.findById(where.id)
   }
 
   static async findMany(): Promise<NGO[]> {
-    return await this.findAll();
+    return this.findAll()
   }
 
   static async createWithPrisma(data: Omit<NGO, 'id' | 'created_at' | 'updated_at' | 'is_active'>): Promise<NGO> {
-    // In a real implementation with Prisma, this would be:
-    // return await prisma.ngo.create({ data });
-
-    // For now, we'll simulate the behavior
-    const ngo: NGO = {
-      id: `ngo-${Date.now()}`,
-      name: data.name,
-      is_active: true,
-      created_at: new Date().toISOString()
-    };
-
-    // Add optional fields only if they exist
-    if (data.contact_person) ngo.contact_person = data.contact_person;
-    if (data.phone) ngo.phone = data.phone;
-    if (data.email) ngo.email = data.email;
-    if (data.address) ngo.address = data.address;
-    if (data.license_number) ngo.license_number = data.license_number;
-
-    return ngo;
+    const id = `ngo-${Date.now()}`
+    const row = await prisma.nGO.create({
+      data: {
+        id,
+        name: data.name,
+        contact_person: data.contact_person ?? null,
+        phone: data.phone ?? null,
+        email: data.email ?? null,
+        address: data.address ?? null,
+        license_number: data.license_number ?? null,
+        is_active: true
+      }
+    })
+    return toNGO(row)
   }
 
   static async updateWithPrisma(
     where: { id: string },
     data: Partial<Omit<NGO, 'id' | 'created_at' | 'updated_at' | 'is_active'>>
   ): Promise<NGO | null> {
-    const updates: string[] = [];
-    const values: (string | number | boolean | null)[] = [];
-
-    Object.entries(data).forEach(([key, value]) => {
-      updates.push(`${key} = ?`);
-      values.push(value as string | number | boolean | null);
-    });
-
-    if (updates.length === 0) {
-      return await this.findById(where.id);
+    try {
+      const row = await prisma.nGO.update({
+        where,
+        data: {
+          name: data.name,
+          contact_person: data.contact_person,
+          phone: data.phone,
+          email: data.email,
+          address: data.address,
+          license_number: data.license_number,
+          updated_at: new Date()
+        }
+      })
+      return toNGO(row)
+    } catch {
+      return null
     }
-
-    values.push(where.id);
-
-    const query = `
-      UPDATE ngos
-      SET ${updates.join(', ')}, updated_at = CURRENT_TIMESTAMP
-      WHERE id = ?
-    `;
-
-    await run(query, values);
-    return await this.findById(where.id);
   }
 
   static async delete(where: { id: string }): Promise<void> {
-    const query = 'DELETE FROM ngos WHERE id = ?';
-    await run(query, [where.id]);
+    await prisma.nGO.delete({ where })
   }
 }
 
-export default NGOModel;
+export default NGOModel

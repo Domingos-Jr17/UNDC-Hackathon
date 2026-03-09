@@ -42,8 +42,10 @@ class EncryptionService {
       throw new Error('ENCRYPTION_KEY environment variable is required')
     }
 
-    // Ensure key is exactly 32 bytes for AES-256
-    return crypto.scryptSync(key, crypto.randomBytes(16), 32)
+    const salt = process.env.ENCRYPTION_SALT ?? 'wira-platform-v1'
+
+    // Ensure deterministic 32-byte key for AES-256 across restarts.
+    return crypto.scryptSync(key, salt, 32)
   }
 
   /**

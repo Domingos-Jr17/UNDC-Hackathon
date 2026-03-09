@@ -7,6 +7,6 @@ export type RootStackParamList = {
     VideoLesson: { courseId: string; moduleId: string };
     Quiz: { courseId: string; moduleId: string };
     Certificate: { courseId: string; score?: number };
-    JobsMockup: undefined;
+    Jobs: undefined;
     Progress: undefined;
 };

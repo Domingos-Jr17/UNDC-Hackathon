@@ -1,9 +1,8 @@
 #!/usr/bin/env node
 import { PrismaClient } from '@prisma/client'
-// import bcrypt from 'bcryptjs' // Removido pois não está sendo usado
+import bcrypt from 'bcryptjs'
 import winston from 'winston'
 
-// Configure logger
 const logger = winston.createLogger({
   level: 'info',
   format: winston.format.combine(
@@ -20,172 +19,262 @@ const logger = winston.createLogger({
   ]
 })
 
-async function seedData() {
-  const prisma = new PrismaClient()
+const prisma = new PrismaClient()
 
-  try {
-    logger.info('🌱 Starting data seeding...')
+async function seedBaseData(): Promise<void> {
+  logger.info('Seeding base entities...')
 
-    // Check database connection
-    await prisma.$connect()
-    logger.info('✅ Database connected successfully')
+  await prisma.nGO.createMany({
+    data: [
+      {
+        id: 'ngo-001',
+        name: 'ONG Horizonte Seguro',
+        contact_person: 'Equipe Técnica A',
+        phone: '+258820000001',
+        email: 'contato@horizonteseguro.org',
+        address: 'Maputo'
+      },
+      {
+        id: 'ngo-002',
+        name: 'ONG Recomeço',
+        contact_person: 'Equipe Técnica B',
+        phone: '+258820000002',
+        email: 'contato@recomeco.org',
+        address: 'Beira'
+      }
+    ],
+    skipDuplicates: true
+  })
 
-    // Seed demo users
-    await seedUsers(prisma)
+  await prisma.course.createMany({
+    data: [
+      {
+        id: 'costura',
+        title: 'Costura Avançada',
+        description: 'Capacitação técnica para produção têxtil.',
+        instructor: 'Mentora Técnica 1',
+        duration_hours: 40,
+        modules_count: 8,
+        level: 'Intermediário',
+        skills: 'costura,controle-de-qualidade,producao'
+      },
+      {
+        id: 'culinaria',
+        title: 'Culinária Profissional',
+        description: 'Capacitação em cozinha profissional e segurança alimentar.',
+        instructor: 'Mentora Técnica 2',
+        duration_hours: 35,
+        modules_count: 7,
+        level: 'Básico',
+        skills: 'culinaria,higiene,producao'
+      },
+      {
+        id: 'agricultura',
+        title: 'Agricultura Sustentável',
+        description: 'Práticas de agricultura regenerativa para renda local.',
+        instructor: 'Mentora Técnica 3',
+        duration_hours: 30,
+        modules_count: 6,
+        level: 'Básico',
+        skills: 'agricultura,irrigacao,colheita'
+      }
+    ],
+    skipDuplicates: true
+  })
 
-    // Seed sample progress data
-    await seedProgress(prisma)
-
-    // Seed sample certificates
-    await seedCertificates(prisma)
-
-    logger.info('✅ Data seeding completed successfully')
-
-  } catch (error) {
-    logger.error('❌ Seeding failed:', error)
-    process.exit(1)
-  } finally {
-    await prisma.$disconnect()
-  }
+  await prisma.employer.createMany({
+    data: [
+      {
+        id: 'emp-001',
+        name: 'Textil Maputo Lda',
+        location: 'Maputo',
+        contact_name: 'RH 01',
+        contact_phone: '+258821000001',
+        contact_email: 'rh@textilmaputo.co.mz'
+      },
+      {
+        id: 'emp-002',
+        name: 'Sabores do Sul',
+        location: 'Matola',
+        contact_name: 'RH 02',
+        contact_phone: '+258821000002',
+        contact_email: 'rh@saboresdosul.co.mz'
+      }
+    ],
+    skipDuplicates: true
+  })
 }
 
-async function seedUsers(prisma: PrismaClient) {
-  logger.info('👥 Creating demo users...')
+async function seedUsers(): Promise<void> {
+  logger.info('Seeding users...')
 
-  const demoUsers = [
+  const baseUsers = [
     {
       anonymous_code: 'V0042',
-      real_name: 'Maria Silva',
-      phone: '+258841234567',
-      email: 'maria@demo.wira',
-      ngo_id: 'ngo-001'
+      ngo_id: 'ngo-001',
+      role: 'VICTIM' as const
     },
     {
       anonymous_code: 'V0038',
-      real_name: 'Ana Joaquim',
-      phone: '+258823456789',
-      email: 'ana@demo.wira',
-      ngo_id: 'ngo-001'
+      ngo_id: 'ngo-001',
+      role: 'VICTIM' as const
     },
     {
       anonymous_code: 'V0031',
-      real_name: 'João Mandlate',
-      phone: '+258845678901',
-      email: 'joao@demo.wira',
-      ngo_id: 'ngo-002'
+      ngo_id: 'ngo-002',
+      role: 'VICTIM' as const
     }
   ]
 
-  for (const user of demoUsers) {
-    const existingUser = await prisma.user.findUnique({
-      where: { anonymous_code: user.anonymous_code }
-    })
+  await prisma.user.createMany({
+    data: baseUsers,
+    skipDuplicates: true
+  })
 
-    if (!existingUser) {
-      await prisma.user.create({
-        data: user
-      })
-      logger.info(`✅ Created user: ${user.anonymous_code}`)
-    } else {
-      logger.info(`ℹ️  User already exists: ${user.anonymous_code}`)
-    }
-  }
+  const staffPassword = await bcrypt.hash('Staff@2026', 10)
+  await prisma.user.createMany({
+    data: [
+      {
+        anonymous_code: 'A0001',
+        email: 'staff@wira.org',
+        password: staffPassword,
+        role: 'STAFF',
+        ngo_id: 'ngo-001'
+      },
+      {
+        anonymous_code: 'A0002',
+        email: 'admin@wira.org',
+        password: staffPassword,
+        role: 'ADMIN',
+        ngo_id: 'ngo-001'
+      }
+    ],
+    skipDuplicates: true
+  })
 }
 
-async function seedProgress(prisma: PrismaClient) {
-  logger.info('📊 Creating progress data...')
+async function seedProgress(): Promise<void> {
+  logger.info('Seeding progress...')
 
-  const progressData = [
+  const progressRows = [
     {
       user_code: 'V0042',
-      course_id: 'costura-001',
-      completed_modules: '1,2,3',
-      percentage: 37,
+      course_id: 'costura',
+      completed_modules: JSON.stringify(['1', '2', '3']),
+      percentage: 38,
       current_module: 4,
       quiz_attempts: 1,
-      last_quiz_score: 85
+      last_quiz_score: 80
     },
     {
       user_code: 'V0038',
-      course_id: 'culinaria-001',
-      completed_modules: '1',
-      percentage: 14,
+      course_id: 'culinaria',
+      completed_modules: JSON.stringify(['1']),
+      percentage: 15,
       current_module: 2,
       quiz_attempts: 0
     },
     {
       user_code: 'V0031',
-      course_id: 'costura-001',
-      completed_modules: '1,2,3,4,5,6,7,8',
-      percentage: 100,
-      current_module: 8,
-      quiz_attempts: 2,
-      last_quiz_score: 92,
-      completed_at: new Date()
+      course_id: 'agricultura',
+      completed_modules: JSON.stringify(['1', '2']),
+      percentage: 33,
+      current_module: 3,
+      quiz_attempts: 1,
+      last_quiz_score: 72
     }
   ]
 
-  for (const progress of progressData) {
-    const existingProgress = await prisma.progress.findUnique({
+  for (const row of progressRows) {
+    await prisma.progress.upsert({
       where: {
         user_code_course_id: {
-          user_code: progress.user_code,
-          course_id: progress.course_id
+          user_code: row.user_code,
+          course_id: row.course_id
         }
-      }
+      },
+      update: row,
+      create: row
     })
-
-    if (!existingProgress) {
-      await prisma.progress.create({
-        data: progress
-      })
-      logger.info(`✅ Created progress: ${progress.user_code} - ${progress.course_id}`)
-    } else {
-      logger.info(`ℹ️  Progress already exists: ${progress.user_code} - ${progress.course_id}`)
-    }
   }
 }
 
-async function seedCertificates(prisma: PrismaClient) {
-  logger.info('🏆 Creating certificates...')
+async function seedCertificates(): Promise<void> {
+  logger.info('Seeding certificates...')
 
-  const certificates = [
-    {
-      id: 'cert-wira-v0031-costura-2025-001',
+  await prisma.certificate.upsert({
+    where: { verification_code: 'WIRA-V0031-COSTURA-2026-001' },
+    update: {},
+    create: {
+      id: 'cert-001',
       anonymous_code: 'V0031',
-      course_id: 'costura-001',
+      course_id: 'costura',
       course_title: 'Costura Avançada',
-      verification_code: 'WIRA-V0031-COSTURA-2025-001',
-      qr_code: 'QR-WIRA-V0031-COSTURA-2025-001',
-      instructor: 'Maria da Glória',
-      institution: 'Centro de Acolhimento Maputo',
-      score: 92,
+      verification_code: 'WIRA-V0031-COSTURA-2026-001',
+      qr_code: 'https://verify.wira.org/WIRA-V0031-COSTURA-2026-001',
+      instructor: 'Mentora Técnica 1',
+      institution: 'WIRA Academy',
+      score: 88,
       max_score: 100,
-      verified: true,
-      verification_date: new Date(),
-      verification_ip: '127.0.0.1'
+      verified: false
     }
-  ]
+  })
+}
 
-  for (const cert of certificates) {
-    const existingCert = await prisma.certificate.findUnique({
-      where: { verification_code: cert.verification_code }
-    })
+async function seedJobs(): Promise<void> {
+  logger.info('Seeding jobs...')
 
-    if (!existingCert) {
-      await prisma.certificate.create({
-        data: cert
-      })
-      logger.info(`✅ Created certificate: ${cert.verification_code}`)
-    } else {
-      logger.info(`ℹ️  Certificate already exists: ${cert.verification_code}`)
-    }
+  await prisma.job.createMany({
+    data: [
+      {
+        id: 'job-003',
+        title: 'Assistente de Produção Têxtil',
+        description: 'Apoio na produção e acabamento de peças.',
+        location: 'Maputo',
+        required_skills: 'costura,controle-de-qualidade',
+        contract_type: 'FULL_TIME',
+        schedule: '08:00-17:00',
+        salary_range: '11.000-15.000 MZN',
+        ngo_id: 'ngo-001',
+        employer_id: 'emp-001'
+      },
+      {
+        id: 'job-004',
+        title: 'Ajudante de Cozinha Industrial',
+        description: 'Pré-preparo de alimentos e suporte operacional.',
+        location: 'Matola',
+        required_skills: 'culinaria,higiene,organizacao',
+        contract_type: 'FULL_TIME',
+        schedule: '07:00-16:00',
+        salary_range: '10.500-13.000 MZN',
+        ngo_id: 'ngo-001',
+        employer_id: 'emp-002'
+      }
+    ],
+    skipDuplicates: true
+  })
+}
+
+async function main(): Promise<void> {
+  try {
+    logger.info('Starting seed...')
+    await prisma.$connect()
+    await seedBaseData()
+    await seedUsers()
+    await seedProgress()
+    await seedCertificates()
+    await seedJobs()
+    logger.info('Seed completed successfully')
+  } finally {
+    await prisma.$disconnect()
   }
 }
 
-// Run seeding
 if (require.main === module) {
-  seedData()
+  main().catch((error) => {
+    logger.error('Seed failed', { error: (error as Error).message })
+    process.exit(1)
+  })
 }
 
-export { seedData }
+export { main as seedData }

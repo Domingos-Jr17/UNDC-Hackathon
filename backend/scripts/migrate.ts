@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import { PrismaClient } from '@prisma/client'
+import bcrypt from 'bcryptjs'
 import winston from 'winston'
 
 // Configure logger
@@ -49,71 +50,137 @@ async function runMigrations() {
 async function initializeDefaultData(prisma: PrismaClient) {
   logger.info('📝 Initializing default data...')
 
-  // Check if NGOs exist, create default if not
-  const ngoCount = await prisma.nGO.count()
-  if (ngoCount === 0) {
-    await prisma.nGO.createMany({
-      data: [
-        {
-          id: 'ngo-001',
-          name: 'Centro de Acolhimento Maputo',
-          contact_person: 'Ana Joaquim',
-          phone: '+258821234567',
-          email: 'contacto@centromaputo.wira',
-          address: 'Av. Julius Nyerere, Maputo'
-        },
-        {
-          id: 'ngo-002',
-          name: 'Projeto Esperança',
-          contact_person: 'Carlos Mandlate',
-          phone: '+258847654321',
-          email: 'esperanca@ong.wira',
-          address: 'Rua da República, Beira'
-        }
-      ]
-    })
-    logger.info('✅ Default NGOs created')
-  }
+  await prisma.nGO.createMany({
+    data: [
+      {
+        id: 'ngo-001',
+        name: 'ONG Horizonte Seguro',
+        contact_person: 'Equipe Técnica A',
+        phone: '+258820000001',
+        email: 'contato@horizonteseguro.org',
+        address: 'Maputo'
+      },
+      {
+        id: 'ngo-002',
+        name: 'ONG Recomeço',
+        contact_person: 'Equipe Técnica B',
+        phone: '+258820000002',
+        email: 'contato@recomeco.org',
+        address: 'Beira'
+      }
+    ],
+    skipDuplicates: true
+  })
 
-  // Check if courses exist, create default if not
-  const courseCount = await prisma.course.count()
-  if (courseCount === 0) {
-    await prisma.course.createMany({
-      data: [
-        {
-          id: 'costura-001',
-          title: 'Costura Avançada',
-          description: 'Curso profissional de costura com foco em moda e confecção industrial',
-          instructor: 'Maria da Glória',
-          duration_hours: 40,
-          modules_count: 8,
-          level: 'Avançado',
-          skills: 'Costura industrial, design de moda, gestão de produção'
-        },
-        {
-          id: 'culinaria-001',
-          title: 'Culinária Profissional',
-          description: 'Formação em gastronomia com ênfase na culinária moçambicana',
-          instructor: 'Chef Matumbo',
-          duration_hours: 35,
-          modules_count: 7,
-          level: 'Intermediário',
-          skills: 'Cozinha moçambicana, gestão de cozinha, higiene alimentar'
-        },
-        {
-          id: 'agricultura-001',
-          title: 'Agricultura Sustentável',
-          description: 'Técnicas modernas de agricultura sustentável e agroecologia',
-          instructor: 'Dr. Zeca',
-          duration_hours: 30,
-          modules_count: 6,
-          level: 'Básico',
-          skills: 'Agroecologia, irrigação, gestão agrícola, comercialização'
-        }
-      ]
-    })
-    logger.info('✅ Default courses created')
-  }
+  await prisma.course.createMany({
+    data: [
+      {
+        id: 'costura',
+        title: 'Costura Avançada',
+        description: 'Capacitação técnica para produção têxtil.',
+        instructor: 'Mentora Técnica 1',
+        duration_hours: 40,
+        modules_count: 8,
+        level: 'Intermediário',
+        skills: 'costura,controle-de-qualidade,producao'
+      },
+      {
+        id: 'culinaria',
+        title: 'Culinária Profissional',
+        description: 'Capacitação em cozinha profissional e segurança alimentar.',
+        instructor: 'Mentora Técnica 2',
+        duration_hours: 35,
+        modules_count: 7,
+        level: 'Básico',
+        skills: 'culinaria,higiene,producao'
+      },
+      {
+        id: 'agricultura',
+        title: 'Agricultura Sustentável',
+        description: 'Práticas de agricultura regenerativa para renda local.',
+        instructor: 'Mentora Técnica 3',
+        duration_hours: 30,
+        modules_count: 6,
+        level: 'Básico',
+        skills: 'agricultura,irrigacao,colheita'
+      }
+    ],
+    skipDuplicates: true
+  })
+
+  await prisma.employer.createMany({
+    data: [
+      {
+        id: 'emp-001',
+        name: 'Textil Maputo Lda',
+        location: 'Maputo',
+        contact_name: 'RH 01',
+        contact_phone: '+258821000001',
+        contact_email: 'rh@textilmaputo.co.mz'
+      },
+      {
+        id: 'emp-002',
+        name: 'Sabores do Sul',
+        location: 'Matola',
+        contact_name: 'RH 02',
+        contact_phone: '+258821000002',
+        contact_email: 'rh@saboresdosul.co.mz'
+      }
+    ],
+    skipDuplicates: true
+  })
+
+  await prisma.job.createMany({
+    data: [
+      {
+        id: 'job-001',
+        title: 'Costureira Industrial Júnior',
+        description: 'Apoio em linha de produção de uniformes escolares.',
+        location: 'Maputo',
+        required_skills: 'costura,producao',
+        contract_type: 'FULL_TIME',
+        schedule: '08:00-17:00',
+        salary_range: '12.000-16.000 MZN',
+        ngo_id: 'ngo-001',
+        employer_id: 'emp-001'
+      },
+      {
+        id: 'job-002',
+        title: 'Auxiliar de Cozinha',
+        description: 'Preparação de alimentos e organização de cozinha profissional.',
+        location: 'Matola',
+        required_skills: 'culinaria,higiene',
+        contract_type: 'FULL_TIME',
+        schedule: '07:00-16:00',
+        salary_range: '10.000-14.000 MZN',
+        ngo_id: 'ngo-001',
+        employer_id: 'emp-002'
+      }
+    ],
+    skipDuplicates: true
+  })
+
+  const staffPassword = await bcrypt.hash('Staff@2026', 10)
+
+  await prisma.user.createMany({
+    data: [
+      {
+        anonymous_code: 'A0001',
+        email: 'staff@wira.org',
+        password: staffPassword,
+        role: 'STAFF',
+        ngo_id: 'ngo-001'
+      },
+      {
+        anonymous_code: 'A0002',
+        email: 'admin@wira.org',
+        password: staffPassword,
+        role: 'ADMIN',
+        ngo_id: 'ngo-001'
+      }
+    ],
+    skipDuplicates: true
+  })
 
   logger.info('✅ Default data initialization completed')
 }
