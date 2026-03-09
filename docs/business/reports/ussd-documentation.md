@@ -1,12 +1,12 @@
-# 📱 WIRA USSD System - Complete Documentation
+﻿# ðŸ“± WIRA USSD System - Complete Documentation
 
-## 🎯 Overview
+## ðŸŽ¯ Overview
 
 The WIRA USSD System allows human trafficking victims to access the educational platform through basic phones, without requiring internet. This digital inclusion ensures that all beneficiaries can have access to professional training, regardless of their device or location.
 
 ---
 
-## 🏗️ Technical Architecture
+## ðŸ—ï¸ Technical Architecture
 
 ### **Implemented Components**
 
@@ -28,7 +28,7 @@ The WIRA USSD System allows human trafficking victims to access the educational 
 
 ---
 
-## 📋 USSD Navigation Flows
+## ðŸ“‹ USSD Navigation Flows
 
 ### **Flow 1: Login and Access**
 
@@ -99,9 +99,9 @@ Study Hours: 127
 Last Activity: Today
 
 Statistics:
-• Sewing: 37% complete
-• Cooking: New
-• Agriculture: 15% complete
+â€¢ Sewing: 37% complete
+â€¢ Cooking: New
+â€¢ Agriculture: 15% complete
 
 0. Return to menu
 ```
@@ -116,13 +116,13 @@ CON WIRA - HELP CENTER
 We are here to help!
 
 Access Codes:
-• Format: V#### (e.g.: V0042)
-• Provided by your NGO
+â€¢ Format: V#### (e.g.: V0042)
+â€¢ Provided by your NGO
 
 Support:
-• Phone: +258 84 123 4567
-• WhatsApp: +258 84 123 4567
-• Email: ajuda@wira.org
+â€¢ Phone: +258 84 123 4567
+â€¢ WhatsApp: +258 84 123 4567
+â€¢ Email: ajuda@wira.org
 
 Hours: Mon-Fri, 8am-5pm
 
@@ -131,7 +131,7 @@ Hours: Mon-Fri, 8am-5pm
 
 ---
 
-## 🔧 Configuration and Installation
+## ðŸ”§ Configuration and Installation
 
 ### **Prerequisites**
 - Node.js 14+
@@ -182,7 +182,7 @@ Content-Type: application/json
 
 ---
 
-## 🧪 Testing and Simulation
+## ðŸ§ª Testing and Simulation
 
 ### **Local Testing with cURL**
 
@@ -228,7 +228,7 @@ curl -X POST http://localhost:3000/api/ussd/test \
 
 BASE_URL="http://localhost:3000/api/ussd/test"
 
-echo "🧪 WIRA USSD TEST - Complete Sequence"
+echo "ðŸ§ª WIRA USSD TEST - Complete Sequence"
 echo "====================================="
 
 # Test 1: Welcome
@@ -249,12 +249,12 @@ curl -s -X POST $BASE_URL \
   -H "Content-Type: application/json" \
   -d '{"text": "V0042"}' | head -1
 
-echo -e "\n✅ Tests completed!"
+echo -e "\nâœ… Tests completed!"
 ```
 
 ---
 
-## 🌐 Operator Integration
+## ðŸŒ Operator Integration
 
 ### **Standard USSD Format**
 
@@ -295,23 +295,23 @@ const ussdConfig = {
 
 ---
 
-## 🔒 Security and Validation
+## ðŸ”’ Security and Validation
 
 ### **Implemented**
-- ✅ **Code validation**: V#### format mandatory
-- ✅ **Session timeout**: 5 minutes inactive
-- ✅ **Rate limiting**: Prevention against abuse
-- ✅ **Input sanitization**: Data cleaning
-- ✅ **Logging**: Access audit
+- âœ… **Code validation**: V#### format mandatory
+- âœ… **Session timeout**: 5 minutes inactive
+- âœ… **Rate limiting**: Prevention against abuse
+- âœ… **Input sanitization**: Data cleaning
+- âœ… **Logging**: Access audit
 
 ### **Demo Access Codes**
-- **V0042**: Maria Silva - Sewing (37% complete)
-- **V0038**: Ana Machel - Cooking (New)
-- **V0031**: João Sitoe - Agriculture (15% complete)
+- **V0042**: Beneficiaria A - Sewing (37% complete)
+- **V0038**: Beneficiaria B - Cooking (New)
+- **V0031**: JoÃ£o Sitoe - Agriculture (15% complete)
 
 ---
 
-## 📊 Monitoring and Debugging
+## ðŸ“Š Monitoring and Debugging
 
 ### **System Logs**
 
@@ -320,10 +320,10 @@ const ussdConfig = {
 npm run dev
 
 # USSD logs appear as:
-📱 USSD Request: Session=session_123, Phone=+258840000000, Text="V0042"
-📤 USSD Response: CON Welcome to WIRA...
-✅ User authenticated: V0042
-🗑️ Session expired: session_456
+ðŸ“± USSD Request: Session=session_123, Phone=+258840000000, Text="V0042"
+ðŸ“¤ USSD Response: CON Welcome to WIRA...
+âœ… User authenticated: V0042
+ðŸ—‘ï¸ Session expired: session_456
 ```
 
 ### **Service Status**
@@ -360,7 +360,7 @@ curl http://localhost:3000/health
 
 ---
 
-## 🚀 Production Deploy
+## ðŸš€ Production Deploy
 
 ### **Environment Variables**
 
@@ -412,7 +412,7 @@ server {
 
 ---
 
-## 📈 Metrics and KPIs
+## ðŸ“ˆ Metrics and KPIs
 
 ### **Usage Metrics**
 - **Active sessions**: Number of connected users
@@ -428,7 +428,7 @@ server {
 
 ---
 
-## 🆘 Support and Troubleshooting
+## ðŸ†˜ Support and Troubleshooting
 
 ### **Common Problems**
 
@@ -463,23 +463,23 @@ tail -f /var/log/wira/ussd.log
 
 ---
 
-## 🔄 Future Roadmap
+## ðŸ”„ Future Roadmap
 
 ### **V1.1 (3 months)**
-- 🔄 M-Pesa integration for certificates
-- 🔄 Offline system with SMS
-- 🔄 Multilingual support (Emakhuwa, Xichangana)
-- 🔄 Advanced analytics
+- ðŸ”„ M-Pesa integration for certificates
+- ðŸ”„ Offline system with SMS
+- ðŸ”„ Multilingual support (Emakhuwa, Xichangana)
+- ðŸ”„ Advanced analytics
 
 ### **V2.0 (6 months)**
-- 🔄 AI for personalized recommendations
-- 🔄 Voice (IVR) complementary to USSD
-- 🔄 WhatsApp Business integration
-- 🔄 Dashboard USSD Analytics
+- ðŸ”„ AI for personalized recommendations
+- ðŸ”„ Voice (IVR) complementary to USSD
+- ðŸ”„ WhatsApp Business integration
+- ðŸ”„ Dashboard USSD Analytics
 
 ---
 
-## 📚 References
+## ðŸ“š References
 
 - **USSD Guidelines**: GSMA USSD Best Practices
 - **Security**: OWASP Mobile Security
@@ -490,4 +490,4 @@ tail -f /var/log/wira/ussd.log
 
 **WIRA USSD System** - Digital inclusion through accessible and empowering technology.
 
-*Developed with ❤️ for human trafficking victims in Mozambique*
+*Developed with â¤ï¸ for human trafficking victims in Mozambique*
