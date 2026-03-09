@@ -134,6 +134,7 @@ Hours: Mon-Fri, 8am-5pm
 ## ðŸ”§ Configuration and Installation
 
 ### **Prerequisites**
+
 - Node.js 14+
 - SQLite database
 - Port 3000 available
@@ -283,13 +284,14 @@ To integrate with mobile operators in Mozambique:
 3. **Tmcel**: Register USSD endpoint
 
 **Configuration example:**
+
 ```javascript
 const ussdConfig = {
   shortcode: "*123#",
   endpoint: "https://api.wira.org/api/ussd",
   method: "POST",
   timeout: 30000,
-  retries: 3
+  retries: 3,
 };
 ```
 
@@ -298,6 +300,7 @@ const ussdConfig = {
 ## ðŸ”’ Security and Validation
 
 ### **Implemented**
+
 - âœ… **Code validation**: V#### format mandatory
 - âœ… **Session timeout**: 5 minutes inactive
 - âœ… **Rate limiting**: Prevention against abuse
@@ -305,9 +308,10 @@ const ussdConfig = {
 - âœ… **Logging**: Access audit
 
 ### **Demo Access Codes**
-- **V0042**: Beneficiaria A - Sewing (37% complete)
-- **V0038**: Beneficiaria B - Cooking (New)
-- **V0031**: Beneficiario C - Agriculture (15% complete)
+
+- **V0042**: Beneficiária A - Sewing (37% complete)
+- **V0038**: Beneficiária B - Cooking (New)
+- **V0031**: Beneficiário C - Agriculture (15% complete)
 
 ---
 
@@ -415,12 +419,14 @@ server {
 ## ðŸ“ˆ Metrics and KPIs
 
 ### **Usage Metrics**
+
 - **Active sessions**: Number of connected users
 - **Completion rate**: % of courses completed via USSD
 - **Average session time**: Duration of interactions
 - **Drop-off rate**: % of incomplete sessions
 
 ### **Expected KPIs**
+
 - **Accessibility**: +95% coverage in rural areas
 - **Engagement**: 70% of weekly active users
 - **Completion**: 60% course completion rate
@@ -432,12 +438,12 @@ server {
 
 ### **Common Problems**
 
-| Problem | Cause | Solution |
-|----------|-------|---------|
-| "Service unavailable" | Server offline | Restart backend |
-| "Invalid code" | Wrong format | Use V#### |
-| "Session expired" | Timeout | Restart navigation |
-| "No response" | Slow network | Check connectivity |
+| Problem               | Cause          | Solution           |
+| --------------------- | -------------- | ------------------ |
+| "Service unavailable" | Server offline | Restart backend    |
+| "Invalid code"        | Wrong format   | Use V####          |
+| "Session expired"     | Timeout        | Restart navigation |
+| "No response"         | Slow network   | Check connectivity |
 
 ### **Useful Commands**
 
@@ -466,12 +472,14 @@ tail -f /var/log/wira/ussd.log
 ## ðŸ”„ Future Roadmap
 
 ### **V1.1 (3 months)**
+
 - ðŸ”„ M-Pesa integration for certificates
 - ðŸ”„ Offline system with SMS
 - ðŸ”„ Multilingual support (Emakhuwa, Xichangana)
 - ðŸ”„ Advanced analytics
 
 ### **V2.0 (6 months)**
+
 - ðŸ”„ AI for personalized recommendations
 - ðŸ”„ Voice (IVR) complementary to USSD
 - ðŸ”„ WhatsApp Business integration
@@ -490,4 +498,4 @@ tail -f /var/log/wira/ussd.log
 
 **WIRA USSD System** - Digital inclusion through accessible and empowering technology.
 
-*Developed with â¤ï¸ for human trafficking victims in Mozambique*
+_Developed with â¤ï¸ for human trafficking victims in Mozambique_

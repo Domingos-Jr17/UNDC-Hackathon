@@ -8,6 +8,7 @@ import StaffLoginPage from './components/StaffLoginPage.tsx';
 import UsersPage from './components/UsersPage.tsx';
 import ReportsPage from './components/ReportsPage.tsx';
 import CoursesPage from './components/CoursesPage.tsx';
+import CreateCoursePage from './components/CreateCoursePage.tsx';
 import CourseDetail from './components/CourseDetail.tsx';
 import SettingsPage from './components/SettingsPage.tsx';
 import UserDetail from './components/UserDetail.tsx';
@@ -76,6 +77,13 @@ function App() {
               <ProtectedRoute>
                 <ErrorBoundary>
                   <CourseDetail />
+                </ErrorBoundary>
+              </ProtectedRoute>
+            } />
+            <Route path="/courses/create" element={
+              <ProtectedRoute>
+                <ErrorBoundary>
+                  <CreateCoursePage />
                 </ErrorBoundary>
               </ProtectedRoute>
             } />

@@ -52,14 +52,14 @@ export default function CoursesPage() {
 
   if (loading) {
     return (
-      <Layout title="Gestao de Cursos" subtitle="Catalogo oficial de cursos do backend">
+      <Layout title="Gestão de Cursos" subtitle="Catálogo oficial de cursos do backend">
         <LoadingOverlay show={loading} message="Carregando cursos..." />
       </Layout>
     )
   }
 
   return (
-    <Layout title="Gestao de Cursos" subtitle="Catalogo oficial de cursos do backend">
+    <Layout title="Gestão de Cursos" subtitle="Catálogo oficial de cursos do backend">
       {error ? (
         <Card className="mb-6 border-red-200 bg-red-50">
           <CardContent className="pt-6 text-red-700">{error}</CardContent>
@@ -121,7 +121,7 @@ export default function CoursesPage() {
                     <span>{course.duration_hours}h</span>
                   </div>
                   <div>
-                    <span className="font-medium">Instrutor:</span> {course.instructor ?? 'Equipe WIRA'}
+                    <span className="font-medium">Instrutor:</span> {course.instructor ?? 'Equipa WIRA'}
                   </div>
                 </div>
 

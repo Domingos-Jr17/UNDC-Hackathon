@@ -1,4 +1,5 @@
 # 🛠️ BACKLOG TÉCNICO - WIRA HÍBRIDO CORRIGIDO
+
 ## Foco: Capacitação Digital | 28-30 Outubro 2025 | 3 dias = 30h úteis
 
 ---
@@ -14,14 +15,14 @@
 
 ## 📊 ESTRATÉGIA DE PRIORIZAÇÃO
 
-| Componente | Status no Hackathon | % Tempo |
-|------------|---------------------|---------|
-| **App Mobile - Capacitação** | ✅ FUNCIONAL | 50% |
-| **Backend API - Cursos** | ✅ FUNCIONAL | 20% |
-| **Dashboard ONG** | ✅ FUNCIONAL (básico) | 15% |
-| **USSD Capacitação** | 🎨 IMPLEMENTADO (código) | 5% |
-| **Matching de Vagas** | 🎨 MOCKUP (tela fake) | 5% |
-| **Polimento + Demo** | ✅ CRÍTICO | 5% |
+| Componente                   | Status no Hackathon      | % Tempo |
+| ---------------------------- | ------------------------ | ------- |
+| **App Mobile - Capacitação** | ✅ FUNCIONAL             | 50%     |
+| **Backend API - Cursos**     | ✅ FUNCIONAL             | 20%     |
+| **Dashboard ONG**            | ✅ FUNCIONAL (básico)    | 15%     |
+| **USSD Capacitação**         | 🎨 IMPLEMENTADO (código) | 5%      |
+| **Matching de Vagas**        | 🎨 MOCKUP (tela fake)    | 5%      |
+| **Polimento + Demo**         | ✅ CRÍTICO               | 5%      |
 
 ---
 
@@ -32,6 +33,7 @@
 #### **MANHÃ (4h): Setup + Estrutura App**
 
 **08:00 - 09:00 | Setup React Native**
+
 ```bash
 # MUST - 1h
 npx create-expo-app wira-app
@@ -51,6 +53,7 @@ npm install expo-file-system  # Download offline
 ```
 
 **09:00 - 10:30 | Estrutura de Navegação**
+
 ```typescript
 // MUST - 1.5h
 // App.tsx
@@ -78,7 +81,7 @@ const Stack = createNativeStackNavigator();
 export default function App() {
   return (
     <NavigationContainer>
-      <Stack.Navigator 
+      <Stack.Navigator
         initialRouteName="Welcome"
         screenOptions={{
           headerStyle: { backgroundColor: '#1E3A8A' },
@@ -86,8 +89,8 @@ export default function App() {
           headerTitleStyle: { fontWeight: 'bold' }
         }}
       >
-        <Stack.Screen 
-          name="Welcome" 
+        <Stack.Screen
+          name="Welcome"
           component={WelcomeScreen}
           options={{ headerShown: false }}
         />
@@ -99,10 +102,10 @@ export default function App() {
         <Stack.Screen name="Quiz" component={QuizScreen} />
         <Stack.Screen name="Certificate" component={CertificateScreen} />
         <Stack.Screen name="Progress" component={ProgressScreen} />
-        
+
         {/* MOCKUP - Fase 2 */}
-        <Stack.Screen 
-          name="JobsMockup" 
+        <Stack.Screen
+          name="JobsMockup"
           component={JobsMockupScreen}
           options={{ title: 'Vagas (Em Breve)' }}
         />
@@ -113,6 +116,7 @@ export default function App() {
 ```
 
 **10:30 - 12:00 | Telas de Onboarding**
+
 ```typescript
 // MUST - 1.5h
 // screens/WelcomeScreen.tsx
@@ -123,19 +127,19 @@ import { View, Text, TouchableOpacity, Image } from 'react-native';
 export default function WelcomeScreen({ navigation }) {
   return (
     <View className="flex-1 bg-blue-900 justify-center items-center p-6">
-      <Image 
+      <Image
         source={require('../assets/logo.png')}
         style={{ width: 150, height: 150 }}
       />
-      
+
       <Text className="text-4xl font-bold text-white mt-8 text-center">
         WIRA
       </Text>
-      
+
       <Text className="text-xl text-blue-200 mt-4 text-center">
         A Universidade Digital que{'\n'}Empodera Sobreviventes
       </Text>
-      
+
       <View className="mt-12 w-full">
         <TouchableOpacity
           className="bg-white py-4 px-8 rounded-lg mb-4"
@@ -145,7 +149,7 @@ export default function WelcomeScreen({ navigation }) {
             Já tenho código de acesso
           </Text>
         </TouchableOpacity>
-        
+
         <TouchableOpacity
           className="bg-blue-700 py-4 px-8 rounded-lg border-2 border-white"
           onPress={() => {
@@ -158,7 +162,7 @@ export default function WelcomeScreen({ navigation }) {
           </Text>
         </TouchableOpacity>
       </View>
-      
+
       <Text className="text-blue-300 text-sm mt-8 text-center">
         📚 Capacitação Profissional Certificada{'\n'}
         🎓 Reconhecida pelo Ministério do Trabalho
@@ -176,47 +180,47 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 export default function LoginScreen({ navigation }) {
   const [code, setCode] = useState('');
   const [loading, setLoading] = useState(false);
-  
+
   const handleLogin = async () => {
     if (code.length < 5) {
       Alert.alert('Erro', 'Código inválido');
       return;
     }
-    
+
     setLoading(true);
-    
+
     // Simular verificação (no real seria API)
     setTimeout(async () => {
       // Códigos de demonstração
       const validCodes = ['V0042', 'V0038', 'V0031'];
-      
+
       if (validCodes.includes(code.toUpperCase())) {
         // Salvar código localmente
         await AsyncStorage.setItem('userCode', code.toUpperCase());
-        
+
         // Navegar para Home
         navigation.replace('Home');
       } else {
         Alert.alert(
-          'Código não encontrado', 
+          'Código não encontrado',
           'Contacte sua ONG para obter código válido'
         );
       }
-      
+
       setLoading(false);
     }, 1000);
   };
-  
+
   return (
     <View className="flex-1 bg-white p-6 justify-center">
       <Text className="text-3xl font-bold text-blue-900 mb-2">
         Bem-vinda de volta!
       </Text>
-      
+
       <Text className="text-gray-600 mb-8">
         Digite seu código de acesso fornecido pela ONG
       </Text>
-      
+
       <TextInput
         className="border-2 border-gray-300 p-4 rounded-lg text-lg mb-6"
         placeholder="Ex: V0042"
@@ -225,7 +229,7 @@ export default function LoginScreen({ navigation }) {
         maxLength={5}
         autoCapitalize="characters"
       />
-      
+
       <TouchableOpacity
         className="bg-blue-600 py-4 rounded-lg"
         onPress={handleLogin}
@@ -235,7 +239,7 @@ export default function LoginScreen({ navigation }) {
           {loading ? 'Verificando...' : 'Entrar'}
         </Text>
       </TouchableOpacity>
-      
+
       <TouchableOpacity
         className="mt-6"
         onPress={() => navigation.goBack()}
@@ -254,6 +258,7 @@ export default function LoginScreen({ navigation }) {
 #### **TARDE (6h): Telas de Capacitação PRINCIPAIS**
 
 **14:00 - 16:00 | Home + Biblioteca de Cursos**
+
 ```typescript
 // MUST - 2h
 // screens/HomeScreen.tsx
@@ -269,22 +274,22 @@ export default function HomeScreen({ navigation }) {
     certificatesEarned: 0,
     hoursLearned: 0
   });
-  
+
   useEffect(() => {
     loadUserData();
   }, []);
-  
+
   const loadUserData = async () => {
     const code = await AsyncStorage.getItem('userCode');
     setUserCode(code || '');
-    
+
     // Carregar progresso (simulado)
     const progress = await AsyncStorage.getItem('userProgress');
     if (progress) {
       setStats(JSON.parse(progress));
     }
   };
-  
+
   return (
     <ScrollView className="flex-1 bg-gray-50">
       {/* Header */}
@@ -295,12 +300,12 @@ export default function HomeScreen({ navigation }) {
           Continue sua jornada de aprendizado
         </Text>
       </View>
-      
+
       {/* Stats Cards */}
       <View className="px-4 -mt-8">
         <View className="bg-white rounded-lg shadow p-4 mb-4">
           <Text className="text-gray-600 text-sm mb-2">Seu Progresso</Text>
-          
+
           <View className="flex-row justify-between mb-4">
             <View className="items-center">
               <Text className="text-3xl font-bold text-blue-600">
@@ -308,14 +313,14 @@ export default function HomeScreen({ navigation }) {
               </Text>
               <Text className="text-gray-500 text-xs">Cursos Completos</Text>
             </View>
-            
+
             <View className="items-center">
               <Text className="text-3xl font-bold text-green-600">
                 {stats.certificatesEarned}
               </Text>
               <Text className="text-gray-500 text-xs">Certificados</Text>
             </View>
-            
+
             <View className="items-center">
               <Text className="text-3xl font-bold text-purple-600">
                 {stats.hoursLearned}h
@@ -323,7 +328,7 @@ export default function HomeScreen({ navigation }) {
               <Text className="text-gray-500 text-xs">Horas de Estudo</Text>
             </View>
           </View>
-          
+
           <TouchableOpacity
             className="bg-blue-600 py-3 rounded-lg"
             onPress={() => navigation.navigate('Progress')}
@@ -334,13 +339,13 @@ export default function HomeScreen({ navigation }) {
           </TouchableOpacity>
         </View>
       </View>
-      
+
       {/* Quick Actions */}
       <View className="px-4 mt-4">
         <Text className="text-lg font-bold text-gray-900 mb-3">
           Ações Rápidas
         </Text>
-        
+
         <TouchableOpacity
           className="bg-white rounded-lg shadow p-4 mb-3 flex-row items-center"
           onPress={() => navigation.navigate('CourseLibrary')}
@@ -356,7 +361,7 @@ export default function HomeScreen({ navigation }) {
           </View>
           <Text className="text-blue-600 text-xl">›</Text>
         </TouchableOpacity>
-        
+
         <TouchableOpacity
           className="bg-white rounded-lg shadow p-4 mb-3 flex-row items-center"
           onPress={() => navigation.navigate('Certificate')}
@@ -372,7 +377,7 @@ export default function HomeScreen({ navigation }) {
           </View>
           <Text className="text-green-600 text-xl">›</Text>
         </TouchableOpacity>
-        
+
         {/* MOCKUP - Fase 2 */}
         <TouchableOpacity
           className="bg-gray-100 rounded-lg shadow p-4 mb-3 flex-row items-center opacity-60"
@@ -392,13 +397,13 @@ export default function HomeScreen({ navigation }) {
           <Text className="text-gray-400 text-xl">›</Text>
         </TouchableOpacity>
       </View>
-      
+
       {/* Current Course (if any) */}
       <View className="px-4 mt-6 mb-6">
         <Text className="text-lg font-bold text-gray-900 mb-3">
           Continue Aprendendo
         </Text>
-        
+
         <View className="bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg p-4">
           <Text className="text-white font-bold text-lg mb-1">
             Costura Avançada
@@ -406,14 +411,14 @@ export default function HomeScreen({ navigation }) {
           <Text className="text-blue-100 text-sm mb-3">
             Módulo 3 de 8 • 65% completo
           </Text>
-          
+
           <View className="bg-white/30 rounded-full h-2 mb-3">
-            <View 
-              className="bg-white rounded-full h-2" 
+            <View
+              className="bg-white rounded-full h-2"
               style={{ width: '65%' }}
             />
           </View>
-          
+
           <TouchableOpacity
             className="bg-white py-2 rounded-lg"
             onPress={() => navigation.navigate('CourseDetail', { courseId: 'costura' })}
@@ -477,7 +482,7 @@ export default function CourseLibraryScreen({ navigation }) {
         <Text className="text-gray-600 mb-6">
           Escolha um curso para começar sua capacitação profissional
         </Text>
-        
+
         {COURSES.map((course) => (
           <TouchableOpacity
             key={course.id}
@@ -488,7 +493,7 @@ export default function CourseLibraryScreen({ navigation }) {
               <View className={`bg-${course.color}-100 w-24 items-center justify-center`}>
                 <Text className="text-5xl">{course.icon}</Text>
               </View>
-              
+
               <View className="flex-1 p-4">
                 {course.inProgress && (
                   <View className="bg-blue-100 self-start px-2 py-1 rounded mb-1">
@@ -497,14 +502,14 @@ export default function CourseLibraryScreen({ navigation }) {
                     </Text>
                   </View>
                 )}
-                
+
                 <Text className="font-bold text-gray-900 text-lg">
                   {course.title}
                 </Text>
                 <Text className="text-gray-600 text-sm mb-2">
                   {course.subtitle}
                 </Text>
-                
+
                 <View className="flex-row items-center">
                   <Text className="text-gray-500 text-xs mr-3">
                     ⏱ {course.duration}
@@ -517,7 +522,7 @@ export default function CourseLibraryScreen({ navigation }) {
                   </Text>
                 </View>
               </View>
-              
+
               <View className="justify-center pr-4">
                 <Text className="text-gray-400 text-2xl">›</Text>
               </View>
@@ -531,6 +536,7 @@ export default function CourseLibraryScreen({ navigation }) {
 ```
 
 **16:00 - 18:00 | Detalhe do Curso + Vídeo**
+
 ```typescript
 // MUST - 2h
 // screens/CourseDetailScreen.tsx
@@ -562,17 +568,17 @@ export default function CourseDetailScreen({ route, navigation }) {
   const { courseId } = route.params;
   const course = COURSE_DATA[courseId];
   const [progress, setProgress] = useState(0);
-  
+
   useEffect(() => {
     calculateProgress();
   }, []);
-  
+
   const calculateProgress = () => {
     const completed = course.modules.filter(m => m.completed).length;
     const total = course.modules.length;
     setProgress(Math.round((completed / total) * 100));
   };
-  
+
   return (
     <ScrollView className="flex-1 bg-white">
       {/* Header */}
@@ -584,26 +590,26 @@ export default function CourseDetailScreen({ route, navigation }) {
           👩‍🏫 {course.instructor}
         </Text>
       </View>
-      
+
       {/* Progress */}
       <View className="p-6 bg-gray-50">
         <View className="flex-row justify-between mb-2">
           <Text className="text-gray-600 font-semibold">Seu Progresso</Text>
           <Text className="text-blue-600 font-bold">{progress}%</Text>
         </View>
-        
+
         <View className="bg-gray-300 rounded-full h-3">
-          <View 
+          <View
             className="bg-blue-600 rounded-full h-3"
             style={{ width: `${progress}%` }}
           />
         </View>
-        
+
         <Text className="text-gray-500 text-sm mt-2">
           {course.modules.filter(m => m.completed).length} de {course.modules.length} módulos completados
         </Text>
       </View>
-      
+
       {/* Description */}
       <View className="p-6">
         <Text className="text-lg font-bold text-gray-900 mb-2">
@@ -613,13 +619,13 @@ export default function CourseDetailScreen({ route, navigation }) {
           {course.description}
         </Text>
       </View>
-      
+
       {/* Modules */}
       <View className="p-6 pt-0">
         <Text className="text-lg font-bold text-gray-900 mb-4">
           Módulos do Curso
         </Text>
-        
+
         {course.modules.map((module, index) => (
           <TouchableOpacity
             key={module.id}
@@ -628,9 +634,9 @@ export default function CourseDetailScreen({ route, navigation }) {
             }`}
             onPress={() => {
               if (index <= 2) { // Permitir apenas até módulo 3 na demo
-                navigation.navigate('VideoLesson', { 
+                navigation.navigate('VideoLesson', {
                   courseId,
-                  moduleId: module.id 
+                  moduleId: module.id
                 });
               }
             }}
@@ -651,12 +657,12 @@ export default function CourseDetailScreen({ route, navigation }) {
                     {module.title}
                   </Text>
                 </View>
-                
+
                 <Text className="text-gray-500 text-sm ml-8">
                   ⏱ {module.duration}
                 </Text>
               </View>
-              
+
               <Text className={`text-xl ${
                 module.completed ? 'text-green-500' : 'text-gray-400'
               }`}>
@@ -666,7 +672,7 @@ export default function CourseDetailScreen({ route, navigation }) {
           </TouchableOpacity>
         ))}
       </View>
-      
+
       {/* Certificate CTA */}
       {progress === 100 && (
         <View className="p-6 pt-0">
@@ -696,16 +702,16 @@ import { Video } from 'expo-av';
 export default function VideoLessonScreen({ route, navigation }) {
   const { courseId, moduleId } = route.params;
   const [videoComplete, setVideoComplete] = useState(false);
-  
+
   const handleVideoEnd = () => {
     setVideoComplete(true);
   };
-  
+
   const handleContinue = () => {
     // Ir para quiz
     navigation.navigate('Quiz', { courseId, moduleId });
   };
-  
+
   return (
     <View className="flex-1 bg-black">
       {/* Video Player */}
@@ -722,7 +728,7 @@ export default function VideoLessonScreen({ route, navigation }) {
           }}
         />
       </View>
-      
+
       {/* Lesson Info */}
       <View className="bg-white p-6">
         <Text className="text-xl font-bold text-gray-900 mb-2">
@@ -731,7 +737,7 @@ export default function VideoLessonScreen({ route, navigation }) {
         <Text className="text-gray-600 mb-4">
           Aprenda a técnica profissional de costura de bolsos em uniformes escolares.
         </Text>
-        
+
         {videoComplete ? (
           <TouchableOpacity
             className="bg-blue-600 py-4 rounded-lg"
@@ -755,7 +761,8 @@ export default function VideoLessonScreen({ route, navigation }) {
 ```
 
 **18:00 - 20:00 | Quiz + Certificado**
-```typescript
+
+````typescript
 // MUST - 2h
 // screens/QuizScreen.tsx
 
@@ -824,19 +831,19 @@ const QUIZ_QUESTIONS = {
 export default function QuizScreen({ route, navigation }) {
   const { courseId, moduleId } = route.params;
   const questions = QUIZ_QUESTIONS[courseId][moduleId];
-  
+
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [selectedAnswers, setSelectedAnswers] = useState({});
   const [showResults, setShowResults] = useState(false);
   const [score, setScore] = useState(0);
-  
+
   const handleSelectAnswer = (questionIndex, answerIndex) => {
     setSelectedAnswers({
       ...selectedAnswers,
       [questionIndex]: answerIndex
     });
   };
-  
+
   const handleSubmit = async () => {
     // Calcular pontuação
     let correct = 0;
@@ -845,30 +852,30 @@ export default function QuizScreen({ route, navigation }) {
         correct++;
       }
     });
-    
+
     const finalScore = Math.round((correct / questions.length) * 100);
     setScore(finalScore);
     setShowResults(true);
-    
+
     // Salvar progresso se passou (>= 70%)
     if (finalScore >= 70) {
       await saveProgress(courseId, moduleId);
     }
   };
-  
+
   const saveProgress = async (courseId, moduleId) => {
     // Atualizar progresso no AsyncStorage
     const progressKey = `progress_${courseId}`;
     const existing = await AsyncStorage.getItem(progressKey);
-    
+
     let progress = existing ? JSON.parse(existing) : { completedModules: [] };
-    
+
     if (!progress.completedModules.includes(moduleId)) {
       progress.completedModules.push(moduleId);
       await AsyncStorage.setItem(progressKey, JSON.stringify(progress));
     }
   };
-  
+
   const handleContinue = () => {
     if (score >= 70) {
       navigation.navigate('CourseDetail', { courseId });
@@ -888,7 +895,7 @@ export default function QuizScreen({ route, navigation }) {
       );
     }
   };
-  
+
   if (showResults) {
     return (
       <View className="flex-1 bg-white p-6 justify-center items-center">
@@ -899,19 +906,19 @@ export default function QuizScreen({ route, navigation }) {
             {score >= 70 ? '✓' : '✗'}
           </Text>
         </View>
-        
+
         <Text className="text-3xl font-bold text-gray-900 mb-2">
           {score >= 70 ? 'Parabéns!' : 'Quase lá!'}
         </Text>
-        
+
         <Text className="text-6xl font-bold text-blue-600 mb-2">
           {score}%
         </Text>
-        
+
         <Text className="text-gray-600 text-center mb-8">
           Você acertou {Math.round(questions.length * score / 100)} de {questions.length} questões
         </Text>
-        
+
         {score >= 70 ? (
           <View className="w-full">
             <View className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
@@ -922,7 +929,7 @@ export default function QuizScreen({ route, navigation }) {
                 Este progresso foi salvo automaticamente
               </Text>
             </View>
-            
+
             <TouchableOpacity
               className="bg-blue-600 py-4 rounded-lg"
               onPress={handleContinue}
@@ -942,7 +949,7 @@ export default function QuizScreen({ route, navigation }) {
                 Reveja o conteúdo e tente novamente
               </Text>
             </View>
-            
+
             <TouchableOpacity
               className="bg-blue-600 py-4 rounded-lg mb-3"
               onPress={() => navigation.goBack()}
@@ -951,7 +958,7 @@ export default function QuizScreen({ route, navigation }) {
                 Rever Conteúdo da Aula
               </Text>
             </TouchableOpacity>
-            
+
             <TouchableOpacity
               className="bg-gray-200 py-4 rounded-lg"
               onPress={() => {
@@ -970,11 +977,11 @@ export default function QuizScreen({ route, navigation }) {
       </View>
     );
   }
-  
+
   const question = questions[currentQuestion];
   const isLastQuestion = currentQuestion === questions.length - 1;
   const allAnswered = Object.keys(selectedAnswers).length === questions.length;
-  
+
   return (
     <ScrollView className="flex-1 bg-white">
       <View className="p-6">
@@ -988,22 +995,22 @@ export default function QuizScreen({ route, navigation }) {
               {Math.round(((currentQuestion + 1) / questions.length) * 100)}%
             </Text>
           </View>
-          
+
           <View className="bg-gray-200 rounded-full h-2">
-            <View 
+            <View
               className="bg-blue-600 rounded-full h-2"
               style={{ width: `${((currentQuestion + 1) / questions.length) * 100}%` }}
             />
           </View>
         </View>
-        
+
         {/* Question */}
         <View className="bg-blue-50 rounded-lg p-4 mb-6">
           <Text className="text-lg font-bold text-gray-900">
             {question.question}
           </Text>
         </View>
-        
+
         {/* Options */}
         <View className="mb-6">
           {question.options.map((option, index) => (
@@ -1026,7 +1033,7 @@ export default function QuizScreen({ route, navigation }) {
                     <View className="w-3 h-3 rounded-full bg-white" />
                   )}
                 </View>
-                
+
                 <Text className={`flex-1 ${
                   selectedAnswers[currentQuestion] === index
                     ? 'text-blue-700 font-semibold'
@@ -1038,7 +1045,7 @@ export default function QuizScreen({ route, navigation }) {
             </TouchableOpacity>
           ))}
         </View>
-        
+
         {/* Navigation */}
         <View className="flex-row justify-between">
           {currentQuestion > 0 && (
@@ -1051,9 +1058,9 @@ export default function QuizScreen({ route, navigation }) {
               </Text>
             </TouchableOpacity>
           )}
-          
+
           <View className="flex-1" />
-          
+
           {isLastQuestion ? (
             <TouchableOpacity
               className={`py-3 px-6 rounded-lg ${
@@ -1104,15 +1111,15 @@ export default function CertificateScreen({ route, navigation }) {
   const { courseId } = route.params;
   const [userCode, setUserCode] = useState('');
   const [certificate, setCertificate] = useState(null);
-  
+
   useEffect(() => {
     loadCertificate();
   }, []);
-  
+
   const loadCertificate = async () => {
     const code = await AsyncStorage.getItem('userCode');
     setUserCode(code);
-    
+
     // Simular dados do certificado
     setCertificate({
       courseName: 'Costura Avançada - Uniformes Escolares',
@@ -1122,7 +1129,7 @@ export default function CertificateScreen({ route, navigation }) {
       certificateId: `WIRA-${code}-${courseId.toUpperCase()}-2025`
     });
   };
-  
+
   const handleShare = async () => {
     try {
       await Share.share({
@@ -1132,13 +1139,13 @@ export default function CertificateScreen({ route, navigation }) {
       console.error(error);
     }
   };
-  
+
   if (!certificate) {
     return <View className="flex-1 bg-white items-center justify-center">
       <Text>Carregando certificado...</Text>
     </View>;
   }
-  
+
   return (
     <ScrollView className="flex-1 bg-gray-50">
       <View className="p-6">
@@ -1150,34 +1157,34 @@ export default function CertificateScreen({ route, navigation }) {
             </Text>
             <View className="w-16 h-1 bg-blue-600 mb-4" />
           </View>
-          
+
           <Text className="text-center text-gray-600 mb-2">
             Certificamos que
           </Text>
-          
+
           <Text className="text-center text-2xl font-bold text-gray-900 mb-4">
             {userCode}
           </Text>
-          
+
           <Text className="text-center text-gray-600 mb-2">
             completou com sucesso o curso de
           </Text>
-          
+
           <Text className="text-center text-xl font-bold text-blue-600 mb-6">
             {certificate.courseName}
           </Text>
-          
+
           <View className="border-t border-gray-200 pt-4 mb-4">
             <View className="flex-row justify-between mb-2">
               <Text className="text-gray-600">Carga Horária:</Text>
               <Text className="font-semibold">{certificate.hours} horas</Text>
             </View>
-            
+
             <View className="flex-row justify-between mb-2">
               <Text className="text-gray-600">Data de Conclusão:</Text>
               <Text className="font-semibold">{certificate.completionDate}</Text>
             </View>
-            
+
             <View className="flex-row justify-between">
               <Text className="text-gray-600">Instituição:</Text>
               <Text className="font-semibold text-right flex-1 ml-2">
@@ -1185,7 +1192,7 @@ export default function CertificateScreen({ route, navigation }) {
               </Text>
             </View>
           </View>
-          
+
           {/* QR Code */}
           <View className="items-center py-4 border-t border-gray-200">
             <Text className="text-gray-600 text-sm mb-3">
@@ -1199,7 +1206,7 @@ export default function CertificateScreen({ route, navigation }) {
               ID: {certificate.certificateId}
             </Text>
           </View>
-          
+
           <View className="border-t border-gray-200 pt-4">
             <Text className="text-xs text-gray-500 text-center">
               Certificado digital validado por WIRA{'\n'}
@@ -1207,7 +1214,7 @@ export default function CertificateScreen({ route, navigation }) {
             </Text>
           </View>
         </View>
-        
+
         {/* Actions */}
         <TouchableOpacity
           className="bg-blue-600 py-4 rounded-lg mb-3"
@@ -1217,7 +1224,7 @@ export default function CertificateScreen({ route, navigation }) {
             📤 Partilhar Certificado
           </Text>
         </TouchableOpacity>
-        
+
         <TouchableOpacity
           className="bg-green-600 py-4 rounded-lg mb-3"
         >
@@ -1225,7 +1232,7 @@ export default function CertificateScreen({ route, navigation }) {
             📥 Descarregar PDF
           </Text>
         </TouchableOpacity>
-        
+
         <TouchableOpacity
           className="bg-gray-200 py-4 rounded-lg"
           onPress={() => navigation.navigate('Home')}
@@ -1234,7 +1241,7 @@ export default function CertificateScreen({ route, navigation }) {
             Voltar ao Início
           </Text>
         </TouchableOpacity>
-        
+
         {/* Achievement Badge */}
         <View className="bg-gradient-to-r from-yellow-400 to-orange-500 rounded-lg p-6 mt-6">
           <Text className="text-center text-white font-bold text-lg mb-2">
@@ -1249,11 +1256,12 @@ export default function CertificateScreen({ route, navigation }) {
     </ScrollView>
   );
 }
-```
+````
 
 ---
 
 **RESULTADO DIA 1:**
+
 ```
 ✅ App React Native completo e funcional
 ✅ Navegação entre 8 telas principais
@@ -1270,6 +1278,7 @@ export default function CertificateScreen({ route, navigation }) {
 #### **MANHÃ (4h): Backend API Simples**
 
 **09:00 - 10:30 | Setup Backend Básico**
+
 ```bash
 # MUST - 1.5h
 
@@ -1294,8 +1303,8 @@ mkdir src/data
 // src/index.ts
 // MUST - Backend minimalista (sem banco de dados real)
 
-import express from 'express';
-import cors from 'cors';
+import express from "express";
+import cors from "cors";
 
 const app = express();
 
@@ -1304,87 +1313,87 @@ app.use(express.json());
 
 // Dados simulados em memória (suficiente para demo)
 const USERS = {
-  'V0042': {
-    code: 'V0042',
-    name: 'Beneficiaria A', // Criptografado em produção
-    ngo: 'Centro Acolhimento Maputo',
-    courses: ['costura'],
+  V0042: {
+    code: "V0042",
+    name: "Beneficiária A", // Criptografado em produção
+    ngo: "Centro Acolhimento Maputo",
+    courses: ["costura"],
     progress: {
-      costura: { completedModules: [1, 2, 3], percentage: 37.5 }
+      costura: { completedModules: [1, 2, 3], percentage: 37.5 },
     },
-    certificates: ['costura']
+    certificates: ["costura"],
   },
-  'V0038': {
-    code: 'V0038',
-    name: 'Beneficiaria B',
-    ngo: 'Centro Acolhimento Maputo',
-    courses: ['culinaria'],
+  V0038: {
+    code: "V0038",
+    name: "Beneficiária B",
+    ngo: "Centro Acolhimento Maputo",
+    courses: ["culinaria"],
     progress: {
-      culinaria: { completedModules: [1], percentage: 14 }
+      culinaria: { completedModules: [1], percentage: 14 },
     },
-    certificates: []
-  }
+    certificates: [],
+  },
 };
 
 const COURSES = [
   {
-    id: 'costura',
-    title: 'Costura Avançada',
+    id: "costura",
+    title: "Costura Avançada",
     modules: 8,
     hours: 40,
-    level: 'Intermediário'
+    level: "Intermediário",
   },
   {
-    id: 'culinaria',
-    title: 'Culinária Profissional',
+    id: "culinaria",
+    title: "Culinária Profissional",
     modules: 7,
     hours: 35,
-    level: 'Básico'
+    level: "Básico",
   },
   {
-    id: 'agricultura',
-    title: 'Agricultura Sustentável',
+    id: "agricultura",
+    title: "Agricultura Sustentável",
     modules: 6,
     hours: 30,
-    level: 'Básico'
-  }
+    level: "Básico",
+  },
 ];
 
 // Routes
-app.get('/health', (req, res) => {
-  res.json({ status: 'ok', timestamp: new Date() });
+app.get("/health", (req, res) => {
+  res.json({ status: "ok", timestamp: new Date() });
 });
 
-app.post('/api/auth/login', (req, res) => {
+app.post("/api/auth/login", (req, res) => {
   const { code } = req.body;
-  
+
   if (USERS[code]) {
     res.json({
       success: true,
-      user: USERS[code]
+      user: USERS[code],
     });
   } else {
     res.status(404).json({
       success: false,
-      message: 'Código não encontrado'
+      message: "Código não encontrado",
     });
   }
 });
 
-app.get('/api/courses', (req, res) => {
+app.get("/api/courses", (req, res) => {
   res.json({
     success: true,
-    data: COURSES
+    data: COURSES,
   });
 });
 
-app.get('/api/users/:code/progress', (req, res) => {
+app.get("/api/users/:code/progress", (req, res) => {
   const user = USERS[req.params.code];
-  
+
   if (user) {
     res.json({
       success: true,
-      data: user.progress
+      data: user.progress,
     });
   } else {
     res.status(404).json({ success: false });
@@ -1398,6 +1407,7 @@ app.listen(PORT, () => {
 ```
 
 **10:30 - 13:00 | Dashboard ONG (Vite + React)**
+
 ```bash
 # MUST - 2.5h
 
@@ -1432,7 +1442,7 @@ export default function Dashboard() {
     activeCourses: 0,
     certificatesIssued: 0
   });
-  
+
   useEffect(() => {
     // Dados simulados
     const mockVictims: Victim[] = [
@@ -1458,7 +1468,7 @@ export default function Dashboard() {
         certificates: ['costura']
       }
     ];
-    
+
     setVictims(mockVictims);
     setStats({
       totalVictims: 3,
@@ -1466,7 +1476,7 @@ export default function Dashboard() {
       certificatesIssued: 1
     });
   }, []);
-  
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -1474,7 +1484,7 @@ export default function Dashboard() {
         <h1 className="text-3xl font-bold">WIRA - Dashboard ONG</h1>
         <p className="text-blue-100">Centro de Acolhimento Maputo</p>
       </header>
-      
+
       {/* Stats */}
       <div className="p-6">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
@@ -1483,20 +1493,20 @@ export default function Dashboard() {
             <h3 className="text-gray-600 text-sm font-medium">Sobreviventes Cadastradas</h3>
             <p className="text-3xl font-bold text-gray-900">{stats.totalVictims}</p>
           </div>
-          
+
           <div className="bg-white rounded-lg shadow p-6">
             <div className="text-green-600 mb-2">📚</div>
             <h3 className="text-gray-600 text-sm font-medium">Cursos em Andamento</h3>
             <p className="text-3xl font-bold text-gray-900">{stats.activeCourses}</p>
           </div>
-          
+
           <div className="bg-white rounded-lg shadow p-6">
             <div className="text-purple-600 mb-2">🏆</div>
             <h3 className="text-gray-600 text-sm font-medium">Certificados Emitidos</h3>
             <p className="text-3xl font-bold text-gray-900">{stats.certificatesIssued}</p>
           </div>
         </div>
-        
+
         {/* Victims Table */}
         <div className="bg-white rounded-lg shadow overflow-hidden">
           <div className="p-6 border-b border-gray-200">
@@ -1504,7 +1514,7 @@ export default function Dashboard() {
               Progresso de Capacitação
             </h2>
           </div>
-          
+
           <table className="w-full">
             <thead className="bg-gray-50">
               <tr>
@@ -1538,7 +1548,7 @@ export default function Dashboard() {
                   <td className="px-6 py-4">
                     <div className="flex items-center">
                       <div className="w-full bg-gray-200 rounded-full h-2 mr-2">
-                        <div 
+                        <div
                           className="bg-blue-600 h-2 rounded-full"
                           style={{ width: `${victim.progress[victim.courses[0]].percentage}%` }}
                         />
@@ -1573,6 +1583,7 @@ export default function Dashboard() {
 #### **TARDE (6h): USSD Codificado + Mockup Vagas**
 
 **14:00 - 16:00 | Implementação USSD Codificada**
+
 ```
 MUST - 2h
 
@@ -1604,7 +1615,8 @@ Integração com Africa's Talking planejada para pós-hackathon
 ```
 
 **16:00 - 18:00 | Tela Mockup de Vagas (Fase 2)**
-```typescript
+
+````typescript
 // screens/JobsMockupScreen.tsx
 // MOCKUP - Mostrar visão futura
 
@@ -1623,13 +1635,13 @@ export default function JobsMockupScreen({ navigation }) {
           Funcionalidade disponível em 30 dias
         </Text>
       </View>
-      
+
       {/* Mockup de Vagas */}
       <View className="p-4">
         <Text className="text-xl font-bold text-gray-900 mb-4">
           Vagas Compatíveis com Seu Perfil
         </Text>
-        
+
         {/* Vaga 1 - Compatibilidade Alta */}
         <View className="bg-white rounded-lg shadow mb-4 overflow-hidden opacity-70">
           <View className="bg-green-100 p-2">
@@ -1637,7 +1649,7 @@ export default function JobsMockupScreen({ navigation }) {
               ⭐ 95% COMPATÍVEL
             </Text>
           </View>
-          
+
           <View className="p-4">
             <Text className="text-lg font-bold text-gray-900 mb-1">
               Costureira - Fábrica Textil Matola
@@ -1645,22 +1657,22 @@ export default function JobsMockupScreen({ navigation }) {
             <Text className="text-gray-600 text-sm mb-3">
               Produção de uniformes escolares
             </Text>
-            
+
             <View className="flex-row items-center mb-2">
               <Text className="text-gray-700">💰 Salário:</Text>
               <Text className="font-semibold text-gray-900 ml-2">8.000 MT/mês</Text>
             </View>
-            
+
             <View className="flex-row items-center mb-2">
               <Text className="text-gray-700">📍 Localização:</Text>
               <Text className="font-semibold text-gray-900 ml-2">Matola (5km)</Text>
             </View>
-            
+
             <View className="flex-row items-center mb-3">
               <Text className="text-gray-700">✓ Status:</Text>
               <Text className="font-semibold text-green-600 ml-2">Validada por ONG</Text>
             </View>
-            
+
             <View className="bg-gray-100 p-3 rounded-lg mb-3">
               <Text className="text-sm font-semibold text-gray-700 mb-1">
                 Por que 95% compatível?
@@ -1671,8 +1683,8 @@ export default function JobsMockupScreen({ navigation }) {
                 • Você tem certificado exigido
               </Text>
             </View>
-            
-            <TouchableOpacity 
+
+            <TouchableOpacity
               className="bg-gray-400 py-3 rounded-lg"
               disabled
             >
@@ -1682,7 +1694,7 @@ export default function JobsMockupScreen({ navigation }) {
             </TouchableOpacity>
           </View>
         </View>
-        
+
         {/* Vaga 2 */}
         <View className="bg-white rounded-lg shadow mb-4 overflow-hidden opacity-70">
           <View className="bg-blue-100 p-2">
@@ -1690,7 +1702,7 @@ export default function JobsMockupScreen({ navigation }) {
               ⭐ 88% COMPATÍVEL
             </Text>
           </View>
-          
+
           <View className="p-4">
             <Text className="text-lg font-bold text-gray-900 mb-1">
               Costureira - Cooperativa Mulheres
@@ -1698,18 +1710,18 @@ export default function JobsMockupScreen({ navigation }) {
             <Text className="text-gray-600 text-sm mb-3">
               Trabalho em cooperativa feminina
             </Text>
-            
+
             <View className="flex-row items-center mb-2">
               <Text className="text-gray-700">💰 Salário:</Text>
               <Text className="font-semibold text-gray-900 ml-2">6.500 MT/mês</Text>
             </View>
-            
+
             <View className="flex-row items-center mb-3">
               <Text className="text-gray-700">📍 Localização:</Text>
               <Text className="font-semibold text-gray-900 ml-2">Maputo Centro</Text>
             </View>
-            
-            <TouchableOpacity 
+
+            <TouchableOpacity
               className="bg-gray-400 py-3 rounded-lg"
               disabled
             >
@@ -1719,7 +1731,7 @@ export default function JobsMockupScreen({ navigation }) {
             </TouchableOpacity>
           </View>
         </View>
-        
+
         {/* Info Box */}
         <View className="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-6">
           <Text className="font-bold text-blue-900 mb-2">
@@ -1734,9 +1746,9 @@ export default function JobsMockupScreen({ navigation }) {
             ✓ Acompanhamento pós-emprego
           </Text>
         </View>
-        
+
         {/* GitHub Link */}
-        <TouchableOpacity 
+        <TouchableOpacity
           className="bg-gray-800 p-4 rounded-lg mt-4"
           onPress={() => {
             // Abrir GitHub
@@ -1753,9 +1765,10 @@ export default function JobsMockupScreen({ navigation }) {
     </ScrollView>
   );
 }
-```
+````
 
 **18:00 - 20:00 | Seed Data + Polimento**
+
 ```typescript
 // SHOULD - 2h
 
@@ -1873,6 +1886,7 @@ export default function JobsMockupScreen({ navigation }) {
 ```
 
 **RESULTADO DIA 2:**
+
 ```
 ✅ Backend API funcional (dados em memória)
 ✅ Dashboard ONG mostrando progresso de capacitação
@@ -1888,6 +1902,7 @@ export default function JobsMockupScreen({ navigation }) {
 #### **MANHÃ (4h): Testes + Bugfixes + Assets**
 
 **09:00 - 10:30 | Testes de Fluxo Completo**
+
 ```
 MUST - 1.5h
 
@@ -1905,13 +1920,13 @@ TESTAR MANUALMENTE:
    □ Fazer quiz (5 questões)
    □ Ver resultado (passar com 80%)
    □ Voltar ao curso (progresso atualiza para 50%)
-   
+
 2. Testar Dashboard ONG
    □ Abrir http://localhost:3001
    □ Ver 3 vítimas listadas
    □ Progresso atualiza corretamente
    □ Estatísticas corretas
-   
+
 3. Testar Mockup de Vagas
    □ No app, ir para "Vagas Compatíveis"
    □ Ver 2 vagas mockup
@@ -1922,6 +1937,7 @@ ANOTAR BUGS ENCONTRADOS E CORRIGIR
 ```
 
 **10:30 - 12:00 | Adicionar Assets e Polimento Visual**
+
 ```
 MUST - 1.5h
 
@@ -1944,6 +1960,7 @@ Polimento Visual:
 ```
 
 **12:00 - 13:00 | Preparar Backup e Contingências**
+
 ```
 MUST - 1h
 
@@ -1956,15 +1973,15 @@ PLANO B (se demo falhar):
    □ Mostrar certificado
    □ Mostrar dashboard ONG
    □ Mostrar mockup vagas
-   
+
 2. Exportar APK/IPA para instalação rápida
    □ eas build (se tiver tempo)
    □ OU rodar via Expo Go
-   
+
 3. Screenshots de Alta Qualidade
    □ 10 telas principais
    □ Imprimir em A4 (plano C)
-   
+
 4. Copiar TUDO em 2 pen drives
    □ Código completo
    □ APK/IPA
@@ -1978,6 +1995,7 @@ PLANO B (se demo falhar):
 #### **TARDE (6h): Slides + Ensaio + Preparação Final**
 
 **14:00 - 16:00 | Atualizar Slides (conforme análise)**
+
 ```
 MUST - 2h
 
@@ -1997,6 +2015,7 @@ Exportar:
 ```
 
 **16:00 - 18:00 | Ensaio Geral (3x)**
+
 ```
 CRITICAL - 2h
 
@@ -2025,6 +2044,7 @@ ENSAIO 3 (17:30-18:00):
 ```
 
 **18:00 - 20:00 | Preparação Final e Checklist**
+
 ```
 CRITICAL - 2h
 
@@ -2063,6 +2083,7 @@ CRITICAL - 2h
 ### **DIA 30/OUT - MANHÃ DA APRESENTAÇÃO**
 
 **06:00 - 07:00 | Preparação Pessoal**
+
 ```
 □ Café da manhã nutritivo
 □ Roupa profissional confortável
@@ -2071,6 +2092,7 @@ CRITICAL - 2h
 ```
 
 **07:00 - 08:00 | Verificação Técnica**
+
 ```
 □ Tablet: 100% carregado + carregador backup
 □ Laptop: 100% carregado + carregador
@@ -2083,6 +2105,7 @@ CRITICAL - 2h
 ```
 
 **08:00 - 09:00 | Chegada UEM**
+
 ```
 □ Chegar 1h antes
 □ Testar projetor
@@ -2094,6 +2117,7 @@ CRITICAL - 2h
 ```
 
 **09:00 - 09:30 | Preparação Mental**
+
 ```
 □ Respiração 4-7-8 (5 ciclos)
 □ Visualizar sucesso
@@ -2104,6 +2128,7 @@ CRITICAL - 2h
 ```
 
 **09:30 | SHOWTIME 🎬**
+
 ```
 □ Respirar fundo 3x
 □ Sorrir genuinamente
@@ -2116,12 +2141,14 @@ CRITICAL - 2h
 ## 🎯 DIFERENÇAS-CHAVE DO BACKLOG CORRIGIDO
 
 ### **❌ ERROS DO BACKLOG ANTERIOR:**
+
 1. Focava muito em matching de vagas (Fase 2)
 2. USSD descrito como "funcional e codificado" em vez de "simulado"
 3. Dashboard mostrava "validação de vagas" como prioritário
 4. Métricas de MVP irrealistas (200 vítimas, 40% emprego)
 
 ### **✅ ACERTOS DO BACKLOG CORRIGIDO:**
+
 1. **70% do tempo no App de Capacitação** (Fase 1)
 2. **USSD claramente marcado como "implementado"**
 3. **Dashboard foca em monitorar PROGRESSO de cursos**

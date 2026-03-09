@@ -23,7 +23,7 @@ export default function CourseDetail() {
 
   if (loading) {
     return (
-      <Layout title="Detalhes do Curso" subtitle="Informacoes completas do curso">
+      <Layout title="Detalhes do Curso" subtitle="Informações completas do curso">
         <LoadingOverlay show={loading} message="Carregando detalhes do curso..." />
       </Layout>
     )
@@ -31,11 +31,11 @@ export default function CourseDetail() {
 
   if (error || !course) {
     return (
-      <Layout title="Detalhes do Curso" subtitle="Informacoes completas do curso">
+      <Layout title="Detalhes do Curso" subtitle="Informações completas do curso">
         <Card>
           <CardContent className="p-8 text-center">
-            <h2 className="text-xl font-semibold text-destructive">Curso nao encontrado</h2>
-            <p className="text-muted-foreground mt-2">{error ?? 'Nao foi possivel localizar o curso solicitado.'}</p>
+            <h2 className="text-xl font-semibold text-destructive">Curso não encontrado</h2>
+            <p className="text-muted-foreground mt-2">{error ?? 'Não foi possível localizar o curso solicitado.'}</p>
             <Button className="mt-4" onClick={() => navigate('/courses')}>
               <ArrowLeft className="mr-2 h-4 w-4" />
               Voltar para Cursos
@@ -59,32 +59,32 @@ export default function CourseDetail() {
             <CardTitle className="text-2xl">{course.title}</CardTitle>
             <div className="flex items-center gap-2">
               <Badge>{course.level}</Badge>
-              <Badge variant="outline">{course.modules_count} modulos</Badge>
+              <Badge variant="outline">{course.modules_count} módulos</Badge>
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
-            <p className="text-muted-foreground">{course.description ?? 'Sem descricao detalhada.'}</p>
+            <p className="text-muted-foreground">{course.description ?? 'Sem descrição detalhada.'}</p>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="p-4 rounded-lg border">
-                <div className="flex items-center gap-2 mb-1"><Clock className="h-4 w-4" /> Duracao</div>
+                <div className="flex items-center gap-2 mb-1"><Clock className="h-4 w-4" /> Duração</div>
                 <p className="text-xl font-semibold">{course.duration_hours}h</p>
               </div>
               <div className="p-4 rounded-lg border">
-                <div className="flex items-center gap-2 mb-1"><BookOpen className="h-4 w-4" /> Modulos</div>
+                <div className="flex items-center gap-2 mb-1"><BookOpen className="h-4 w-4" /> Módulos</div>
                 <p className="text-xl font-semibold">{course.modules_count}</p>
               </div>
               <div className="p-4 rounded-lg border">
                 <div className="flex items-center gap-2 mb-1"><User className="h-4 w-4" /> Instrutor</div>
-                <p className="text-xl font-semibold">{course.instructor ?? 'Equipe WIRA'}</p>
+                <p className="text-xl font-semibold">{course.instructor ?? 'Equipa WIRA'}</p>
               </div>
             </div>
 
             <div>
-              <h3 className="font-semibold mb-2 flex items-center gap-2"><Award className="h-4 w-4" /> Competencias</h3>
+              <h3 className="font-semibold mb-2 flex items-center gap-2"><Award className="h-4 w-4" /> Competências</h3>
               <div className="flex flex-wrap gap-2">
                 {skills.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">Nenhuma competencia cadastrada.</p>
+                  <p className="text-sm text-muted-foreground">Nenhuma competência cadastrada.</p>
                 ) : (
                   skills.map(skill => (
                     <Badge key={skill} variant="secondary">{skill}</Badge>

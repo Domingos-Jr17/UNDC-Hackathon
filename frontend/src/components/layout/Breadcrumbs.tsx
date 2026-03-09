@@ -22,6 +22,7 @@ const routeMap: Record<string, string> = {
   '/users': 'Utilizadores',
   '/users/[id]': 'Detalhes do Utilizador',
   '/courses': 'Cursos',
+  '/courses/create': 'Criar Curso',
   '/courses/[id]': 'Detalhes do Curso',
   '/reports': 'Relatórios',
   '/reports/progress': 'Relatório de Progresso',

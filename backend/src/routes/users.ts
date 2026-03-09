@@ -16,7 +16,8 @@ router.post(
   '/activate',
   authenticateToken,
   requireStaffRole,
-  body('ngoId').isString().notEmpty().withMessage('ngoId é obrigatório'),
+  body('ngoId').isString().trim().matches(/^(ngo|ong)-\d{3}$/i).withMessage('ngoId invalido'),
+  body('phone').optional().matches(/^\+?\d{8,15}$/).withMessage('phone invalido'),
   handleValidationErrors,
   UsersController.activate
 )
@@ -31,3 +32,4 @@ router.patch(
 )
 
 export default router
+

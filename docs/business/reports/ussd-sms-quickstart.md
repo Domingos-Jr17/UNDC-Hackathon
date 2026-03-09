@@ -3,6 +3,7 @@
 ## 📋 PREREQUISITES
 
 ### **Required Software:**
+
 - Node.js (v14 or higher)
 - Modern web browser (Chrome, Firefox, Edge)
 - Command-line terminal
@@ -13,6 +14,7 @@
 ## 🎯 **STEP 1: START THE SYSTEM**
 
 ### **1.1 Open Terminal**
+
 ```bash
 # Navigate to the project directory
 cd E:\IT-developer\Hackathons\hackathos_trafico_de_pessoas\mvp\test_hack\wira-platform\backend
@@ -21,6 +23,7 @@ cd E:\IT-developer\Hackathons\hackathos_trafico_de_pessoas\mvp\test_hack\wira-pl
 ### **1.2 Start USSD/SMS Server**
 
 **Option A: Use JavaScript (Recommended for Demo)**
+
 ```bash
 # Start complete server
 node ussd-server.js
@@ -38,6 +41,7 @@ node ussd-server.js
 ```
 
 **Option B: Use TypeScript (For Development)**
+
 ```bash
 # Install TypeScript dependencies
 npm install
@@ -54,6 +58,7 @@ npm run dev:simple
 ```
 
 ### **1.3 Start Demo Frontend**
+
 ```bash
 # Open new terminal
 cd E:\IT-developer\Hackathons\hackathos_trafico_de_pessoas\mvp\test_hack\wira-platform\frontend
@@ -70,6 +75,7 @@ node serve.cjs
 ## 🧪 **STEP 2: VERIFY OPERATION**
 
 ### **2.1 Health Check Test**
+
 ```bash
 # Verify if server is online
 curl http://localhost:3000/health
@@ -91,6 +97,7 @@ curl http://localhost:3000/health
 ```
 
 ### **2.2 Basic USSD Test**
+
 ```bash
 # Test initial USSD screen
 curl -X POST http://localhost:3000/api/ussd/test \
@@ -111,6 +118,7 @@ curl -X POST http://localhost:3000/api/ussd/test \
 ## 📱 **STEP 3: COMPLETE USSD TEST**
 
 ### **3.1 Login Sequence**
+
 ```bash
 # Step 1: Login with code V0042
 curl -X POST http://localhost:3000/api/ussd \
@@ -127,6 +135,7 @@ curl -X POST http://localhost:3000/api/ussd \
 ```
 
 ### **3.2 Menu Navigation**
+
 ```bash
 # View progress (option 2)
 curl -X POST http://localhost:3000/api/ussd \
@@ -145,15 +154,17 @@ curl -X POST http://localhost:3000/api/ussd \
 ```
 
 ### **3.3 Available Access Codes**
-- **V0042** - Beneficiaria A (Sewing 37%, Cooking 14%)
-- **V0038** - Beneficiaria B (Cooking 14%)
-- **V0031** - Beneficiario F (Sewing 100% - with certificate)
+
+- **V0042** - Beneficiária A (Sewing 37%, Cooking 14%)
+- **V0038** - Beneficiária B (Cooking 14%)
+- **V0031** - Beneficiário F (Sewing 100% - with certificate)
 
 ---
 
 ## 📧 **STEP 4: SMS SYSTEM TEST**
 
 ### **4.1 Check SMS Status**
+
 ```bash
 # Check SMS service
 curl http://localhost:3000/api/sms/status
@@ -170,6 +181,7 @@ curl http://localhost:3000/api/sms/status
 ```
 
 ### **4.2 Send Manual SMS**
+
 ```bash
 # Send test SMS
 curl -X POST http://localhost:3000/api/sms/send \
@@ -192,6 +204,7 @@ curl -X POST http://localhost:3000/api/sms/send \
 ```
 
 ### **4.3 Check Sent SMS**
+
 ```bash
 # List all SMS
 curl http://localhost:3000/api/sms/all
@@ -204,6 +217,7 @@ curl http://localhost:3000/api/sms/all
 ## 🎬 **STEP 5: AUTOMATIC DEMONSTRATION**
 
 ### **5.1 Complete Automatic Sequence**
+
 ```bash
 # Execute complete USSD demo
 curl http://localhost:3000/api/demo/ussd/sequence
@@ -233,10 +247,12 @@ curl http://localhost:3000/api/demo/ussd/sequence
 ## 🖥️ **STEP 6: ACCESS INTERACTIVE FRONTENDS**
 
 ### **6.1 Main Dashboard**
+
 - **URL:** `http://localhost:3001`
 - **Features:** KPIs, progress, USSD status
 
 ### **6.2 USSD/SMS Demonstration**
+
 - **URL:** `http://localhost:3001/ussd-demo.html`
 - **Features:**
   - USSD phone simulator
@@ -246,6 +262,7 @@ curl http://localhost:3000/api/demo/ussd/sequence
   - Real-time system status
 
 ### **6.3 How to Use USSD Frontend:**
+
 1. **USSD Keyboard:** Type `*123#` then `V0042`
 2. **Navigation:** Use number buttons 1-4
 3. **SMS:** Type message and click "Send"
@@ -257,14 +274,15 @@ curl http://localhost:3000/api/demo/ussd/sequence
 
 ### **7.1 Common Problems and Solutions**
 
-| Problem | Cause | Solution |
-|----------|-------|---------|
-| "address already in use" | Port 3000 occupied | Close other Node.js processes |
-| "Connection refused" | Server not started | Check if `node ussd-server.js` is running |
-| "Invalid JSON" | Formatting error | Use double quotes in JSON |
-| "Session expired" | USSD timeout | Use new session or restart browser |
+| Problem                  | Cause              | Solution                                  |
+| ------------------------ | ------------------ | ----------------------------------------- |
+| "address already in use" | Port 3000 occupied | Close other Node.js processes             |
+| "Connection refused"     | Server not started | Check if `node ussd-server.js` is running |
+| "Invalid JSON"           | Formatting error   | Use double quotes in JSON                 |
+| "Session expired"        | USSD timeout       | Use new session or restart browser        |
 
 ### **7.2 Useful Commands**
+
 ```bash
 # Check ports in use
 netstat -ano | findstr :3000
@@ -277,6 +295,7 @@ taskkill /f /im node.exe
 ```
 
 ### **7.3 Connectivity Verification**
+
 ```bash
 # Test connectivity with backend
 curl -v http://localhost:3000/health
@@ -295,6 +314,7 @@ curl -v http://localhost:3000/api/sms/status
 ## 📊 **STEP 8: MONITORING**
 
 ### **8.1 Real-Time Status**
+
 ```bash
 # USSD Status
 curl http://localhost:3000/api/ussd/status
@@ -307,7 +327,9 @@ curl http://localhost:3000/health
 ```
 
 ### **8.2 System Logs**
+
 The server displays real-time logs:
+
 ```
 📱 USSD Request: Session=demo123, Phone=+258840000000, Text="V0042"
 📤 USSD Response: CON Welcome, Maria! 👋
@@ -323,6 +345,7 @@ The server displays real-time logs:
 ### **9.1 Suggested Script (2 minutes)**
 
 **Minute 1: Backend API**
+
 ```bash
 # Show health check
 curl http://localhost:3000/health
@@ -332,11 +355,13 @@ curl -X POST http://localhost:3000/api/ussd/test -d '{"text":"V0042"}'
 ```
 
 **Minute 2: Interactive Frontend**
+
 - Access: `http://localhost:3001/ussd-demo.html`
 - Click "Automatic Demo"
 - Show USSD navigation and automatic SMS sending
 
 ### **9.2 Points to Highlight**
+
 1. **USSD works without internet** - real digital inclusion
 2. **Automatic SMS** - proactive communication
 3. **Anonymous codes** - V0042, V0038, V0031
@@ -348,17 +373,20 @@ curl -X POST http://localhost:3000/api/ussd/test -d '{"text":"V0042"}'
 ## 🚨 **STEP 10: BACKUP AND RECOVERY**
 
 ### **10.1 Important Files**
+
 - `ussd-server.js` - Main USSD/SMS Server
 - `ussd-demo.html` - Demo Frontend
 - `simple-server.js` - Basic Backend (backup)
 
 ### **10.2 Settings**
+
 - **USSD Port:** 3000
 - **Frontend Port:** 3001
 - **Session Timeout:** 5 minutes
-- **USSD Shortcode:** *123#
+- **USSD Shortcode:** \*123#
 
 ### **10.3 Demo Data**
+
 - **Users:** V0042 (Maria), V0038 (Ana), V0031 (João)
 - **Courses:** Sewing, Cooking, Agriculture
 - **Progress:** Realistic data (37%, 14%, 100%)
@@ -383,12 +411,14 @@ curl -X POST http://localhost:3000/api/ussd/test -d '{"text":"V0042"}'
 ## 🔧 **TYPESCRIPT MIGRATION INFORMATION**
 
 ### **Migrated Files**
+
 - ✅ `src/types/ussd.ts` - Complete type definitions
 - ✅ `src/simple-server.ts` - Basic server with typing
 - ✅ `src/ussd-server.ts` - Complete USSD server with typing
 - ✅ `package.json` - Build and development scripts for TypeScript
 
 ### **Available TypeScript Scripts**
+
 ```bash
 npm run dev:ussd      # USSD Server Development
 npm run dev:simple    # Simple Server Development
@@ -399,12 +429,14 @@ npm run demo          # Build + Execute USSD Server
 ```
 
 ### **Migration Advantages**
+
 - 🔒 **Type Safety**: Type checking during compilation
 - 🛠️ **Better IDE**: Auto-complete and refactoring
 - 📚 **Documentation**: Types as living documentation
 - 🔧 **Maintainability**: More robust and scalable code
 
 ### **Development Note**
+
 For presentations and demonstrations, use the JavaScript version (`node ussd-server.js`) as it's simpler and more direct. For future development, prefer the TypeScript version.
 
 ---
@@ -414,6 +446,7 @@ For presentations and demonstrations, use the JavaScript version (`node ussd-ser
 If all items above are marked ✅, the WIRA USSD/SMS system is **100% functional** and ready for demonstration at the UNODC Hackathon!
 
 **Important URLs:**
+
 - 📱 **USSD Demo:** `http://localhost:3001/ussd-demo.html`
 - 📊 **Dashboard:** `http://localhost:3001`
 - 🔧 **API Health:** `http://localhost:3000/health`

@@ -404,7 +404,7 @@ function insertSampleData(): void {
 
   // Insert sample users with encryption
   const users: Partial<User>[] = [
-    { anonymous_code: 'V0042', ngo_id: 'ong-001', real_name: 'Beneficiaria A', phone: '+258 84 111 2222' },
+    { anonymous_code: 'V0042', ngo_id: 'ong-001', real_name: 'Beneficiária A', phone: '+258 84 111 2222' },
     { anonymous_code: 'V0038', ngo_id: 'ong-001', real_name: 'Instrutora A', phone: '+258 84 333 4444' },
     { anonymous_code: 'V0031', ngo_id: 'ong-002', real_name: 'Beneficiario C', phone: '+258 84 555 6666' }
   ]

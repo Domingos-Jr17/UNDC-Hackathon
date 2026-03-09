@@ -1,6 +1,5 @@
 import { z } from "zod";
 
-// Schema para validação de código de usuário
 export const userCodeSchema = z.object({
   code: z.string()
     .min(5, "O código deve ter no mínimo 5 caracteres.")
@@ -9,7 +8,6 @@ export const userCodeSchema = z.object({
     .transform(val => val.toUpperCase().trim())
 });
 
-// Schema para ativação de usuário
 export const activateUserSchema = z.object({
   realName: z.string()
     .min(2, "Nome deve ter no mínimo 2 caracteres.")
@@ -20,7 +18,7 @@ export const activateUserSchema = z.object({
   ngoId: z.string()
     .min(3, "ID da ONG é obrigatório.")
     .max(20, "ID da ONG deve ter no máximo 20 caracteres.")
-    .regex(/^[A-Z0-9-]+$/, "ID da ONG deve conter apenas letras maiúsculas, números e hífens.")
+    .regex(/^(NGO|ONG)-\d{3}$/i, "ID da ONG deve estar no formato NGO-001 ou ONG-001.")
     .transform(val => val.toUpperCase().trim()),
 
   dateOfBirth: z.string()
@@ -32,17 +30,20 @@ export const activateUserSchema = z.object({
     .max(500, "Habilidades devem ter no máximo 500 caracteres.")
     .transform(val => val.trim())
     .optional()
+    .or(z.literal("")),
+
+  phone: z.string()
+    .regex(/^\+?\d{8,15}$/, "Telefone deve estar em formato internacional (ex: +258841234567).")
+    .transform(val => val.trim())
+    .optional()
     .or(z.literal(""))
 });
 
-// Schema para filtros de monitoramento
 export const monitorFilterSchema = z.object({
   status: z.enum(['all', 'Ativo', 'Inativo'])
 });
 
-// Funções de sanitização
 export const sanitizeInput = {
-  // Remove caracteres perigosos para prevenir XSS
   text: (input: string): string => {
     return input
       .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, "")
@@ -50,7 +51,6 @@ export const sanitizeInput = {
       .trim();
   },
 
-  // Sanitiza nomes (remove caracteres especiais exceto espaços e acentos)
   name: (input: string): string => {
     return input
       .replace(/[^a-zA-Z\sÀ-ÿ]/g, "")
@@ -58,7 +58,6 @@ export const sanitizeInput = {
       .trim();
   },
 
-  // Sanitiza códigos (mantém apenas formato V####)
   code: (input: string): string => {
     return input
       .toUpperCase()
@@ -66,7 +65,6 @@ export const sanitizeInput = {
       .substring(0, 5);
   },
 
-  // Sanitiza IDs (remove caracteres especiais)
   id: (input: string): string => {
     return input
       .toUpperCase()
@@ -75,13 +73,12 @@ export const sanitizeInput = {
   }
 };
 
-// Função de validação de data
 export const validateDate = (dateString: string): boolean => {
   const regex = /^\d{2}\/\d{2}\/\d{2}$/;
   if (!regex.test(dateString)) return false;
 
   const [day, month, year] = dateString.split('/').map(Number);
-  const fullYear = 2000 + year; // Assumir século 21 para anos de 2 dígitos
+  const fullYear = 2000 + year;
 
   const date = new Date(fullYear, month - 1, day);
   return (
@@ -93,7 +90,6 @@ export const validateDate = (dateString: string): boolean => {
   );
 };
 
-// Tipos exportados
 export type ActivateUserFormData = z.infer<typeof activateUserSchema>;
 export type UserCodeFormData = z.infer<typeof userCodeSchema>;
 export type MonitorFilterData = z.infer<typeof monitorFilterSchema>;

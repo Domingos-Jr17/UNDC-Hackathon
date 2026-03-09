@@ -72,7 +72,7 @@ export default function VideoLessonScreen({ route, navigation }: VideoLessonScre
 
   const togglePlayPause = (): void => {
     if (!state.module?.videoUrl) {
-      Alert.alert('Video indisponivel', 'Este modulo ainda nao possui video publicado.')
+      Alert.alert('Vídeo indisponível', 'Este módulo ainda não possui vídeo publicado.')
       return
     }
 
@@ -90,7 +90,10 @@ export default function VideoLessonScreen({ route, navigation }: VideoLessonScre
       return
     }
 
-    Alert.alert('Download', 'O pacote offline deste modulo sera disponibilizado em breve.')
+    Alert.alert(
+      'Offline indisponível',
+      'Pacote offline não disponível para este módulo no backend atual.'
+    )
   }
 
   const handleComplete = async (): Promise<void> => {
@@ -160,7 +163,7 @@ export default function VideoLessonScreen({ route, navigation }: VideoLessonScre
           />
         ) : (
           <View style={styles.videoUnavailable}>
-            <Text style={styles.videoUnavailableText}>Video ainda nao publicado para este modulo.</Text>
+            <Text style={styles.videoUnavailableText}>Vídeo ainda não publicado para este módulo.</Text>
           </View>
         )}
       </View>
@@ -195,7 +198,7 @@ export default function VideoLessonScreen({ route, navigation }: VideoLessonScre
           style={styles.quizButton}
           onPress={() => navigation.navigate('Quiz', { courseId, moduleId: String(state.module?.id ?? moduleId) })}
         >
-          <Text style={styles.quizButtonText}>Fazer Quiz deste modulo</Text>
+          <Text style={styles.quizButtonText}>Fazer Quiz deste módulo</Text>
         </TouchableOpacity>
       </View>
     </ScrollView>

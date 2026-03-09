@@ -1,5 +1,6 @@
 import express, { Request, Response, NextFunction } from 'express';
-import { logger } from '../middleware/security';
+import { body } from 'express-validator';
+import { authenticateToken, handleValidationErrors, logger, requireStaffRole } from '../middleware/security';
 import CourseController from '../controllers/CourseController';
 import cacheService from '../services/cache';
 
@@ -42,6 +43,19 @@ const cacheMiddleware = (ttl: number = 1800) => {
 // Get all courses with caching
 router.get('/', cacheMiddleware(1800), CourseController.getAll);
 
+// Create course (staff/admin only)
+router.post(
+  '/',
+  authenticateToken,
+  requireStaffRole,
+  body('title').isString().trim().isLength({ min: 3, max: 120 }).withMessage('title invalido'),
+  body('duration_hours').isInt({ min: 1, max: 1000 }).withMessage('duration_hours invalido'),
+  body('modules_count').isInt({ min: 1, max: 200 }).withMessage('modules_count invalido'),
+  body('level').isString().trim().isLength({ min: 2, max: 40 }).withMessage('level invalido'),
+  handleValidationErrors,
+  CourseController.create
+);
+
 // Get course by ID with caching
 router.get('/:id', cacheMiddleware(1800), CourseController.getById);
 
@@ -52,6 +66,6 @@ router.get('/:id/modules', cacheMiddleware(3600), CourseController.getModules);
 router.get('/:id/quiz', cacheMiddleware(3600), CourseController.getQuiz);
 
 // Invalidate cache for course when updated
-router.post('/:id/invalidate-cache', CourseController.invalidateCache);
+router.post('/:id/invalidate-cache', authenticateToken, requireStaffRole, CourseController.invalidateCache);
 
 export default router;

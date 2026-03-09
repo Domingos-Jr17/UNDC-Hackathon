@@ -1,11 +1,20 @@
 import { Request, Response } from 'express';
-import { logger } from '../middleware/security';
+import { AuthenticatedRequest } from '../types';
+import { canAccessAnonymousCode, logger } from '../middleware/security';
 import ProgressModel from '../models/Progress';
 import CourseModel from '../models/Course';
 
 class ProgressController {
-  static async getUserAggregate(req: Request, res: Response): Promise<void> {
+  static async getUserAggregate(req: AuthenticatedRequest, res: Response): Promise<void> {
     const { userCode } = req.params;
+
+    if (!canAccessAnonymousCode(req.user, userCode)) {
+      res.status(403).json({
+        success: false,
+        error: 'Acesso negado para este recurso'
+      });
+      return;
+    }
 
     try {
       const [progressRows, courses] = await Promise.all([
@@ -57,8 +66,16 @@ class ProgressController {
     }
   }
 
-  static async getUserProgress(req: Request, res: Response): Promise<void> {
+  static async getUserProgress(req: AuthenticatedRequest, res: Response): Promise<void> {
     const { userCode, courseId } = req.params;
+
+    if (!canAccessAnonymousCode(req.user, userCode)) {
+      res.status(403).json({
+        success: false,
+        error: 'Acesso negado para este recurso'
+      });
+      return;
+    }
 
     try {
       // Use ORM-like method to find progress
@@ -91,9 +108,17 @@ class ProgressController {
     }
   }
 
-  static async updateProgress(req: Request, res: Response): Promise<void> {
+  static async updateProgress(req: AuthenticatedRequest, res: Response): Promise<void> {
     const { userCode, courseId } = req.params;
     const { completedModules, percentage } = req.body;
+
+    if (!canAccessAnonymousCode(req.user, userCode)) {
+      res.status(403).json({
+        success: false,
+        error: 'Acesso negado para este recurso'
+      });
+      return;
+    }
 
     try {
       const progress = await ProgressModel.updateProgress(userCode, courseId, completedModules, percentage);

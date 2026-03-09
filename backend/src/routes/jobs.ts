@@ -18,6 +18,9 @@ router.post(
 router.post(
   '/:id/apply',
   authenticateToken,
+  body('anonymousCode').optional().matches(/^V\d{4}$/i).withMessage('anonymousCode invalido'),
+  body('notes').optional().isString().isLength({ max: 1000 }).withMessage('notes invalido'),
+  handleValidationErrors,
   ipRateLimit(20, 15 * 60 * 1000),
   JobsController.apply
 )

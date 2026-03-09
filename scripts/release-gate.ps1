@@ -46,6 +46,22 @@ function Assert-NoMatches {
   }
 }
 
+function Assert-HasMatches {
+  param(
+    [string]$Pattern,
+    [string[]]$Targets,
+    [string]$Reason
+  )
+
+  $matches = & rg -n --hidden --glob '!**/node_modules/**' --glob '!**/dist/**' --glob '!**/.git/**' $Pattern $Targets
+  if ($LASTEXITCODE -gt 1) {
+    throw "Gate failed while scanning required pattern: $Pattern"
+  }
+  if ($LASTEXITCODE -ne 0 -or -not $matches) {
+    throw "Gate failed: $Reason"
+  }
+}
+
 Invoke-Step "Backend type-check" { Invoke-NpmCommand "backend" "type-check" }
 Invoke-Step "Frontend type-check" { Invoke-NpmCommand "frontend" "type-check" }
 Invoke-Step "Mobile type-check" { Invoke-NpmCommand "mobile" "type-check" }
@@ -61,6 +77,11 @@ Invoke-Step "Mock markers scan (critical front/mobile)" {
 
 Invoke-Step "Security TODO scan" {
   Assert-NoMatches @("TODO: Implement dark mode logic", "TODO: Handle successful report generation", "TODO: Implement download functionality") @("frontend/src", "mobile/src", "backend/src") "Security/production TODOs still present"
+}
+
+Invoke-Step "USSD aux endpoint environment guard" {
+  Assert-HasMatches "AUX_ENDPOINTS_ENABLED" @("backend/src/routes/ussd.ts") "AUX endpoint env guard not found"
+  Assert-HasMatches "ensureAuxEndpointsEnabled\(res\)" @("backend/src/routes/ussd.ts") "Aux endpoints are not explicitly guarded by environment"
 }
 
 Write-Host "Release gate passed."

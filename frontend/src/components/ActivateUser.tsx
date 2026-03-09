@@ -25,11 +25,12 @@ export default function ActivateUser() {
             realName: '',
             ngoId: '',
             initialSkills: '',
-            dateOfBirth: ''
+            dateOfBirth: '',
+            phone: ''
         }
     });
 
-    const { register, handleSubmit, formState: { errors, isValid } } = form;
+    const { register, handleSubmit, getValues, formState: { errors, isValid } } = form;
 
     const handleGenerateCode = useCallback(async (data: ActivateUserFormData) => {
         // Validar data de nascimento
@@ -41,7 +42,10 @@ export default function ActivateUser() {
         const id = toast.loading('Gerando código...');
 
         try {
-            const user = await activateUser(data);
+            const user = await activateUser({
+                ...data,
+                phone: data.phone?.trim() ? data.phone.trim() : undefined
+            });
             const newCode = user.anonymousCode;
             setGeneratedCode(newCode);
             toast.dismiss(id);
@@ -57,14 +61,20 @@ export default function ActivateUser() {
             return;
         }
 
+        const phone = getValues('phone')?.trim();
+        if (!phone) {
+            toast.error('Informe um telefone válido para enviar o SMS.');
+            return;
+        }
+
         const id = toast.loading('Enviando SMS...');
         try {
-            await sendSMS(generatedCode);
+            await sendSMS(generatedCode, phone);
             toast.dismiss(id);
         } catch {
             toast.dismiss(id);
         }
-    }, [generatedCode, sendSMS]); 
+    }, [generatedCode, getValues, sendSMS]); 
 
     return (
         <Layout
@@ -87,7 +97,7 @@ export default function ActivateUser() {
                                 <Input
                                     id="realName"
                                     required
-                                    placeholder="Beneficiaria A"
+                                    placeholder="Beneficiária A"
                                     {...register('realName')}
                                     aria-invalid={errors.realName ? "true" : "false"}
                                 />
@@ -121,6 +131,19 @@ export default function ActivateUser() {
                                 />
                                 {errors.ngoId && (
                                     <p className="text-sm text-destructive mt-1">{errors.ngoId.message}</p>
+                                )}
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label htmlFor="phone">Telefone (SMS)</Label>
+                                <Input
+                                    id="phone"
+                                    placeholder="+258841234567"
+                                    {...register('phone')}
+                                    aria-invalid={errors.phone ? "true" : "false"}
+                                />
+                                {errors.phone && (
+                                    <p className="text-sm text-destructive mt-1">{errors.phone.message}</p>
                                 )}
                             </div>
 

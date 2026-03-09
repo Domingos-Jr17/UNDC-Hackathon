@@ -44,7 +44,7 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
       <View style={styles.form}>
         <TextInput
           style={styles.input}
-          placeholder="Codigo (ex: V0001)"
+          placeholder="Código (ex: V0001)"
           value={accessCode}
           onChangeText={setAccessCode}
           autoCapitalize="characters"

@@ -151,6 +151,7 @@ app.get('/api', (_req: express.Request, res: express.Response): void => {
       },
       courses: {
         'GET /api/courses': 'Listar cursos ativos',
+        'POST /api/courses': 'Criar curso (STAFF/ADMIN)',
         'GET /api/courses/:id': 'Obter detalhes do curso',
         'GET /api/courses/:id/modules': 'Listar módulos do curso',
         'GET /api/courses/:id/quiz': 'Obter quiz do curso',

@@ -53,8 +53,8 @@ export default function ReportsPage() {
   }
 
   return (
-    <Layout title="Relatorios" subtitle="Exportacao de dados reais da plataforma">
-      <LoadingOverlay show={loading} message="Carregando relatorios..." />
+    <Layout title="Relatórios" subtitle="Exportação de dados reais da plataforma">
+      <LoadingOverlay show={loading} message="Carregando relatórios..." />
 
       {error ? (
         <Card className="mb-6 border-red-200 bg-red-50">
@@ -63,25 +63,25 @@ export default function ReportsPage() {
       ) : null}
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
-        <MetricCard title="Beneficiarias" value={stats?.totalUsers ?? users.length} icon={Users} />
+        <MetricCard title="Beneficiárias" value={stats?.totalUsers ?? users.length} icon={Users} />
         <MetricCard title="Ativas" value={stats?.activeUsers ?? users.filter(user => user.status === 'Ativo').length} icon={Activity} />
-        <MetricCard title="Cursos Concluidos" value={stats?.coursesCompleted ?? 0} icon={GraduationCap} />
+        <MetricCard title="Cursos Concluídos" value={stats?.coursesCompleted ?? 0} icon={GraduationCap} />
         <MetricCard title="Certificados" value={stats?.certificatesIssued ?? 0} icon={Award} />
         <MetricCard title="Eventos" value={activity.length} icon={FileText} />
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Exportacoes Disponiveis</CardTitle>
+          <CardTitle>Exportações Disponíveis</CardTitle>
         </CardHeader>
         <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Relatorio de Beneficiarias</CardTitle>
+              <CardTitle className="text-base">Relatório de Beneficiárias</CardTitle>
             </CardHeader>
             <CardContent>
               <p className="text-sm text-muted-foreground mb-4">
-                Exporta dados agregados de usuarias e progresso em formato CSV.
+                Exporta dados agregados de utilizadoras e progresso em formato CSV.
               </p>
               <Button className="w-full" onClick={exportUsersCsv}>
                 <Download className="mr-2 h-4 w-4" />
@@ -92,7 +92,7 @@ export default function ReportsPage() {
 
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Relatorio de Atividade</CardTitle>
+              <CardTitle className="text-base">Relatório de Atividade</CardTitle>
             </CardHeader>
             <CardContent>
               <p className="text-sm text-muted-foreground mb-4">

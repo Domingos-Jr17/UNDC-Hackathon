@@ -1,7 +1,7 @@
 import { Request, Response } from 'express'
 import prismaService from '../services/prisma'
 import { AuthenticatedRequest } from '../types'
-import { logger } from '../middleware/security'
+import { canAccessAnonymousCode, logger } from '../middleware/security'
 
 const prisma = prismaService.getClient()
 
@@ -63,11 +63,19 @@ class JobsController {
     }
   }
 
-  static async getMatching(req: Request, res: Response): Promise<void> {
+  static async getMatching(req: AuthenticatedRequest, res: Response): Promise<void> {
     const { anonymousCode, location, availability } = req.body as {
       anonymousCode: string
       location?: string
       availability?: string
+    }
+
+    if (!canAccessAnonymousCode(req.user, anonymousCode)) {
+      res.status(403).json({
+        success: false,
+        error: 'Acesso negado para este recurso'
+      })
+      return
     }
 
     try {
@@ -137,12 +145,20 @@ class JobsController {
   static async apply(req: AuthenticatedRequest, res: Response): Promise<void> {
     const { id } = req.params
     const { anonymousCode, notes } = req.body as { anonymousCode?: string; notes?: string }
-    const applicantCode = anonymousCode ?? req.user?.anonymousCode
+    const applicantCode = (anonymousCode ?? req.user?.anonymousCode)?.toUpperCase()
 
     if (!applicantCode) {
       res.status(400).json({
         success: false,
-        error: 'anonymousCode é obrigatório'
+        error: 'anonymousCode e obrigatorio'
+      })
+      return
+    }
+
+    if (!canAccessAnonymousCode(req.user, applicantCode)) {
+      res.status(403).json({
+        success: false,
+        error: 'Acesso negado para este recurso'
       })
       return
     }
@@ -221,3 +237,4 @@ class JobsController {
 }
 
 export default JobsController
+

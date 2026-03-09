@@ -104,7 +104,7 @@ export default function CourseLibraryScreen({ navigation }: CourseLibraryScreenP
               <View style={[styles.progressFill, { width: `${course.progress}%` }]} />
             </View>
             <Text style={styles.progressText}>
-              {course.progress}% completo • modulo atual {course.currentModule}
+              {course.progress}% completo • módulo atual {course.currentModule}
             </Text>
           </TouchableOpacity>
         ))}

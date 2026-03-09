@@ -1,4 +1,5 @@
 import request from 'supertest'
+import jwt from 'jsonwebtoken'
 
 jest.mock('../../src/models/User', () => ({
   __esModule: true,
@@ -93,5 +94,38 @@ describe('Auth Routes', () => {
 
     expect(response.status).toBe(401)
     expect(response.body.error).toBeDefined()
+  })
+
+  test('POST /api/auth/refresh should preserve role, ngoId and audience claims', async () => {
+    const jwtSecret = process.env.JWT_SECRET ?? 'test-jwt-secret-32-characters-long'
+    const originalToken = jwt.sign(
+      {
+        anonymousCode: 'A0001',
+        ngoId: 'ngo-001',
+        role: 'STAFF',
+        email: 'staff@wira.org',
+        sessionId: 'old-session'
+      },
+      jwtSecret,
+      {
+        expiresIn: '1h',
+        issuer: 'wira-platform',
+        audience: 'wira-dashboard'
+      }
+    )
+
+    const response = await request(app)
+      .post('/api/auth/refresh')
+      .set('Authorization', `Bearer ${originalToken}`)
+
+    expect(response.status).toBe(200)
+    expect(response.body.success).toBe(true)
+    expect(response.body.token).toBeDefined()
+
+    const decoded = jwt.verify(response.body.token as string, jwtSecret) as jwt.JwtPayload
+    expect(decoded.anonymousCode).toBe('A0001')
+    expect(decoded.ngoId).toBe('ngo-001')
+    expect(decoded.role).toBe('STAFF')
+    expect(decoded.aud).toBe('wira-dashboard')
   })
 })

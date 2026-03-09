@@ -285,18 +285,27 @@ class AuthController {
         ignoreExpiration: true
       }) as JWTayload;
 
+      const role = decoded.role ?? 'VICTIM'
+      const audience = typeof decoded.aud === 'string'
+        ? decoded.aud
+        : role === 'STAFF' || role === 'ADMIN'
+          ? 'wira-dashboard'
+          : 'wira-app'
+
       // Generate new token
       const newToken = jwt.sign(
         {
           anonymousCode: decoded.anonymousCode,
           ngoId: decoded.ngoId,
+          role,
+          ...(decoded.email ? { email: decoded.email } : {}),
           sessionId: Math.random().toString(36).substring(2, 15)
         } as JWTayload,
         jwtSecret,
         {
           expiresIn: '24h',
           issuer: 'wira-platform',
-          audience: 'wira-app'
+          audience
         }
       );
 

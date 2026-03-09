@@ -27,6 +27,20 @@ describe('API Integration', () => {
     expect(response.body.error).toBeDefined()
   })
 
+  test('POST /api/courses without token should return 401', async () => {
+    const response = await request(app)
+      .post('/api/courses')
+      .send({
+        title: 'Curso de Teste',
+        duration_hours: 20,
+        modules_count: 5,
+        level: 'Basico'
+      })
+
+    expect(response.status).toBe(401)
+    expect(response.body.error).toBeDefined()
+  })
+
   test('Unknown route should return 404', async () => {
     const response = await request(app).get('/api/unknown-route')
 

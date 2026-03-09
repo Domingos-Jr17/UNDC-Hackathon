@@ -5,6 +5,7 @@
 ### ✅ Quiz Engine with Immediate Feedback
 
 #### Frontend Implementation (React Native)
+
 ```typescript
 // src/screens/QuizScreen.tsx
 interface QuizQuestion {
@@ -31,9 +32,10 @@ interface QuizState {
 ```
 
 #### Backend Implementation (Node.js + SQLite)
+
 ```javascript
 // src/routes/quiz.routes.js
-router.post('/submit', (req, res) => {
+router.post("/submit", (req, res) => {
   const { code, courseId, answers } = req.body;
 
   // Calculate score
@@ -49,15 +51,17 @@ router.post('/submit', (req, res) => {
 
   // Store results in database
   db.run(
-    'INSERT INTO quiz_results (user_code, course_id, score, passed, timestamp) VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)',
-    [code, courseId, score, passed]
+    "INSERT INTO quiz_results (user_code, course_id, score, passed, timestamp) VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)",
+    [code, courseId, score, passed],
   );
 
   res.json({
     success: true,
     score,
     passed,
-    feedback: passed ? 'Congratulations! You completed the course.' : 'Keep studying and try again.'
+    feedback: passed
+      ? "Congratulations! You completed the course."
+      : "Keep studying and try again.",
   });
 });
 ```
@@ -65,6 +69,7 @@ router.post('/submit', (req, res) => {
 ### ✅ Certificate Generation with QR Codes
 
 #### Frontend Implementation
+
 ```typescript
 // src/screens/CertificateScreen.tsx
 interface CertificateData {
@@ -89,9 +94,10 @@ interface CertificateData {
 ```
 
 #### Backend Implementation
+
 ```javascript
 // src/routes/certificates.routes.js
-router.post('/generate', (req, res) => {
+router.post("/generate", (req, res) => {
   const { anonymousCode, courseId, score } = req.body;
 
   // Generate unique certificate code
@@ -100,66 +106,75 @@ router.post('/generate', (req, res) => {
 
   // Create certificate record
   const certificate = {
-    id: 'cert-' + Date.now(),
+    id: "cert-" + Date.now(),
     anonymousCode,
     courseId,
     courseTitle: getCourseTitle(courseId),
-    date: new Date().toLocaleDateString('en-US'),
+    date: new Date().toLocaleDateString("en-US"),
     code: certificateCode,
     qrCode,
-    instructor: 'Maputo Shelter Center',
-    institution: 'Maputo Shelter Center',
+    instructor: "Maputo Shelter Center",
+    institution: "Maputo Shelter Center",
     score,
-    verified: false
+    verified: false,
   };
 
   // Store in database
   db.run(
-    'INSERT INTO certificates (id, anonymous_code, course_id, course_title, date, code, qr_code, instructor, institution, score, verified) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-    [certificate.id, certificate.anonymousCode, certificate.courseId, certificate.courseTitle, certificate.date, certificate.code, certificate.qrCode, certificate.instructor, certificate.institution, certificate.score, certificate.verified]
+    "INSERT INTO certificates (id, anonymous_code, course_id, course_title, date, code, qr_code, instructor, institution, score, verified) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+    [
+      certificate.id,
+      certificate.anonymousCode,
+      certificate.courseId,
+      certificate.courseTitle,
+      certificate.date,
+      certificate.code,
+      certificate.qrCode,
+      certificate.instructor,
+      certificate.institution,
+      certificate.score,
+      certificate.verified,
+    ],
   );
 
   res.json({
     success: true,
     certificate,
-    message: 'Certificate generated successfully'
+    message: "Certificate generated successfully",
   });
 });
 
 // Verification endpoint
-router.get('/verify/:code', (req, res) => {
+router.get("/verify/:code", (req, res) => {
   const { code } = req.params;
 
-  db.get(
-    'SELECT * FROM certificates WHERE qr_code = ?',
-    [code],
-    (err, row) => {
-      if (err) {
-        return res.status(500).json({ error: 'Database error' });
-      }
-
-      if (!row) {
-        return res.status(404).json({ error: 'Certificate not found' });
-      }
-
-      res.json({
-        success: true,
-        valid: row.verified,
-        certificate: {
-          anonymousCode: row.anonymous_code,
-          courseTitle: row.course_title,
-          date: row.date,
-          score: row.score
-        }
-      });
+  db.get("SELECT * FROM certificates WHERE qr_code = ?", [code], (err, row) => {
+    if (err) {
+      return res.status(500).json({ error: "Database error" });
     }
-  );
+
+    if (!row) {
+      return res.status(404).json({ error: "Certificate not found" });
+    }
+
+    res.json({
+      success: true,
+      valid: row.verified,
+      certificate: {
+        anonymousCode: row.anonymous_code,
+        courseTitle: row.course_title,
+        date: row.date,
+        score: row.score,
+      },
+    });
+  });
 });
 ```
 
 ### ✅ NGO Dashboard for Activation and Monitoring
 
 #### Frontend Implementation (React + Vite)
+
 ```typescript
 // src/components/Dashboard.jsx
 interface DashboardStats {
@@ -217,13 +232,14 @@ interface UserProgress {
 ```
 
 #### Backend Implementation
+
 ```javascript
 // src/routes/users.routes.js
-router.post('/activate', (req, res) => {
+router.post("/activate", (req, res) => {
   const { realName, ngoId, initialSkills } = req.body;
 
   // Generate anonymous code
-  const anonymousCode = 'V' + Math.floor(Math.random() * 9000 + 1000);
+  const anonymousCode = "V" + Math.floor(Math.random() * 9000 + 1000);
 
   // Encrypt sensitive data
   const encryptedName = encrypt(realName);
@@ -231,8 +247,8 @@ router.post('/activate', (req, res) => {
 
   // Store in database
   db.run(
-    'INSERT INTO users (anonymous_code, real_name, phone, ngo_id, created_at) VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)',
-    [anonymousCode, encryptedName, encryptedPhone, ngoId]
+    "INSERT INTO users (anonymous_code, real_name, phone, ngo_id, created_at) VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)",
+    [anonymousCode, encryptedName, encryptedPhone, ngoId],
   );
 
   // Send SMS notification (simulated)
@@ -241,27 +257,27 @@ router.post('/activate', (req, res) => {
   res.json({
     success: true,
     anonymousCode,
-    message: 'User activated successfully'
+    message: "User activated successfully",
   });
 });
 
 // Progress monitoring
-router.get('/progress/:ngoId', (req, res) => {
+router.get("/progress/:ngoId", (req, res) => {
   const { ngoId } = req.params;
 
   db.all(
-    'SELECT u.anonymous_code, u.real_name, p.percentage, p.last_activity, c.title FROM users u JOIN progress p ON u.anonymous_code = p.user_id JOIN courses c ON p.course_id = c.id WHERE u.ngo_id = ?',
+    "SELECT u.anonymous_code, u.real_name, p.percentage, p.last_activity, c.title FROM users u JOIN progress p ON u.anonymous_code = p.user_id JOIN courses c ON p.course_id = c.id WHERE u.ngo_id = ?",
     [ngoId],
     (err, rows) => {
       if (err) {
-        return res.status(500).json({ error: 'Database error' });
+        return res.status(500).json({ error: "Database error" });
       }
 
       res.json({
         success: true,
-        users: rows
+        users: rows,
       });
-    }
+    },
   );
 });
 ```
@@ -269,6 +285,7 @@ router.get('/progress/:ngoId', (req, res) => {
 ### ✅ USSD Prototype Simulation
 
 #### Frontend Implementation
+
 ```typescript
 // src/components/USSDSimulation.jsx
 interface USSDMenu {
@@ -291,67 +308,68 @@ interface USSDMenu {
 const ussdMenu = [
   {
     id: 1,
-    title: 'Welcome to WIRA',
-    options: ['1. My Courses', '2. My Progress', '3. My Certificates'],
-    action: 'main'
+    title: "Welcome to WIRA",
+    options: ["1. My Courses", "2. My Progress", "3. My Certificates"],
+    action: "main",
   },
   {
     id: 2,
-    title: 'My Courses',
-    options: ['1. Sewing', '2. Cooking', '3. Agriculture', '0. Back'],
-    action: 'courses'
+    title: "My Courses",
+    options: ["1. Sewing", "2. Cooking", "3. Agriculture", "0. Back"],
+    action: "courses",
   },
   {
     id: 3,
-    title: 'My Progress',
-    options: ['1. View Progress', '2. Details', '0. Back'],
-    action: 'progress'
+    title: "My Progress",
+    options: ["1. View Progress", "2. Details", "0. Back"],
+    action: "progress",
   },
   {
     id: 4,
-    title: 'My Certificates',
-    options: ['1. View Certificates', '2. Share', '0. Back'],
-    action: 'certificates'
-  }
+    title: "My Certificates",
+    options: ["1. View Certificates", "2. Share", "0. Back"],
+    action: "certificates",
+  },
 ];
 ```
 
 #### Backend Implementation
+
 ```javascript
 // src/routes/ussd.routes.js
-router.post('/navigate', (req, res) => {
+router.post("/navigate", (req, res) => {
   const { code, menuId, optionId } = req.body;
 
   // Process USSD navigation
-  const menu = ussdMenu.find(m => m.id === menuId);
+  const menu = ussdMenu.find((m) => m.id === menuId);
 
   if (!menu) {
-    return res.status(400).json({ error: 'Invalid menu' });
+    return res.status(400).json({ error: "Invalid menu" });
   }
 
-  const option = menu.options.find(o => o.id === optionId);
+  const option = menu.options.find((o) => o.id === optionId);
 
   if (!option) {
-    return res.status(400).json({ error: 'Invalid option' });
+    return res.status(400).json({ error: "Invalid option" });
   }
 
   // Execute action
-  let response = '';
+  let response = "";
   switch (menu.action) {
-    case 'courses':
+    case "courses":
       response = handleCoursesAction(code, optionId);
       break;
-    case 'progress':
+    case "progress":
       response = handleProgressAction(code, optionId);
       break;
-    case 'certificates':
+    case "certificates":
       response = handleCertificatesAction(code, optionId);
       break;
   }
 
   res.json({
     success: true,
-    response
+    response,
   });
 });
 
@@ -360,13 +378,13 @@ function handleCoursesAction(code, optionId) {
   // Get user courses from database
   const courses = getUserCourses(code);
 
-  if (optionId === '0') {
-    return 'Return to main menu';
+  if (optionId === "0") {
+    return "Return to main menu";
   }
 
   const course = courses[optionId - 1];
   if (!course) {
-    return 'Course not found';
+    return "Course not found";
   }
 
   return `Course: ${course.title}\nProgress: ${course.progress}%\nModules: ${course.completedModules}/${course.totalModules}`;
@@ -376,6 +394,7 @@ function handleCoursesAction(code, optionId) {
 ## 🔧 DEPLOYMENT INSTRUCTIONS
 
 ### 1. Mobile App Deployment
+
 ```bash
 # Install dependencies
 cd wira-platform/mobile-app
@@ -393,6 +412,7 @@ expo build:ios
 ```
 
 ### 2. Backend Deployment
+
 ```bash
 # Install dependencies
 cd wira-platform/backend
@@ -409,6 +429,7 @@ npm start
 ```
 
 ### 3. NGO Dashboard Deployment
+
 ```bash
 # Install dependencies
 cd wira-platform/ong-dashboard-simple
@@ -427,6 +448,7 @@ npm run deploy
 ## 📊 TESTING INSTRUCTIONS
 
 ### 1. Quiz Engine Testing
+
 ```bash
 # Test quiz submission
 curl -X POST http://localhost:3000/api/quiz/submit \
@@ -438,6 +460,7 @@ curl http://localhost:3000/api/quiz/results/V0042/sewing
 ```
 
 ### 2. Certificate Generation Testing
+
 ```bash
 # Test certificate generation
 curl -X POST http://localhost:3000/api/certificates/generate \
@@ -449,17 +472,19 @@ curl http://localhost:3000/api/certificates/verify/WIRA-CERT-V0042-sewing-2025
 ```
 
 ### 3. NGO Dashboard Testing
+
 ```bash
 # Test user activation
 curl -X POST http://localhost:3000/api/users/activate \
   -H "Content-Type: application/json" \
-  -d '{"realName": "Beneficiaria A", "ngoId": "ngo-001", "initialSkills": "Basic Sewing"}'
+  -d '{"realName": "Beneficiária A", "ngoId": "ngo-001", "initialSkills": "Basic Sewing"}'
 
 # Test progress monitoring
 curl http://localhost:3000/api/users/progress/ngo-001
 ```
 
 ### 4. USSD Simulation Testing
+
 ```bash
 # Test USSD navigation
 curl -X POST http://localhost:3000/api/ussd/navigate \
@@ -470,6 +495,7 @@ curl -X POST http://localhost:3000/api/ussd/navigate \
 ## 🎯 SUCCESS CRITERIA
 
 ### Quiz Engine
+
 - [ ] Score calculation accuracy (70% pass threshold)
 - [ ] Immediate feedback display
 - [ ] Question navigation functionality
@@ -477,6 +503,7 @@ curl -X POST http://localhost:3000/api/ussd/navigate \
 - [ ] Progress saving to database
 
 ### Certificate Generation
+
 - [ ] Unique certificate code generation
 - [ ] QR code generation and verification
 - [ ] Digital certificate display
@@ -484,6 +511,7 @@ curl -X POST http://localhost:3000/api/ussd/navigate \
 - [ ] Share capability
 
 ### NGO Dashboard
+
 - [ ] User activation with anonymous codes
 - [ ] Real-time statistics display
 - [ ] Progress monitoring visualization
@@ -491,11 +519,12 @@ curl -X POST http://localhost:3000/api/ussd/navigate \
 - [ ] Report generation capabilities
 
 ### USSD Simulation
+
 - [x] Interactive menu navigation
 - [x] Course access via USSD
 - [x] Progress checking via USSD
 - [x] Certificate verification via USSD
-- [x] *123# dialing simulation (official code implemented)
+- [x] \*123# dialing simulation (official code implemented)
 
 ## 🚀 NEXT STEPS
 
@@ -511,6 +540,7 @@ curl -X POST http://localhost:3000/api/ussd/navigate \
 ## 📈 MONITORING METRICS
 
 ### Technical Metrics
+
 - API response time < 500ms
 - App load time < 3 seconds
 - Database query time < 100ms
@@ -518,6 +548,7 @@ curl -X POST http://localhost:3000/api/ussd/navigate \
 - Uptime > 99.9%
 
 ### Business Metrics
+
 - Quiz completion rate > 70%
 - Certificate generation success rate > 95%
 - User activation rate > 90%

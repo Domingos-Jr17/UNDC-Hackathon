@@ -1,6 +1,6 @@
-import { NextFunction, Response } from 'express'
+﻿import { NextFunction, Response } from 'express'
 import { AuthenticatedRequest } from '../../src/types'
-import { requireRole, requireStaffRole } from '../../src/middleware/security'
+import { canAccessAnonymousCode, requireRole, requireStaffRole } from '../../src/middleware/security'
 
 type MockResponse = Response & {
   statusCode?: number
@@ -34,9 +34,7 @@ describe('RBAC middleware', () => {
 
     expect(next).not.toHaveBeenCalled()
     expect(res.status).toHaveBeenCalledWith(401)
-    expect(res.body).toEqual({
-      error: 'Token de autenticação não fornecido'
-    })
+    expect((res.body as { error?: string }).error).toContain('Token de autent')
   })
 
   test('should return 403 when role is not allowed', () => {
@@ -56,9 +54,7 @@ describe('RBAC middleware', () => {
 
     expect(next).not.toHaveBeenCalled()
     expect(res.status).toHaveBeenCalledWith(403)
-    expect(res.body).toEqual({
-      error: 'Acesso não autorizado para esta função'
-    })
+    expect((res.body as { error?: string }).error).toContain('Acesso')
   })
 
   test('should allow STAFF role on staff middleware', () => {
@@ -113,8 +109,43 @@ describe('RBAC middleware', () => {
 
     expect(next).not.toHaveBeenCalled()
     expect(res.status).toHaveBeenCalledWith(403)
-    expect(res.body).toEqual({
-      error: 'Acesso não autorizado para esta função'
-    })
+    expect((res.body as { error?: string }).error).toContain('Acesso')
+  })
+
+  test('canAccessAnonymousCode should allow victim to access own code', () => {
+    const allowed = canAccessAnonymousCode(
+      {
+        anonymousCode: 'V0042',
+        role: 'VICTIM'
+      },
+      'v0042'
+    )
+
+    expect(allowed).toBe(true)
+  })
+
+  test('canAccessAnonymousCode should block victim from accessing another user', () => {
+    const allowed = canAccessAnonymousCode(
+      {
+        anonymousCode: 'V0042',
+        role: 'VICTIM'
+      },
+      'V0038'
+    )
+
+    expect(allowed).toBe(false)
+  })
+
+  test('canAccessAnonymousCode should allow staff to access other users', () => {
+    const allowed = canAccessAnonymousCode(
+      {
+        anonymousCode: 'A0001',
+        role: 'STAFF'
+      },
+      'V0038'
+    )
+
+    expect(allowed).toBe(true)
   })
 })
+

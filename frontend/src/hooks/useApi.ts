@@ -173,11 +173,12 @@ export function useUserActivation() {
     ngoId: string
     dateOfBirth: string
     initialSkills?: string
+    phone?: string
   }) => {
     setLoading(true)
     try {
       const user = await apiService.activateUser(userData)
-      toast.success('Beneficiaria ativada com sucesso')
+      toast.success('Beneficiária ativada com sucesso')
       return user
     } catch (error) {
       toast.error(error instanceof ApiError ? error.message : 'Falha ao ativar beneficiaria')
@@ -191,7 +192,7 @@ export function useUserActivation() {
     setLoading(true)
     try {
       const code = await apiService.generateUserCode()
-      toast.success('Codigo gerado com sucesso')
+      toast.success('Código gerado com sucesso')
       return code
     } catch (error) {
       toast.error(error instanceof ApiError ? error.message : 'Falha ao gerar codigo')
@@ -201,7 +202,7 @@ export function useUserActivation() {
     }
   }, [])
 
-  const sendSMS = useCallback(async (code: string, phoneNumber?: string) => {
+  const sendSMS = useCallback(async (code: string, phoneNumber: string) => {
     setLoading(true)
     try {
       const sms = await apiService.sendSMSCode(code, phoneNumber)

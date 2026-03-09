@@ -1,10 +1,11 @@
-import { default as rateLimit } from 'express-rate-limit'
+﻿import { default as rateLimit } from 'express-rate-limit'
 import { body, validationResult } from 'express-validator'
 import type { ValidationChain } from 'express-validator'
 import jwt from 'jsonwebtoken'
 import winston from 'winston'
 import express, { Request, Response, NextFunction } from 'express'
 import { AuthenticatedRequest } from '../types'
+import prismaService from '../services/prisma'
 
 // Logger configuration
 const logger = winston.createLogger({
@@ -30,6 +31,8 @@ const logger = winston.createLogger({
     })
   ]
 })
+
+const prisma = prismaService.getClient()
 
 // Rate limiting middleware factory
 const createRateLimit = (windowMs: number, max: number, message: string): express.RequestHandler => {
@@ -67,29 +70,29 @@ export const authLimiter = createRateLimit(
 export const generalLimiter = createRateLimit(
   parseInt(process.env.RATE_LIMIT_WINDOW_MS ?? '900000'), // 15 minutes
   parseInt(process.env.RATE_LIMIT_MAX_REQUESTS ?? '100'), // 100 requests per 15 minutes
-  'Muitas requisições. Tente novamente mais tarde.'
+  'Muitas requisiÃ§Ãµes. Tente novamente mais tarde.'
 )
 
 export const ussdLimiter = createRateLimit(
   5 * 60 * 1000, // 5 minutes
   20, // 20 USSD requests per 5 minutes
-  'Muitas requisições USSD. Tente novamente em 5 minutos.'
+  'Muitas requisiÃ§Ãµes USSD. Tente novamente em 5 minutos.'
 )
 
 // Input validation rules
 export const validateLogin: ValidationChain[] = [
   body('code')
     .matches(/^V\d{4}$/i)
-    .withMessage('Código de acesso deve estar no formato V#### (ex: V0042)')
+    .withMessage('CÃ³digo de acesso deve estar no formato V#### (ex: V0042)')
     .isLength({ min: 5, max: 5 })
-    .withMessage('Código deve ter exatamente 5 caracteres')
+    .withMessage('CÃ³digo deve ter exatamente 5 caracteres')
 ]
 
 // Validation rules for staff email/password login
 export const validateStaffLogin: ValidationChain[] = [
   body('email')
     .isEmail()
-    .withMessage('Email inválido')
+    .withMessage('Email invÃ¡lido')
     .normalizeEmail()
     .isLength({ max: 255 })
     .withMessage('Email muito longo'),
@@ -103,28 +106,28 @@ export const validateStaffLogin: ValidationChain[] = [
 export const validateCertificateGeneration: ValidationChain[] = [
   body('anonymousCode')
     .matches(/^V\d{4}$/i)
-    .withMessage('Código anônimo inválido'),
+    .withMessage('CÃ³digo anÃ´nimo invÃ¡lido'),
   body('courseId')
     .isIn(['costura', 'culinaria', 'agricultura'])
-    .withMessage('ID de curso inválido'),
+    .withMessage('ID de curso invÃ¡lido'),
   body('score')
     .isInt({ min: 0, max: 100 })
-    .withMessage('Pontuação deve ser entre 0 e 100')
+    .withMessage('PontuaÃ§Ã£o deve ser entre 0 e 100')
 ]
 
 export const validateQuizSubmission: ValidationChain[] = [
   body('code')
     .matches(/^V\d{4}$/i)
-    .withMessage('Código de acesso inválido'),
+    .withMessage('CÃ³digo de acesso invÃ¡lido'),
   body('courseId')
     .isIn(['costura', 'culinaria', 'agricultura'])
-    .withMessage('ID de curso inválido'),
+    .withMessage('ID de curso invÃ¡lido'),
   body('answers')
     .isArray({ min: 1 })
     .withMessage('Respostas devem ser um array com pelo menos um elemento'),
   body('answers.*')
     .isInt({ min: 0 })
-    .withMessage('Cada resposta deve ser um número inteiro')
+    .withMessage('Cada resposta deve ser um nÃºmero inteiro')
 ]
 
 // Validation error handler
@@ -139,7 +142,7 @@ export const handleValidationErrors = (req: Request, res: Response, next: NextFu
     })
 
     res.status(400).json({
-      error: 'Dados inválidos',
+      error: 'Dados invÃ¡lidos',
       details: errors.array().map((err) => ({
         field: (err as { param?: string; path?: string }).param ?? (err as { param?: string; path?: string }).path,
         message: err.msg,
@@ -238,7 +241,7 @@ export const corsOptions = {
         currentPort,
         environment: process.env.NODE_ENV || 'development'
       })
-      callback(new Error('Não permitido por CORS'))
+      callback(new Error('NÃ£o permitido por CORS'))
     }
   },
   credentials: true,
@@ -254,7 +257,7 @@ export const authenticateToken = (req: AuthenticatedRequest, res: Response, next
 
   if (!token) {
     res.status(401).json({
-      error: 'Token de autenticação não fornecido'
+      error: 'Token de autenticaÃ§Ã£o nÃ£o fornecido'
     })
     return
   }
@@ -277,7 +280,7 @@ export const authenticateToken = (req: AuthenticatedRequest, res: Response, next
       })
 
       res.status(403).json({
-        error: 'Token inválido ou expirado'
+        error: 'Token invÃ¡lido ou expirado'
       })
       return
     }
@@ -292,7 +295,7 @@ export const requireRole = (allowedRoles: string[]) => {
   return (req: AuthenticatedRequest, res: Response, next: NextFunction): void => {
     if (!req.user) {
       res.status(401).json({
-        error: 'Token de autenticação não fornecido'
+        error: 'Token de autenticaÃ§Ã£o nÃ£o fornecido'
       })
       return
     }
@@ -307,7 +310,7 @@ export const requireRole = (allowedRoles: string[]) => {
       })
 
       res.status(403).json({
-        error: 'Acesso não autorizado para esta função'
+        error: 'Acesso nÃ£o autorizado para esta funÃ§Ã£o'
       })
       return
     }
@@ -321,6 +324,23 @@ export const requireStaffRole = requireRole(['STAFF', 'ADMIN'])
 
 // Middleware for admin only routes
 export const requireAdminRole = requireRole(['ADMIN'])
+
+export const isPrivilegedRole = (role?: string): boolean => role === 'STAFF' || role === 'ADMIN'
+
+export const canAccessAnonymousCode = (
+  actor: { anonymousCode: string; role?: string } | undefined,
+  targetAnonymousCode: string
+): boolean => {
+  if (!actor) {
+    return false
+  }
+
+  if (isPrivilegedRole(actor.role)) {
+    return true
+  }
+
+  return actor.anonymousCode.toUpperCase() === targetAnonymousCode.toUpperCase()
+}
 
 // Input sanitization middleware
 export const sanitizeInput = (req: Request, _res: Response, next: NextFunction): void => {
@@ -419,7 +439,7 @@ export const notFoundHandler = (req: Request, res: Response): void => {
   })
 
   res.status(404).json({
-    error: 'Endpoint não encontrado',
+    error: 'Endpoint nÃ£o encontrado',
     path: req.originalUrl,
     method: req.method
   })
@@ -427,19 +447,124 @@ export const notFoundHandler = (req: Request, res: Response): void => {
 
 // Rate limiting by user (for authenticated routes)
 const userRequestBuckets = new Map<string, { count: number; resetAt: number }>()
+const USER_RATE_LIMIT_ACTION = 'USER_RATE_LIMIT_TRACK'
+
+const getUserRateLimitMode = (): 'memory' | 'database' => {
+  const configuredMode = (process.env.USER_RATE_LIMIT_STORE ?? '').trim().toLowerCase()
+
+  if (configuredMode === 'database') {
+    return 'database'
+  }
+
+  if (configuredMode === 'memory') {
+    return 'memory'
+  }
+
+  return (process.env.NODE_ENV ?? 'development') === 'production' ? 'database' : 'memory'
+}
+
+const consumeUserRateLimitFromDatabase = async (
+  userCode: string,
+  route: string,
+  method: string,
+  maxRequests: number,
+  windowMs: number
+): Promise<{ allowed: boolean; retryAfter?: number }> => {
+  const now = new Date()
+  const windowStart = new Date(now.getTime() - windowMs)
+
+  const countInWindow = await prisma.auditLog.count({
+    where: {
+      user_code: userCode,
+      action: USER_RATE_LIMIT_ACTION,
+      timestamp: { gte: windowStart }
+    }
+  })
+
+  if (countInWindow >= maxRequests) {
+    const oldestInWindow = await prisma.auditLog.findFirst({
+      where: {
+        user_code: userCode,
+        action: USER_RATE_LIMIT_ACTION,
+        timestamp: { gte: windowStart }
+      },
+      orderBy: { timestamp: 'asc' },
+      select: { timestamp: true }
+    })
+
+    const resetAt = oldestInWindow
+      ? oldestInWindow.timestamp.getTime() + windowMs
+      : now.getTime() + windowMs
+
+    return {
+      allowed: false,
+      retryAfter: Math.max(1, Math.ceil((resetAt - now.getTime()) / 1000))
+    }
+  }
+
+  await prisma.auditLog.create({
+    data: {
+      user_code: userCode,
+      action: USER_RATE_LIMIT_ACTION,
+      table_name: 'rate_limit',
+      record_id: route,
+      new_values: JSON.stringify({ method, route, trackedAt: now.toISOString() })
+    }
+  })
+
+  if (Math.random() < 0.03) {
+    await prisma.auditLog.deleteMany({
+      where: {
+        action: USER_RATE_LIMIT_ACTION,
+        timestamp: { lt: new Date(now.getTime() - windowMs * 2) }
+      }
+    })
+  }
+
+  return { allowed: true }
+}
 
 export const userRateLimit = (): express.RequestHandler => {
   const windowMs = 15 * 60 * 1000
   const maxRequests = 120
 
-  return (req: AuthenticatedRequest, res: Response, next: NextFunction): void => {
+  return async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> => {
     if (!req.user) {
       next()
       return
     }
 
-    const now = Date.now()
     const key = req.user.anonymousCode
+
+    if (getUserRateLimitMode() === 'database') {
+      try {
+        const result = await consumeUserRateLimitFromDatabase(
+          key,
+          req.path,
+          req.method,
+          maxRequests,
+          windowMs
+        )
+
+        if (!result.allowed) {
+          res.status(429).json({
+            error: 'Limite de requisições por usuário excedido. Tente novamente mais tarde.',
+            retryAfter: result.retryAfter ?? Math.ceil(windowMs / 1000)
+          })
+          return
+        }
+
+        next()
+        return
+      } catch (error) {
+        logger.warn('Database user rate limit unavailable, falling back to memory', {
+          error: (error as Error).message,
+          userCode: key
+        })
+      }
+    }
+
+    const now = Date.now()
     const current = userRequestBuckets.get(key)
 
     if (!current || current.resetAt <= now) {
@@ -503,3 +628,6 @@ export const maskSensitiveData = (data: Record<string, unknown>): Record<string,
 
 // Export logger for use in other modules
 export { logger }
+
+
+

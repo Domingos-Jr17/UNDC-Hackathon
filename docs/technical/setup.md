@@ -1,17 +1,19 @@
-# 🚀 WIRA Development Environment Setup Guide
+﻿# ðŸš€ WIRA Development Environment Setup Guide
 
-## 📋 Overview
+## ðŸ“‹ Overview
 
 This guide will help you set up and start all components of the WIRA platform in development mode:
-- **Backend API** (Node.js + TypeScript + Prisma + SQLite)
+
+- **Backend API** (Node.js + TypeScript + Prisma + PostgreSQL)
 - **Web Frontend** (React + Vite + Material-UI)
 - **Mobile Application** (React Native + Expo)
 
 ---
 
-## 🔧 Step 1: Check Prerequisites
+## ðŸ”§ Step 1: Check Prerequisites
 
 ### Node.js and npm
+
 ```bash
 # Check installed versions
 node --version  # Must be >= 14.0.0
@@ -19,30 +21,31 @@ npm --version   # Must be >= 8.0.0
 ```
 
 ### Git (optional, for version control)
+
 ```bash
 git --version
 ```
 
 ---
 
-## 🗄️ Step 2: Set Up Backend
+## ðŸ—„ï¸ Step 2: Set Up Backend
 
 ### 2.1 Install Dependencies
+
 ```bash
 cd wira-platform/backend
 npm install
 ```
 
 ### 2.2 Initialize Database
-```bash
-# Run migrations and create initial data
-npm run migrate
 
-# Populate database with demo data
-npm run seed
+```bash
+# Generate Prisma client, apply migrations, and seed data
+npm run setup:dev
 ```
 
 ### 2.3 Start Backend Server
+
 ```bash
 # Development mode with hot reload
 npm run dev
@@ -54,6 +57,7 @@ npm run dev:watch
 The backend server will start at: **http://localhost:3000**
 
 ### 2.4 Verify Backend
+
 ```bash
 # Health check
 curl http://localhost:3000/health
@@ -64,15 +68,17 @@ curl http://localhost:3000/api
 
 ---
 
-## 🖥️ Step 3: Set Up Web Frontend
+## ðŸ–¥ï¸ Step 3: Set Up Web Frontend
 
 ### 3.1 Install Dependencies
+
 ```bash
 cd wira-platform/frontend
 npm install
 ```
 
 ### 3.2 Start Frontend Server
+
 ```bash
 npm run dev
 ```
@@ -80,6 +86,7 @@ npm run dev
 The web frontend will start at: **http://localhost:5173**
 
 ### 3.3 NGO Dashboard Access
+
 - URL: http://localhost:5173
 - Demo Login:
   - Email: `demo@ong.org`
@@ -87,34 +94,39 @@ The web frontend will start at: **http://localhost:5173**
 
 ---
 
-## 📱 Step 4: Set Up Mobile Application
+## ðŸ“± Step 4: Set Up Mobile Application
 
 ### 4.1 Install Dependencies
+
 ```bash
-cd wira-platform/mobile-app
+cd wira-platform/mobile
 npm install
 ```
 
 ### 4.2 Start Expo Development Server
+
 ```bash
 npm start
 ```
 
 ### 4.3 Access Application
+
 - **Web**: Open browser at the address provided by Expo
 - **Android**: Use Expo Go app and scan the QR code
 - **iOS**: Use Expo Go app and scan the QR code
 
 ### 4.4 Demo Access Codes
-- **V0042**: Beneficiaria A (Sewing - 37% complete)
+
+- **V0042**: Beneficiária A (Sewing - 37% complete)
 - **V0038**: Ana Joaquim (Cooking - New)
-- **V0031**: João Mandlate (Agriculture - 15% complete)
+- **V0031**: JoÃ£o Mandlate (Agriculture - 15% complete)
 
 ---
 
-## 🧪 Step 5: Verify Connectivity
+## ðŸ§ª Step 5: Verify Connectivity
 
 ### 5.1 Test API Endpoints
+
 ```bash
 # Verify API status
 curl http://localhost:3000/health
@@ -122,7 +134,7 @@ curl http://localhost:3000/health
 # Test authentication
 curl -X POST http://localhost:3000/api/auth/login \
   -H "Content-Type: application/json" \
-  -d '{"anonymousCode": "V0042"}'
+  -d '{"code": "V0042"}'
 
 # List courses
 curl http://localhost:3000/api/courses
@@ -132,6 +144,7 @@ curl http://localhost:3000/api/progress/user/V0042/course/costura-001
 ```
 
 ### 5.2 Test USSD
+
 ```bash
 # Test USSD endpoint
 curl -X POST http://localhost:3000/api/ussd/test \
@@ -141,20 +154,23 @@ curl -X POST http://localhost:3000/api/ussd/test \
 
 ---
 
-## 🛠️ Service Structure
+## ðŸ› ï¸ Service Structure
 
 ### Backend (Port 3000)
+
 - **RESTful API**: Endpoints for all operations
-- **Database**: SQLite with Prisma ORM
+- **Database**: PostgreSQL with Prisma ORM
 - **Authentication**: JWT with anonymous codes
 - **Security**: Rate limiting, encryption, audit trails
 
 ### Web Frontend (Port 5173)
+
 - **NGO Dashboard**: User management and progress tracking
 - **Reports**: Statistics and export
 - **Activation**: New user registration
 
 ### Mobile App (Expo Port)
+
 - **Anonymous Access**: Login with V#### codes
 - **Courses**: Access to materials and progress
 - **Quizzes**: Assessments with immediate feedback
@@ -162,18 +178,20 @@ curl -X POST http://localhost:3000/api/ussd/test \
 
 ---
 
-## 🔍 Final Verification
+## ðŸ” Final Verification
 
 ### Functionality Checklist
+
 - [ ] Backend API responding at localhost:3000
 - [ ] Web frontend loading at localhost:5173
 - [ ] Expo app running and accessible
 - [ ] Database initialized with demo data
 - [ ] Anonymous login working (codes V0042, V0038, V0031)
-- [ ] USSD responding to test endpoint
+- [ ] USSD responding to /api/ussd/test in dev/test (or with explicit env flag)
 - [ ] No critical errors in logs
 
 ### Important URLs
+
 - **API Health**: http://localhost:3000/health
 - **API Docs**: http://localhost:3000/api
 - **Web Frontend**: http://localhost:5173
@@ -181,9 +199,10 @@ curl -X POST http://localhost:3000/api/ussd/test \
 
 ---
 
-## 🚨 Troubleshooting
+## ðŸš¨ Troubleshooting
 
 ### Occupied Ports
+
 ```bash
 # Check ports in use
 netstat -tlnp | grep :3000
@@ -194,6 +213,7 @@ sudo kill -9 <PID>
 ```
 
 ### Database Problems
+
 ```bash
 # Recreate database
 cd wira-platform/backend
@@ -203,6 +223,7 @@ npm run seed
 ```
 
 ### Dependency Problems
+
 ```bash
 # Clean and reinstall
 rm -rf node_modules package-lock.json
@@ -211,7 +232,7 @@ npm install
 
 ---
 
-## 📝 Next Steps
+## ðŸ“ Next Steps
 
 1. **Run automated tests**: `npm test` (in each directory)
 2. **Validate critical flows**: Login, courses, certificates
@@ -221,35 +242,40 @@ npm install
 
 ---
 
-## 🎯 Priority Test Scenarios
+## ðŸŽ¯ Priority Test Scenarios
 
 ### 1. Authentication and Access
+
 - Login with anonymous codes
 - JWT token validation
 - Rate limiting on login attempts
 
 ### 2. Course System
+
 - Listing available courses
 - Individual progress per module
 - Quiz with immediate feedback
 
 ### 3. Certificates
+
 - Automatic generation
 - QR code verification
 - Digital sharing
 
 ### 4. USSD
+
 - Complete menu navigation
 - Access via basic phones
 - Session timeout
 
 ### 5. NGO Dashboard
+
 - New user activation
 - Progress monitoring
 - Reports and statistics
 
 ---
 
-**Environment successfully configured!** 🎉
+**Environment successfully configured!** ðŸŽ‰
 
 Now you're ready to start testing the WIRA platform in development mode.

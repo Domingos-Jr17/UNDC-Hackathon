@@ -72,6 +72,11 @@ interface SmsEnvelope {
   }
 }
 
+interface CreateCourseEnvelope {
+  success: boolean
+  course: Course
+}
+
 interface VerifyCertificateEnvelope {
   success: boolean
   valid: boolean
@@ -286,6 +291,7 @@ class ApiService {
     ngoId: string
     dateOfBirth: string
     initialSkills?: string
+    phone?: string
   }): Promise<User> {
     const payload = await this.request<ActivateUserEnvelope>('/api/users/activate', {
       method: 'POST',
@@ -301,7 +307,7 @@ class ApiService {
     return payload.code
   }
 
-  async sendSMSCode(code: string, phoneNumber?: string): Promise<SmsEnvelope['sms']> {
+  async sendSMSCode(code: string, phoneNumber: string): Promise<SmsEnvelope['sms']> {
     const payload = await this.request<SmsEnvelope>('/api/sms/send', {
       method: 'POST',
       body: {
@@ -317,6 +323,22 @@ class ApiService {
       requiresAuth: false
     })
     return payload.courses
+  }
+
+  async createCourse(data: {
+    title: string
+    description?: string
+    instructor?: string
+    duration_hours: number
+    modules_count: number
+    level: string
+    skills?: string
+  }): Promise<Course> {
+    const payload = await this.request<CreateCourseEnvelope>('/api/courses', {
+      method: 'POST',
+      body: data
+    })
+    return payload.course
   }
 
   async getCourseProgress(userId: string): Promise<unknown> {
@@ -401,6 +423,9 @@ export interface Course {
   modules_count: number
   level: string
   skills?: string
+  is_active?: boolean
+  created_at?: string
+  updated_at?: string
 }
 
 export interface CertificateVerification {

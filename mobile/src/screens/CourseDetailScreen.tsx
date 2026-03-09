@@ -106,14 +106,14 @@ export default function CourseDetailScreen({ route, navigation }: CourseDetailSc
       <View style={styles.summaryCard}>
         <Text style={styles.summaryInstructor}>{state.course.instructor ?? 'Equipe Tecnica WIRA'}</Text>
         <Text style={styles.summaryMeta}>
-          {state.course.duration_hours}h • {state.course.modules_count} modulos • {state.course.level}
+          {state.course.duration_hours}h • {state.course.modules_count} módulos • {state.course.level}
         </Text>
         <Text style={styles.summaryDescription}>{state.course.description ?? 'Formacao profissional com certificado.'}</Text>
         <View style={styles.progressTrack}>
           <View style={[styles.progressFill, { width: `${progressItem?.progress ?? 0}%` }]} />
         </View>
         <Text style={styles.progressText}>
-          {progressItem?.progress ?? 0}% completo • modulo atual {progressItem?.currentModule ?? 1}
+          {progressItem?.progress ?? 0}% completo • módulo atual {progressItem?.currentModule ?? 1}
         </Text>
       </View>
 
@@ -147,7 +147,7 @@ export default function CourseDetailScreen({ route, navigation }: CourseDetailSc
 
       <View style={styles.footerAction}>
         <TouchableOpacity style={styles.primaryButton} onPress={() => openQuiz(currentModule)}>
-          <Text style={styles.primaryButtonText}>Quiz do modulo atual</Text>
+          <Text style={styles.primaryButtonText}>Quiz do módulo atual</Text>
         </TouchableOpacity>
       </View>
     </ScrollView>

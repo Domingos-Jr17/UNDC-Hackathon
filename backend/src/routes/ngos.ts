@@ -1,25 +1,25 @@
 import express from 'express';
-import { authenticateToken } from '../middleware/security';
+import { authenticateToken, requireAdminRole, requireStaffRole } from '../middleware/security';
 import NGOController from '../controllers/NGOController';
 
 const router = express.Router();
 
 // Get all NGOs
-router.get('/', authenticateToken, NGOController.getAll);
+router.get('/', authenticateToken, requireStaffRole, NGOController.getAll);
 
 // Get NGO by ID
-router.get('/:id', authenticateToken, NGOController.getById);
+router.get('/:id', authenticateToken, requireStaffRole, NGOController.getById);
 
 // Create NGO
-router.post('/', authenticateToken, NGOController.create);
+router.post('/', authenticateToken, requireAdminRole, NGOController.create);
 
 // Update NGO
-router.put('/:id', authenticateToken, NGOController.update);
+router.put('/:id', authenticateToken, requireAdminRole, NGOController.update);
 
 // Deactivate NGO
-router.patch('/:id/deactivate', authenticateToken, NGOController.deactivate);
+router.patch('/:id/deactivate', authenticateToken, requireAdminRole, NGOController.deactivate);
 
 // Delete NGO
-router.delete('/:id', authenticateToken, NGOController.delete);
+router.delete('/:id', authenticateToken, requireAdminRole, NGOController.delete);
 
 export default router;

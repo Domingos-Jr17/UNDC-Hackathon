@@ -4,6 +4,7 @@ import encryptionService from '../services/encryption'
 import { logger } from '../middleware/security'
 
 const prisma = prismaService.getClient()
+const normalizeNgoId = (value: string): string => value.trim().toLowerCase().replace(/^ong-/, 'ngo-')
 
 const mapUserListItem = (user: {
   id: number
@@ -210,11 +211,12 @@ class UsersController {
   }
 
   static async activate(req: Request, res: Response): Promise<void> {
-    const { ngoId, realName, initialSkills } = req.body as {
+    const { ngoId, realName, initialSkills, phone } = req.body as {
       ngoId: string
       realName?: string
       dateOfBirth?: string
       initialSkills?: string
+      phone?: string
     }
 
     if (!ngoId) {
@@ -226,7 +228,8 @@ class UsersController {
     }
 
     try {
-      const ngo = await prisma.nGO.findUnique({ where: { id: ngoId } })
+      const normalizedNgoId = normalizeNgoId(ngoId)
+      const ngo = await prisma.nGO.findUnique({ where: { id: normalizedNgoId } })
       if (!ngo || !ngo.is_active) {
         res.status(400).json({
           success: false,
@@ -256,9 +259,10 @@ class UsersController {
       const user = await prisma.user.create({
         data: {
           anonymous_code: generatedCode,
-          ngo_id: ngoId,
+          ngo_id: normalizedNgoId,
           role: 'VICTIM',
-          real_name: realName ?? null
+          real_name: realName ?? null,
+          phone: phone ?? null
         }
       })
 

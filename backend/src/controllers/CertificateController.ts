@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
-import { logger } from '../middleware/security';
+import { AuthenticatedRequest } from '../types';
+import { canAccessAnonymousCode, logger } from '../middleware/security';
 import CertificateModel from '../models/Certificate';
 import { CertificateGenerationRequest, CertificateVerificationResponse } from '../types';
 import prismaService from '../services/prisma';
@@ -7,8 +8,16 @@ import prismaService from '../services/prisma';
 const prisma = prismaService.getClient();
 
 class CertificateController {
-  static async generate(req: Request, res: Response): Promise<void> {
+  static async generate(req: AuthenticatedRequest, res: Response): Promise<void> {
     const { anonymousCode, courseId, score } = req.body as CertificateGenerationRequest;
+
+    if (!canAccessAnonymousCode(req.user, anonymousCode)) {
+      res.status(403).json({
+        success: false,
+        error: 'Acesso negado para este recurso'
+      })
+      return
+    }
 
     try {
       const [user, course] = await Promise.all([
@@ -65,8 +74,16 @@ class CertificateController {
     }
   }
 
-  static async getByUser(req: Request, res: Response): Promise<void> {
+  static async getByUser(req: AuthenticatedRequest, res: Response): Promise<void> {
     const { anonymousCode } = req.params;
+
+    if (!canAccessAnonymousCode(req.user, anonymousCode)) {
+      res.status(403).json({
+        success: false,
+        error: 'Acesso negado para este recurso'
+      })
+      return
+    }
 
     try {
       const certificates = await prisma.certificate.findMany({
@@ -159,8 +176,16 @@ class CertificateController {
     }
   }
 
-  static async getByUserAndCourse(req: Request, res: Response): Promise<void> {
+  static async getByUserAndCourse(req: AuthenticatedRequest, res: Response): Promise<void> {
     const { anonymousCode, courseId } = req.params;
+
+    if (!canAccessAnonymousCode(req.user, anonymousCode)) {
+      res.status(403).json({
+        success: false,
+        error: 'Acesso negado para este recurso'
+      })
+      return
+    }
 
     try {
     

@@ -1,10 +1,11 @@
 import express, { Request, Response } from 'express'
 import prismaService from '../services/prisma'
-import { logger } from '../middleware/security'
+import { authenticateToken, ipRateLimit, logger } from '../middleware/security'
 import smsProviderService from '../services/smsProvider'
 
 const router = express.Router()
 const prisma = prismaService.getClient()
+const AUX_ENDPOINTS_ENABLED = process.env.NODE_ENV !== 'production' || process.env.ENABLE_USSD_AUX_ENDPOINTS === 'true'
 
 const SESSION_TIMEOUT_MS = parseInt(process.env.USSD_SESSION_TIMEOUT_MS ?? '300000')
 
@@ -26,6 +27,20 @@ const parsePayload = (payload: string | null): StoredSessionPayload => {
 const formatResponse = (shouldEnd: boolean, message: string): string => {
   const prefix = shouldEnd ? 'END' : 'CON'
   return `${prefix} ${message}`
+}
+
+const isValidPhoneNumber = (value: string): boolean => /^\+?\d{8,15}$/.test(value)
+
+const ensureAuxEndpointsEnabled = (res: Response): boolean => {
+  if (AUX_ENDPOINTS_ENABLED) {
+    return true
+  }
+
+  res.status(404).json({
+    success: false,
+    error: 'Endpoint indisponivel neste ambiente'
+  })
+  return false
 }
 
 async function cleanupExpiredSessions(now: Date): Promise<void> {
@@ -296,7 +311,11 @@ async function handleUssdRequest(
   }
 }
 
-router.post('/test', async (req: Request, res: Response): Promise<void> => {
+router.post('/test', ipRateLimit(20, 15 * 60 * 1000), async (req: Request, res: Response): Promise<void> => {
+  if (!ensureAuxEndpointsEnabled(res)) {
+    return
+  }
+
   const { phoneNumber = '+258840000000', text = '', sessionId } = req.body as {
     phoneNumber?: string
     text?: string
@@ -345,39 +364,56 @@ router.get('/sms/status', (_req: Request, res: Response): void => {
   })
 })
 
-router.post('/sms/send', async (req: Request, res: Response): Promise<void> => {
-  const { phoneNumber, message } = req.body as {
-    phoneNumber?: string
-    message?: string
-  }
+router.post(
+  '/sms/send',
+  authenticateToken,
+  ipRateLimit(30, 15 * 60 * 1000),
+  async (req: Request, res: Response): Promise<void> => {
+    if (!ensureAuxEndpointsEnabled(res)) {
+      return
+    }
 
-  if (!phoneNumber || !message) {
-    res.status(400).json({
-      success: false,
-      error: 'phoneNumber and message are required'
-    })
-    return
-  }
+    const { phoneNumber, message } = req.body as {
+      phoneNumber?: string
+      message?: string
+    }
 
-  try {
-    const result = await smsProviderService.send({ phoneNumber, message })
-    res.json({
-      success: true,
-      mode: result.mode,
-      sms: {
-        id: result.messageId,
-        to: result.to,
-        message: result.body,
-        sentAt: result.sentAt,
-        provider: result.provider
-      }
-    })
-  } catch (error) {
-    res.status(502).json({
-      success: false,
-      error: (error as Error).message
-    })
+    if (!phoneNumber || !message) {
+      res.status(400).json({
+        success: false,
+        error: 'phoneNumber and message are required'
+      })
+      return
+    }
+
+    if (!isValidPhoneNumber(phoneNumber)) {
+      res.status(400).json({
+        success: false,
+        error: 'phoneNumber must be in international format'
+      })
+      return
+    }
+
+    try {
+      const result = await smsProviderService.send({ phoneNumber, message })
+      res.json({
+        success: true,
+        mode: result.mode,
+        sms: {
+          id: result.messageId,
+          to: result.to,
+          message: result.body,
+          sentAt: result.sentAt,
+          provider: result.provider
+        }
+      })
+    } catch (error) {
+      res.status(502).json({
+        success: false,
+        error: (error as Error).message
+      })
+    }
   }
-})
+)
 
 export default router

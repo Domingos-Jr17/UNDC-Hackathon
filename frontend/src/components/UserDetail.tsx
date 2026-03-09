@@ -26,7 +26,7 @@ export default function UserDetail() {
       const response = await apiService.verifyCertificate(code)
       setVerificationFeedback(prev => ({
         ...prev,
-        [code]: response.valid ? 'Certificado validado com sucesso' : 'Certificado invalido'
+        [code]: response.valid ? 'Certificado validado com sucesso' : 'Certificado inválido'
       }))
     } catch (verifyError) {
       setVerificationFeedback(prev => ({
@@ -40,7 +40,7 @@ export default function UserDetail() {
 
   if (loading) {
     return (
-      <Layout title="Detalhes da Beneficiaria" subtitle="Informacoes completas de progresso e certificacao">
+      <Layout title="Detalhes da Beneficiária" subtitle="Informações completas de progresso e certificação">
         <LoadingOverlay show={loading} message="Carregando detalhes..." />
       </Layout>
     )
@@ -48,14 +48,14 @@ export default function UserDetail() {
 
   if (error || !user) {
     return (
-      <Layout title="Detalhes da Beneficiaria" subtitle="Informacoes completas de progresso e certificacao">
+      <Layout title="Detalhes da Beneficiária" subtitle="Informações completas de progresso e certificação">
         <Card>
           <CardContent className="p-8 text-center">
-            <h2 className="text-xl font-semibold text-destructive">Beneficiaria nao encontrada</h2>
-            <p className="text-muted-foreground mt-2">{error ?? 'Nao foi possivel carregar os dados solicitados.'}</p>
+            <h2 className="text-xl font-semibold text-destructive">Beneficiária não encontrada</h2>
+            <p className="text-muted-foreground mt-2">{error ?? 'Não foi possível carregar os dados solicitados.'}</p>
             <Button className="mt-4" onClick={() => navigate('/users')}>
               <ArrowLeft className="mr-2 h-4 w-4" />
-              Voltar para Usuarios
+              Voltar para Utilizadores
             </Button>
           </CardContent>
         </Card>
@@ -64,14 +64,14 @@ export default function UserDetail() {
   }
 
   return (
-    <Layout title="Detalhes da Beneficiaria" subtitle={`Codigo ${user.anonymousCode}`}>
+    <Layout title="Detalhes da Beneficiária" subtitle={`Código ${user.anonymousCode}`}>
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <Button variant="outline" onClick={() => navigate('/users')}>
             <ArrowLeft className="mr-2 h-4 w-4" />
-            Voltar para Usuarios
+            Voltar para Utilizadores
           </Button>
-          <Button onClick={() => navigate('/reports')}>Abrir Relatorios</Button>
+          <Button onClick={() => navigate('/reports')}>Abrir Relatórios</Button>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -115,7 +115,7 @@ export default function UserDetail() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-center justify-between">
-                <span className="text-muted-foreground">Situacao</span>
+                <span className="text-muted-foreground">Situação</span>
                 <StatusBadge status={user.status === 'Ativo' ? 'active' : 'inactive'} />
               </div>
               <div className="flex items-center justify-between">
@@ -123,7 +123,7 @@ export default function UserDetail() {
                 <span>{new Date(user.lastActivity).toLocaleDateString('pt-MZ')}</span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-muted-foreground">Codigo</span>
+                <span className="text-muted-foreground">Código</span>
                 <Badge variant="secondary" className="font-mono">{user.anonymousCode}</Badge>
               </div>
               <div className="flex items-center justify-between">
@@ -156,7 +156,7 @@ export default function UserDetail() {
                       <div className="h-2 rounded-full bg-primary" style={{ width: `${item.percentage}%` }} />
                     </div>
                     <div className="flex items-center justify-between text-xs text-muted-foreground">
-                      <span>Modulo atual: {item.currentModule}</span>
+                      <span>Módulo atual: {item.currentModule}</span>
                       <span>{new Date(item.lastActivity).toLocaleDateString('pt-MZ')}</span>
                     </div>
                   </div>
@@ -183,7 +183,7 @@ export default function UserDetail() {
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="font-medium">{certificate.courseTitle}</p>
-                        <p className="text-sm text-muted-foreground">Codigo: {certificate.code}</p>
+                        <p className="text-sm text-muted-foreground">Código: {certificate.code}</p>
                       </div>
                       <Badge>{certificate.score}%</Badge>
                     </div>

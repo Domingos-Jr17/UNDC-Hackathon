@@ -21,6 +21,21 @@ const logger = winston.createLogger({
 
 const prisma = new PrismaClient()
 
+const resolveSeedStaffPassword = (): string => {
+  const envPassword = process.env.SEED_STAFF_PASSWORD
+  const env = process.env.NODE_ENV ?? 'development'
+
+  if (env === 'development') {
+    return envPassword ?? 'Staff@2026'
+  }
+
+  if (!envPassword) {
+    throw new Error('SEED_STAFF_PASSWORD is required outside development')
+  }
+
+  return envPassword
+}
+
 async function seedBaseData(): Promise<void> {
   logger.info('Seeding base entities...')
 
@@ -131,7 +146,7 @@ async function seedUsers(): Promise<void> {
     skipDuplicates: true
   })
 
-  const staffPassword = await bcrypt.hash('Staff@2026', 10)
+  const staffPassword = await bcrypt.hash(resolveSeedStaffPassword(), 10)
   await prisma.user.createMany({
     data: [
       {
