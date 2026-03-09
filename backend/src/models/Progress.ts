@@ -141,6 +141,18 @@ class ProgressModel {
     data: Partial<Omit<Progress, 'id' | 'user_code' | 'course_id' | 'last_activity'>>
   ): Promise<Progress | null> {
     try {
+      const updateData = {
+        ...(data.completed_modules !== undefined ? { completed_modules: data.completed_modules } : {}),
+        ...(data.percentage !== undefined ? { percentage: data.percentage } : {}),
+        ...(data.current_module !== undefined ? { current_module: data.current_module } : {}),
+        ...(data.quiz_attempts !== undefined ? { quiz_attempts: data.quiz_attempts } : {}),
+        ...(data.last_quiz_score !== undefined ? { last_quiz_score: data.last_quiz_score } : {}),
+        ...(data.completed_at !== undefined
+          ? { completed_at: data.completed_at ? new Date(data.completed_at) : null }
+          : {}),
+        last_activity: new Date()
+      }
+
       const row = await prisma.progress.update({
         where: {
           user_code_course_id: {
@@ -148,15 +160,7 @@ class ProgressModel {
             course_id: where.course_id
           }
         },
-        data: {
-          completed_modules: data.completed_modules,
-          percentage: data.percentage,
-          current_module: data.current_module,
-          quiz_attempts: data.quiz_attempts,
-          last_quiz_score: data.last_quiz_score ?? undefined,
-          completed_at: data.completed_at ? new Date(data.completed_at) : undefined,
-          last_activity: new Date()
-        }
+        data: updateData
       })
       return toProgress(row)
     } catch {

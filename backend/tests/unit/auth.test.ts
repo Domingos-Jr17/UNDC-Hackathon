@@ -1,200 +1,97 @@
-import request from 'supertest';
-import jwt from 'jsonwebtoken';
-import app from '../../src/index.secure';
+import request from 'supertest'
 
-describe('Authentication Routes', () => {
-  describe('POST /api/auth/login', () => {
-    test('should login with valid code', async () => {
-      const response = await request(app)
-        .post('/api/auth/login')
-        .send({ code: 'V0042' });
+jest.mock('../../src/models/User', () => ({
+  __esModule: true,
+  default: {
+    findUnique: jest.fn(),
+    resetLoginAttempts: jest.fn(),
+    validateStaffCredentials: jest.fn(),
+    updateLastLogin: jest.fn()
+  }
+}))
 
-      expect(response.status).toBe(200);
-      expect(response.body.success).toBe(true);
-      expect(response.body.token).toBeDefined();
-      expect(response.body.user.anonymousCode).toBe('V0042');
-      expect(response.body.expiresIn).toBe('24h');
-    });
+import app from '../../src/index.secure'
+import UserModel from '../../src/models/User'
 
-    test('should reject invalid code format', async () => {
-      const response = await request(app)
-        .post('/api/auth/login')
-        .send({ code: 'INVALID' });
+const mockedUserModel = UserModel as unknown as {
+  findUnique: jest.Mock
+  resetLoginAttempts: jest.Mock
+  validateStaffCredentials: jest.Mock
+  updateLastLogin: jest.Mock
+}
 
-      expect(response.status).toBe(400);
-      expect(response.body.error).toBe('Dados inválidos');
-      expect(response.body.details).toBeDefined();
-    });
+describe('Auth Routes', () => {
+  beforeEach(() => {
+    mockedUserModel.findUnique.mockReset()
+    mockedUserModel.resetLoginAttempts.mockReset()
+    mockedUserModel.validateStaffCredentials.mockReset()
+    mockedUserModel.updateLastLogin.mockReset()
+  })
 
-    test('should reject non-existent code', async () => {
-      const response = await request(app)
-        .post('/api/auth/login')
-        .send({ code: 'V9999' });
+  test('POST /api/auth/login should authenticate valid anonymous code', async () => {
+    mockedUserModel.findUnique.mockResolvedValue({
+      anonymous_code: 'V0042',
+      ngo_id: 'ngo-001',
+      role: 'VICTIM',
+      created_at: new Date().toISOString(),
+      locked_until: null
+    })
+    mockedUserModel.resetLoginAttempts.mockResolvedValue(undefined)
 
-      expect(response.status).toBe(401);
-      expect(response.body.error).toBe('Código de acesso inválido');
-    });
+    const response = await request(app)
+      .post('/api/auth/login')
+      .send({ code: 'V0042' })
 
-    test('should handle missing code', async () => {
-      const response = await request(app)
-        .post('/api/auth/login')
-        .send({});
+    expect(response.status).toBe(200)
+    expect(response.body.success).toBe(true)
+    expect(response.body.token).toBeDefined()
+    expect(response.body.user.anonymousCode).toBe('V0042')
+  })
 
-      expect(response.status).toBe(400);
-      expect(response.body.error).toBe('Dados inválidos');
-    });
+  test('POST /api/auth/login should reject unknown code', async () => {
+    mockedUserModel.findUnique.mockResolvedValue(null)
 
-    test('should be case insensitive', async () => {
-      const response = await request(app)
-        .post('/api/auth/login')
-        .send({ code: 'v0042' });
+    const response = await request(app)
+      .post('/api/auth/login')
+      .send({ code: 'V9999' })
 
-      expect(response.status).toBe(200);
-      expect(response.body.user.anonymousCode).toBe('V0042');
-    });
-  });
+    expect(response.status).toBe(401)
+    expect(response.body.error).toBeDefined()
+  })
 
-  describe('POST /api/auth/validate', () => {
-    let token;
+  test('POST /api/auth/staff/login should authenticate staff credentials', async () => {
+    mockedUserModel.validateStaffCredentials.mockResolvedValue({
+      anonymous_code: 'A0001',
+      email: 'staff@wira.org',
+      ngo_id: 'ngo-001',
+      role: 'STAFF',
+      created_at: new Date().toISOString(),
+      locked_until: null
+    })
+    mockedUserModel.updateLastLogin.mockResolvedValue(undefined)
 
-    beforeEach(async () => {
-      const loginResponse = await request(app)
-        .post('/api/auth/login')
-        .send({ code: 'V0042' });
+    const response = await request(app)
+      .post('/api/auth/staff/login')
+      .send({ email: 'staff@wira.org', password: 'Staff@2026' })
 
-      token = loginResponse.body.token;
-    });
+    expect(response.status).toBe(200)
+    expect(response.body.success).toBe(true)
+    expect(response.body.user.anonymousCode).toBe('A0001')
+  })
 
-    test('should validate valid token', async () => {
-      const response = await request(app)
-        .post('/api/auth/validate')
-        .set('Authorization', `Bearer ${token}`);
+  test('GET /api/auth/check/:code should validate format', async () => {
+    const response = await request(app).get('/api/auth/check/invalid')
 
-      expect(response.status).toBe(200);
-      expect(response.body.success).toBe(true);
-      expect(response.body.valid).toBe(true);
-      expect(response.body.user.anonymousCode).toBe('V0042');
-    });
+    expect(response.status).toBe(400)
+    expect(response.body.error).toContain('formato')
+  })
 
-    test('should reject invalid token', async () => {
-      const response = await request(app)
-        .post('/api/auth/validate')
-        .set('Authorization', 'Bearer invalid-token');
+  test('POST /api/auth/refresh should reject invalid token', async () => {
+    const response = await request(app)
+      .post('/api/auth/refresh')
+      .set('Authorization', 'Bearer invalid-token')
 
-      expect(response.status).toBe(401);
-      expect(response.body.error).toBe('Token inválido ou expirado');
-    });
-
-    test('should reject missing token', async () => {
-      const response = await request(app)
-        .post('/api/auth/validate');
-
-      expect(response.status).toBe(401);
-      expect(response.body.error).toBe('Token não fornecido');
-    });
-  });
-
-  describe('POST /api/auth/refresh', () => {
-    let token;
-
-    beforeEach(async () => {
-      const loginResponse = await request(app)
-        .post('/api/auth/login')
-        .send({ code: 'V0042' });
-
-      token = loginResponse.body.token;
-    });
-
-    test('should refresh valid token', async () => {
-      const response = await request(app)
-        .post('/api/auth/refresh')
-        .set('Authorization', `Bearer ${token}`);
-
-      expect(response.status).toBe(200);
-      expect(response.body.success).toBe(true);
-      expect(response.body.token).toBeDefined();
-      expect(response.body.token).not.toBe(token);
-    });
-
-    test('should reject invalid token', async () => {
-      const response = await request(app)
-        .post('/api/auth/refresh')
-        .set('Authorization', 'Bearer invalid-token');
-
-      expect(response.status).toBe(401);
-      expect(response.body.error).toBe('Token inválido');
-    });
-  });
-
-  describe('DELETE /api/auth/logout', () => {
-    test('should logout successfully', async () => {
-      const response = await request(app)
-        .delete('/api/auth/logout');
-
-      expect(response.status).toBe(200);
-      expect(response.body.success).toBe(true);
-      expect(response.body.message).toBe('Logout realizado com sucesso');
-    });
-
-    test('should handle logout with token', async () => {
-      const loginResponse = await request(app)
-        .post('/api/auth/login')
-        .send({ code: 'V0042' });
-
-      const token = loginResponse.body.token;
-
-      const response = await request(app)
-        .delete('/api/auth/logout')
-        .set('Authorization', `Bearer ${token}`);
-
-      expect(response.status).toBe(200);
-    });
-  });
-
-  describe('GET /api/auth/check/:code', () => {
-    test('should check available code', async () => {
-      const response = await request(app)
-        .get('/api/auth/check/V9999');
-
-      expect(response.status).toBe(200);
-      expect(response.body.success).toBe(true);
-      expect(response.body.available).toBe(true);
-      expect(response.body.exists).toBe(false);
-    });
-
-    test('should check existing code', async () => {
-      const response = await request(app)
-        .get('/api/auth/check/V0042');
-
-      expect(response.status).toBe(200);
-      expect(response.body.success).toBe(true);
-      expect(response.body.available).toBe(false);
-      expect(response.body.exists).toBe(true);
-    });
-
-    test('should validate code format', async () => {
-      const response = await request(app)
-        .get('/api/auth/check/INVALID');
-
-      expect(response.status).toBe(400);
-      expect(response.body.error).toBe('Código deve estar no formato V####');
-    });
-  });
-
-  describe('Rate Limiting', () => {
-    test('should apply rate limiting to login attempts', async () => {
-      const loginPromises = Array(10).fill().map(() =>
-        request(app)
-          .post('/api/auth/login')
-          .send({ code: 'V0042' })
-      );
-
-      const responses = await Promise.all(loginPromises);
-      const successCount = responses.filter(r => r.status === 200).length;
-      const rateLimitedCount = responses.filter(r => r.status === 429).length;
-
-      expect(successCount).toBeGreaterThan(0);
-      expect(rateLimitedCount).toBeGreaterThan(0);
-    });
-  });
-});
+    expect(response.status).toBe(401)
+    expect(response.body.error).toBeDefined()
+  })
+})

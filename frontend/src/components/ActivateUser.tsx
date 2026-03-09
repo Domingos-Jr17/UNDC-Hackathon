@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 import { useState, useCallback } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -12,10 +12,11 @@ import { UserPlus, UserCheck, Shield, MessageSquare } from 'lucide-react';
 import { toast } from "sonner";
 import { activateUserSchema, validateDate, ActivateUserFormData } from '../lib/schemas';
 import Layout from './layout/Layout';
+import { useUserActivation } from '../hooks/useApi';
 
 export default function ActivateUser() {
     const [generatedCode, setGeneratedCode] = useState<string>('');
-    const [loading, setLoading] = useState<boolean>(false);
+    const { loading, activateUser, sendSMS } = useUserActivation();
 
     const form = useForm({
         resolver: zodResolver(activateUserSchema),
@@ -37,33 +38,33 @@ export default function ActivateUser() {
             return;
         }
 
-        setLoading(true);
         const id = toast.loading('Gerando código...');
 
-        // Simular geração de código
-        setTimeout(() => {
-            const newCode = 'V' + Math.floor(Math.random() * 9000 + 1000);
+        try {
+            const user = await activateUser(data);
+            const newCode = user.anonymousCode;
             setGeneratedCode(newCode);
-            setLoading(false);
-
             toast.dismiss(id);
             toast.success(`Código gerado com sucesso: ${newCode}`);
-        }, 1000);
-    }, []);
+        } catch {
+            toast.dismiss(id);
+        }
+    }, [activateUser]);
 
-    const handleSendSMS = useCallback(() => {
+    const handleSendSMS = useCallback(async () => {
         if (!generatedCode) {
             toast.error('Gere um código primeiro');
             return;
         }
 
         const id = toast.loading('Enviando SMS...');
-        // Simular envio de SMS
-        setTimeout(() => {
+        try {
+            await sendSMS(generatedCode);
             toast.dismiss(id);
-            toast.success('Código enviado com sucesso');
-        }, 800);
-    }, [generatedCode]); 
+        } catch {
+            toast.dismiss(id);
+        }
+    }, [generatedCode, sendSMS]); 
 
     return (
         <Layout
@@ -86,7 +87,7 @@ export default function ActivateUser() {
                                 <Input
                                     id="realName"
                                     required
-                                    placeholder="Maria Silva"
+                                    placeholder="Beneficiaria A"
                                     {...register('realName')}
                                     aria-invalid={errors.realName ? "true" : "false"}
                                 />
@@ -188,7 +189,9 @@ export default function ActivateUser() {
                                 <Button
                                     className="w-full"
                                     variant="outline"
-                                    onClick={handleSendSMS}
+                                    onClick={() => {
+                                        void handleSendSMS();
+                                    }}
                                     disabled={!generatedCode}
                                 >
                                     <MessageSquare className="w-4 h-4 mr-2" />

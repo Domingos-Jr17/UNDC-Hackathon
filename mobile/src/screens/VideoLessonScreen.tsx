@@ -1,261 +1,317 @@
-import React, { useState, useRef } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Alert } from 'react-native';
-import { Video, ResizeMode } from 'expo-av';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { RouteProp } from '@react-navigation/native';
-import { RootStackParamList } from '../types/navigation';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { ActivityIndicator, Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import { Video, ResizeMode } from 'expo-av'
+import { NativeStackNavigationProp } from '@react-navigation/native-stack'
+import { RouteProp } from '@react-navigation/native'
+import { RootStackParamList } from '../types/navigation'
+import apiService, { AggregatedProgress, CourseModule } from '../services/api'
+import sessionService from '../services/session'
 
-type VideoLessonScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'VideoLesson'>;
-type VideoLessonScreenRouteProp = RouteProp<RootStackParamList, 'VideoLesson'>;
+type VideoLessonScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'VideoLesson'>
+type VideoLessonScreenRouteProp = RouteProp<RootStackParamList, 'VideoLesson'>
 
 interface VideoLessonScreenProps {
-    route: VideoLessonScreenRouteProp;
-    navigation: VideoLessonScreenNavigationProp;
+  route: VideoLessonScreenRouteProp
+  navigation: VideoLessonScreenNavigationProp
+}
+
+interface VideoState {
+  userCode: string
+  module: CourseModule | null
+  progress: AggregatedProgress | null
+}
+
+const initialState: VideoState = {
+  userCode: '',
+  module: null,
+  progress: null
 }
 
 export default function VideoLessonScreen({ route, navigation }: VideoLessonScreenProps) {
-    const { courseId, moduleId } = route.params;
-    const videoRef = useRef<Video>(null);
-    const [isPlaying, setIsPlaying] = useState(false);
-    const [isDownloaded, setIsDownloaded] = useState(false);
+  const { courseId, moduleId } = route.params
+  const videoRef = useRef<Video>(null)
+  const [state, setState] = useState<VideoState>(initialState)
+  const [loading, setLoading] = useState(true)
+  const [submitting, setSubmitting] = useState(false)
+  const [isPlaying, setIsPlaying] = useState(false)
 
-    const handlePlayPause = () => {
-        if (isPlaying) {
-            videoRef.current?.pauseAsync();
-        } else {
-            videoRef.current?.playAsync();
-        }
-        setIsPlaying(!isPlaying);
-    };
+  const loadData = useCallback(async (): Promise<void> => {
+    try {
+      const userCode = await sessionService.getUserCode()
+      if (!userCode) {
+        navigation.navigate('Login')
+        return
+      }
 
-    const handleDownload = () => {
-        // Simular download para acesso offline
-        Alert.alert(
-            'Download Iniciado',
-            'O vídeo será baixado para acesso offline. Você será notificado quando concluído.',
-            [
-                { text: 'OK', onPress: () => setIsDownloaded(true) }
-            ]
-        );
-    };
+      const [modules, progress] = await Promise.all([
+        apiService.getCourseModules(courseId),
+        apiService.getAggregatedProgress(userCode)
+      ])
 
-    const handleComplete = () => {
-        Alert.alert(
-            'Módulo Concluído',
-            'Parabéns! Você completou este módulo com sucesso.',
-            [
-                { text: 'Continuar', onPress: () => navigation.goBack() }
-            ]
-        );
-    };
+      const module = modules.find(item => String(item.id) === moduleId) ?? null
+      setState({
+        userCode,
+        module,
+        progress
+      })
+    } catch (error) {
+      Alert.alert('Erro', (error as Error).message)
+    } finally {
+      setLoading(false)
+    }
+  }, [courseId, moduleId, navigation])
 
+  useEffect(() => {
+    void loadData()
+  }, [loadData])
+
+  const progressItem = useMemo(
+    () => state.progress?.courses.find(item => item.courseId === courseId),
+    [state.progress, courseId]
+  )
+
+  const togglePlayPause = (): void => {
+    if (!state.module?.videoUrl) {
+      Alert.alert('Video indisponivel', 'Este modulo ainda nao possui video publicado.')
+      return
+    }
+
+    if (isPlaying) {
+      void videoRef.current?.pauseAsync()
+    } else {
+      void videoRef.current?.playAsync()
+    }
+    setIsPlaying(!isPlaying)
+  }
+
+  const handleDownload = (): void => {
+    if (!state.module?.downloadable || !state.module?.videoUrl) {
+      Alert.alert('Offline indisponivel', 'Este conteudo nao possui pacote offline no momento.')
+      return
+    }
+
+    Alert.alert('Download', 'O pacote offline deste modulo sera disponibilizado em breve.')
+  }
+
+  const handleComplete = async (): Promise<void> => {
+    if (!state.module || !state.userCode) {
+      return
+    }
+
+    const completed = new Set(progressItem?.completedModules ?? [])
+    completed.add(String(state.module.id))
+
+    const totalModules = progressItem?.modulesCount ?? Math.max(state.module.id, completed.size)
+    const percentage = Math.min(100, Math.round((completed.size / totalModules) * 100))
+
+    try {
+      setSubmitting(true)
+      await apiService.updateProgress(state.userCode, courseId, [...completed], percentage)
+      Alert.alert('Concluido', 'Modulo marcado como concluido com sucesso.', [
+        { text: 'OK', onPress: () => navigation.goBack() }
+      ])
+    } catch (error) {
+      Alert.alert('Erro', (error as Error).message)
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  if (loading) {
     return (
-        <ScrollView style={styles.container}>
-            <View style={styles.header}>
-                <TouchableOpacity onPress={() => navigation.goBack()}>
-                    <Text style={styles.backButton}>← Voltar</Text>
-                </TouchableOpacity>
-                <Text style={styles.title}>Módulo {moduleId}</Text>
-            </View>
+      <View style={styles.loaderContainer}>
+        <ActivityIndicator size="large" color="#1E3A8A" />
+      </View>
+    )
+  }
 
-            <View style={styles.videoContainer}>
-                <Video
-                    ref={videoRef}
-                    source={{ uri: 'https://example.com/video.mp4' }}
-                    style={styles.video}
-                    useNativeControls
-                    resizeMode={ResizeMode.CONTAIN}
-                    shouldPlay={isPlaying}
-                    onPlaybackStatusUpdate={(status) => {
-                        if (status.isLoaded) {
-                            setIsPlaying(status.isPlaying || false);
-                        }
-                    }}
-                />
+  if (!state.module) {
+    return (
+      <View style={styles.loaderContainer}>
+        <Text style={styles.errorText}>Modulo nao encontrado.</Text>
+      </View>
+    )
+  }
 
-                <View style={styles.videoControls}>
-                    <TouchableOpacity
-                        style={styles.controlButton}
-                        onPress={handlePlayPause}
-                    >
-                        <Text style={styles.controlText}>
-                            {isPlaying ? 'Pausar' : 'Play'}
-                        </Text>
-                    </TouchableOpacity>
+  const isCompleted = (progressItem?.completedModules ?? []).includes(String(state.module.id))
 
-                    <TouchableOpacity
-                        style={styles.controlButton}
-                        onPress={handleDownload}
-                    >
-                        <Text style={styles.controlText}>
-                            {isDownloaded ? '✓ Baixado' : 'Baixar'}
-                        </Text>
-                    </TouchableOpacity>
-                </View>
-            </View>
+  return (
+    <ScrollView style={styles.container}>
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => navigation.goBack()}>
+          <Text style={styles.backButton}>Voltar</Text>
+        </TouchableOpacity>
+        <Text style={styles.title}>Modulo {moduleId}</Text>
+      </View>
 
-            <View style={styles.contentContainer}>
-                <Text style={styles.sectionTitle}>Conteúdo do Módulo</Text>
+      <View style={styles.videoWrapper}>
+        {state.module.videoUrl ? (
+          <Video
+            ref={videoRef}
+            source={{ uri: state.module.videoUrl }}
+            style={styles.video}
+            useNativeControls
+            resizeMode={ResizeMode.CONTAIN}
+            onPlaybackStatusUpdate={status => {
+              if (status.isLoaded) {
+                setIsPlaying(status.isPlaying ?? false)
+              }
+            }}
+          />
+        ) : (
+          <View style={styles.videoUnavailable}>
+            <Text style={styles.videoUnavailableText}>Video ainda nao publicado para este modulo.</Text>
+          </View>
+        )}
+      </View>
 
-                <View style={styles.contentCard}>
-                    <Text style={styles.contentTitle}>Objetivos de Aprendizagem</Text>
-                    <Text style={styles.contentText}>
-                        • Identificar componentes da máquina industrial{'\n'}
-                        • Configurar tensão e velocidade adequadas{'\n'}
-                        • Realizar costura reta com precisão{'\n'}
-                        • Manusear ferramentas de segurança
-                    </Text>
-                </View>
+      <View style={styles.content}>
+        <Text style={styles.moduleTitle}>{state.module.title}</Text>
+        <Text style={styles.moduleMeta}>Duracao: {state.module.duration}</Text>
+        <Text style={styles.moduleDescription}>{state.module.description ?? 'Sem descricao adicional.'}</Text>
 
-                <View style={styles.contentCard}>
-                    <Text style={styles.contentTitle}>Passo a Passo</Text>
-                    <Text style={styles.contentText}>
-                        1. Verificar fio na máquina{'\n'}
-                        2. Enrolar linha reta{'\n'}
-                        3. Costurar seguindo guia{'\n'}
-                        4. Verificar pontos de parada
-                    </Text>
-                </View>
+        <View style={styles.actionsRow}>
+          <TouchableOpacity style={styles.secondaryButton} onPress={togglePlayPause}>
+            <Text style={styles.secondaryButtonText}>{isPlaying ? 'Pausar' : 'Reproduzir'}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.secondaryButton} onPress={handleDownload}>
+            <Text style={styles.secondaryButtonText}>Offline</Text>
+          </TouchableOpacity>
+        </View>
 
-                <View style={styles.contentCard}>
-                    <Text style={styles.contentTitle}>Dicas Importantes</Text>
-                    <Text style={styles.contentText}>
-                        • Mantenha os dedos afastados da agulha{'\n'}
-                        • Use iluminação adequada para evitar fadiga{'\n'}
-                        • Faça pausas regulares para descansar
-                    </Text>
-                </View>
-            </View>
+        <TouchableOpacity
+          style={[styles.primaryButton, (submitting || isCompleted) && styles.disabledButton]}
+          onPress={() => {
+            void handleComplete()
+          }}
+          disabled={submitting || isCompleted}
+        >
+          <Text style={styles.primaryButtonText}>
+            {isCompleted ? 'Modulo ja concluido' : submitting ? 'Salvando...' : 'Marcar como concluido'}
+          </Text>
+        </TouchableOpacity>
 
-            <View style={styles.actionContainer}>
-                <TouchableOpacity
-                    style={styles.actionButton}
-                    onPress={handleComplete}
-                >
-                    <Text style={styles.actionButtonText}>Marcar como Concluído</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                    style={styles.secondaryButton}
-                    onPress={() => navigation.navigate('Quiz', { courseId, moduleId })}
-                >
-                    <Text style={styles.secondaryButtonText}>Fazer Quiz</Text>
-                </TouchableOpacity>
-            </View>
-        </ScrollView>
-    );
+        <TouchableOpacity
+          style={styles.quizButton}
+          onPress={() => navigation.navigate('Quiz', { courseId, moduleId: String(state.module?.id ?? moduleId) })}
+        >
+          <Text style={styles.quizButtonText}>Fazer Quiz deste modulo</Text>
+        </TouchableOpacity>
+      </View>
+    </ScrollView>
+  )
 }
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: '#F5F5F5',
-    },
-    header: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        padding: 20,
-        paddingTop: 40,
-    },
-    backButton: {
-        fontSize: 16,
-        color: '#1E3A8A',
-        marginRight: 20,
-    },
-    title: {
-        fontSize: 20,
-        fontWeight: 'bold',
-        color: '#FFFFFF',
-    },
-    videoContainer: {
-        backgroundColor: '#000000',
-        borderRadius: 12,
-        overflow: 'hidden',
-        margin: 20,
-    },
-    video: {
-        width: '100%',
-        height: 200,
-    },
-    videoControls: {
-        flexDirection: 'row',
-        justifyContent: 'center',
-        padding: 10,
-        backgroundColor: 'rgba(0,0,0,0.5)',
-    },
-    controlButton: {
-        backgroundColor: 'rgba(255,255,255,0.3)',
-        padding: 10,
-        borderRadius: 20,
-        marginHorizontal: 10,
-    },
-    controlText: {
-        color: '#FFFFFF',
-        fontSize: 14,
-        fontWeight: 'bold',
-    },
-    contentContainer: {
-        padding: 20,
-    },
-    sectionTitle: {
-        fontSize: 18,
-        fontWeight: 'bold',
-        color: '#333333',
-        marginBottom: 15,
-    },
-    contentCard: {
-        backgroundColor: '#FFFFFF',
-        borderRadius: 12,
-        padding: 15,
-        marginBottom: 15,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-        elevation: 3,
-    },
-    contentTitle: {
-        fontSize: 16,
-        fontWeight: 'bold',
-        color: '#333333',
-        marginBottom: 10,
-    },
-    contentText: {
-        fontSize: 14,
-        color: '#333333',
-        lineHeight: 20,
-    },
-    actionContainer: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        padding: 20,
-        marginTop: 20,
-    },
-    actionButton: {
-        backgroundColor: '#4CAF50',
-        paddingVertical: 15,
-        paddingHorizontal: 20,
-        borderRadius: 8,
-        flex: 1,
-        marginRight: 10,
-    },
-    actionButtonText: {
-        color: '#FFFFFF',
-        fontSize: 16,
-        fontWeight: 'bold',
-        textAlign: 'center',
-    },
-    secondaryButton: {
-        backgroundColor: '#1E3A8A',
-        paddingVertical: 15,
-        paddingHorizontal: 20,
-        borderRadius: 8,
-        flex: 1,
-    },
-    secondaryButtonText: {
-        color: '#FFFFFF',
-        fontSize: 16,
-        fontWeight: 'bold',
-        textAlign: 'center',
-    },
-});
+  loaderContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#F5F5F5'
+  },
+  errorText: {
+    color: '#B91C1C',
+    fontSize: 16,
+    fontWeight: '600'
+  },
+  container: {
+    flex: 1,
+    backgroundColor: '#F5F5F5'
+  },
+  header: {
+    backgroundColor: '#1E3A8A',
+    paddingTop: 56,
+    paddingHorizontal: 20,
+    paddingBottom: 18
+  },
+  backButton: {
+    color: '#90CAF9',
+    fontSize: 15,
+    marginBottom: 8
+  },
+  title: {
+    color: '#FFFFFF',
+    fontSize: 22,
+    fontWeight: '700'
+  },
+  videoWrapper: {
+    backgroundColor: '#000000',
+    margin: 20,
+    borderRadius: 12,
+    overflow: 'hidden'
+  },
+  video: {
+    width: '100%',
+    height: 220
+  },
+  videoUnavailable: {
+    height: 220,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 20
+  },
+  videoUnavailableText: {
+    color: '#E5E7EB',
+    textAlign: 'center'
+  },
+  content: {
+    paddingHorizontal: 20,
+    paddingBottom: 24
+  },
+  moduleTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#111827'
+  },
+  moduleMeta: {
+    marginTop: 8,
+    color: '#6B7280',
+    fontSize: 13
+  },
+  moduleDescription: {
+    marginTop: 10,
+    color: '#374151',
+    lineHeight: 19
+  },
+  actionsRow: {
+    marginTop: 14,
+    flexDirection: 'row',
+    gap: 8
+  },
+  secondaryButton: {
+    flex: 1,
+    backgroundColor: '#E5E7EB',
+    borderRadius: 8,
+    paddingVertical: 12,
+    alignItems: 'center'
+  },
+  secondaryButtonText: {
+    color: '#1F2937',
+    fontWeight: '700'
+  },
+  primaryButton: {
+    marginTop: 14,
+    backgroundColor: '#1E3A8A',
+    borderRadius: 8,
+    paddingVertical: 13,
+    alignItems: 'center'
+  },
+  primaryButtonText: {
+    color: '#FFFFFF',
+    fontWeight: '700'
+  },
+  disabledButton: {
+    opacity: 0.65
+  },
+  quizButton: {
+    marginTop: 10,
+    backgroundColor: '#047857',
+    borderRadius: 8,
+    paddingVertical: 13,
+    alignItems: 'center'
+  },
+  quizButtonText: {
+    color: '#FFFFFF',
+    fontWeight: '700'
+  }
+})

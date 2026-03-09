@@ -72,8 +72,45 @@ model Course {
   updated_at      DateTime? @updatedAt
   progresses      Progress[]
   certificates    Certificate[]
+  modules         CourseModule[]
+  quiz_questions  CourseQuizQuestion[]
 
   @@index([is_active])
+}
+
+model CourseModule {
+  id               Int       @id @default(autoincrement())
+  course_id        String
+  module_number    Int
+  title            String
+  description      String?
+  duration_minutes Int
+  video_url        String?
+  downloadable     Boolean   @default(false)
+  is_active        Boolean   @default(true)
+  created_at       DateTime  @default(now())
+  updated_at       DateTime? @updatedAt
+  course           Course    @relation(fields: [course_id], references: [id])
+
+  @@unique([course_id, module_number])
+  @@index([course_id, is_active])
+}
+
+model CourseQuizQuestion {
+  id             Int       @id @default(autoincrement())
+  course_id      String
+  position       Int
+  question_text  String
+  options_json   String
+  correct_answer Int
+  explanation    String
+  is_active      Boolean   @default(true)
+  created_at     DateTime  @default(now())
+  updated_at     DateTime? @updatedAt
+  course         Course    @relation(fields: [course_id], references: [id])
+
+  @@unique([course_id, position])
+  @@index([course_id, is_active])
 }
 
 model Progress {

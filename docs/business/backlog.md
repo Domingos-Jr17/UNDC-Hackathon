@@ -544,7 +544,7 @@ const COURSE_DATA = {
   costura: {
     title: 'Costura Avançada',
     description: 'Aprenda técnicas profissionais de costura para produção de uniformes escolares. Ao final, você estará apta a trabalhar em fábricas têxteis ou cooperativas.',
-    instructor: 'Professora Ana Machel',
+    instructor: 'Professora Instrutora A',
     modules: [
       { id: 1, title: 'Preparação de Máquina Industrial', duration: '45 min', completed: true },
       { id: 2, title: 'Técnicas de Costura Reta', duration: '60 min', completed: true },
@@ -1306,7 +1306,7 @@ app.use(express.json());
 const USERS = {
   'V0042': {
     code: 'V0042',
-    name: 'Maria Silva', // Criptografado em produção
+    name: 'Beneficiaria A', // Criptografado em produção
     ngo: 'Centro Acolhimento Maputo',
     courses: ['costura'],
     progress: {
@@ -1316,7 +1316,7 @@ const USERS = {
   },
   'V0038': {
     code: 'V0038',
-    name: 'Ana Costa',
+    name: 'Beneficiaria B',
     ngo: 'Centro Acolhimento Maputo',
     courses: ['culinaria'],
     progress: {
@@ -1768,7 +1768,7 @@ export default function JobsMockupScreen({ navigation }) {
       "id": "costura",
       "title": "Costura Avançada - Uniformes Escolares",
       "description": "Curso completo de costura industrial focado em produção de uniformes escolares. Técnicas profissionais reconhecidas pelo mercado.",
-      "instructor": "Professora Ana Machel",
+      "instructor": "Professora Instrutora A",
       "duration": "40 horas",
       "modules": 8,
       "level": "Intermediário",
@@ -1779,7 +1779,7 @@ export default function JobsMockupScreen({ navigation }) {
       "id": "culinaria",
       "title": "Culinária Profissional Moçambicana",
       "description": "Técnicas de cozinha profissional focadas em pratos moçambicanos e gestão de cozinha.",
-      "instructor": "Chef João Sitoe",
+      "instructor": "Chef Instrutor",
       "duration": "35 horas",
       "modules": 7,
       "level": "Básico",
@@ -1790,7 +1790,7 @@ export default function JobsMockupScreen({ navigation }) {
       "id": "agricultura",
       "title": "Agricultura Sustentável",
       "description": "Técnicas modernas de cultivo de milho e hortaliças com foco em sustentabilidade e produtividade.",
-      "instructor": "Eng. Maria Cossa",
+      "instructor": "Eng. Instrutora B",
       "duration": "30 horas",
       "modules": 6,
       "level": "Básico",

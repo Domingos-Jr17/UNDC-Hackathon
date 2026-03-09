@@ -25,7 +25,7 @@ export const Header = () => {
             <div className=" bg-[url('/public/logo.png')] bg-cover bg-center bg-no-repeat w-12 h-12"></div>
             {user && (
                 <div className="text-white">
-                    <TypographySmall className="text-white/80">Código: {user.code}</TypographySmall>
+                    <TypographySmall className="text-white/80">Código: {user.anonymousCode}</TypographySmall>
                     <TypographySmall className="text-white/80">ONG: {user.ngoId}</TypographySmall>
                 </div>
             )}

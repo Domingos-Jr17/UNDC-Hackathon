@@ -1,165 +1,136 @@
-import { useState, useEffect, useCallback } from 'react';
-import { apiService, ApiError, User, DashboardStats, Activity, Course } from '../services/api';
-import { toast } from 'sonner';
+import { useState, useEffect, useCallback } from 'react'
+import { apiService, ApiError, User, DashboardStats, Activity, Course } from '../services/api'
+import { toast } from 'sonner'
 
 interface UseApiState<T> {
-  data: T | null;
-  loading: boolean;
-  error: string | null;
-  refetch: () => Promise<void>;
+  data: T | null
+  loading: boolean
+  error: string | null
+  refetch: () => Promise<void>
 }
 
-// Hook genérico para requisições API
-export function useApi<T>(apiCall: () => Promise<T>, dependencies: any[] = []) {
+export function useApi<T>(apiCall: () => Promise<T>, dependencies: unknown[] = []): UseApiState<T> {
   const [state, setState] = useState<UseApiState<T>>({
     data: null,
     loading: true,
     error: null,
-    refetch: async () => {}
-  });
+    refetch: async () => undefined
+  })
 
   const fetchData = useCallback(async () => {
-    setState(prev => ({ ...prev, loading: true, error: null }));
+    setState(prev => ({ ...prev, loading: true, error: null }))
 
     try {
-      const result = await apiCall();
+      const result = await apiCall()
       setState({
         data: result,
         loading: false,
         error: null,
         refetch: fetchData
-      });
+      })
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       setState({
         data: null,
         loading: false,
-        error: errorMessage,
+        error: (error as Error).message,
         refetch: fetchData
-      });
+      })
     }
-  }, dependencies);
+  }, dependencies)
 
   useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+    void fetchData()
+  }, [fetchData])
 
-  return state;
+  return state
 }
 
-// Hook para autenticação
+const toFrontendUser = (payload: {
+  anonymousCode: string
+  ngoId: string
+  role: 'VICTIM' | 'STAFF' | 'ADMIN'
+  createdAt: string
+  email?: string
+  realName?: string
+}): User => ({
+  id: payload.anonymousCode,
+  anonymousCode: payload.anonymousCode,
+  ngoId: payload.ngoId,
+  role: payload.role,
+  status: 'Ativo',
+  lastActivity: new Date().toISOString(),
+  coursesCompleted: 0,
+  certificatesEarned: 0,
+  totalProgress: 0,
+  createdAt: payload.createdAt
+})
+
 export function useAuth() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [user, setUser] = useState<User | null>(null)
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const savedUser = localStorage.getItem('wira_user');
-    if (savedUser) {
-      try {
-        const parsedUser = JSON.parse(savedUser);
-        setUser(parsedUser);
-        setIsAuthenticated(true);
-      } catch {
-        localStorage.removeItem('wira_user');
-      }
+    const raw = localStorage.getItem('wira_user')
+    if (!raw) {
+      setLoading(false)
+      return
     }
-    setLoading(false);
-  }, []);
+
+    try {
+      const parsed = JSON.parse(raw) as User
+      setUser(parsed)
+      setIsAuthenticated(true)
+    } catch {
+      localStorage.removeItem('wira_user')
+    } finally {
+      setLoading(false)
+    }
+  }, [])
 
   const login = useCallback(async (code: string): Promise<boolean> => {
     try {
-      setLoading(true);
-      const response = await apiService.authenticateUser(code);
-
-      if (response.data) {
-        // Transform backend response to frontend User format
-        const backendUser = response.data as any;
-        const userData: User = {
-          id: backendUser.user?.anonymousCode || code,
-          anonymousCode: backendUser.user?.anonymousCode || code,
-          code: backendUser.user?.anonymousCode || code, // backward compatibility
-          realName: backendUser.user?.realName,
-          email: backendUser.user?.email,
-          ngoId: backendUser.user?.ngoId,
-          role: backendUser.user?.role,
-          status: 'Ativo', // Default status
-          lastActivity: new Date().toISOString(),
-          coursesCompleted: 0,
-          certificatesEarned: 0,
-          createdAt: backendUser.user?.createdAt
-        };
-
-        setUser(userData);
-        setIsAuthenticated(true);
-        localStorage.setItem('wira_user', JSON.stringify(userData));
-        localStorage.setItem('wira_token', backendUser.token);
-        toast.success(`Bem-vindo(a)! Código ${code} autenticado com sucesso.`);
-        return true;
-      }
-      return false;
+      setLoading(true)
+      const payload = await apiService.authenticateUser(code)
+      const mapped = toFrontendUser(payload.user)
+      setUser(mapped)
+      setIsAuthenticated(true)
+      localStorage.setItem('wira_user', JSON.stringify(mapped))
+      toast.success(`Login realizado com sucesso para ${payload.user.anonymousCode}`)
+      return true
     } catch (error) {
-      if (error instanceof ApiError) {
-        toast.error(error.message);
-      } else {
-        toast.error('Erro ao autenticar. Tente novamente.');
-      }
-      return false;
+      toast.error(error instanceof ApiError ? error.message : 'Falha ao autenticar')
+      return false
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  }, []);
+  }, [])
 
-  // Staff login for NGO dashboard
   const staffLogin = useCallback(async (email: string, password: string): Promise<boolean> => {
     try {
-      setLoading(true);
-      const response = await apiService.authenticateStaff(email, password);
-
-      if (response.data) {
-        // Transform backend response to frontend User format
-        const backendUser = response.data as any;
-        const userData: User = {
-          id: backendUser.user?.anonymousCode || email,
-          anonymousCode: backendUser.user?.anonymousCode || '',
-          code: backendUser.user?.anonymousCode || '', // backward compatibility
-          realName: backendUser.user?.realName,
-          email: backendUser.user?.email,
-          ngoId: backendUser.user?.ngoId,
-          role: backendUser.user?.role,
-          status: 'Ativo', // Default status
-          lastActivity: new Date().toISOString(),
-          coursesCompleted: 0,
-          certificatesEarned: 0,
-          createdAt: backendUser.user?.createdAt
-        };
-
-        setUser(userData);
-        setIsAuthenticated(true);
-        localStorage.setItem('wira_user', JSON.stringify(userData));
-        localStorage.setItem('wira_token', backendUser.token);
-        toast.success(`Bem-vindo(a) ${backendUser.user?.realName || email}!`);
-        return true;
-      }
-      return false;
+      setLoading(true)
+      const payload = await apiService.authenticateStaff(email, password)
+      const mapped = toFrontendUser(payload.user)
+      setUser(mapped)
+      setIsAuthenticated(true)
+      localStorage.setItem('wira_user', JSON.stringify(mapped))
+      toast.success(`Bem-vinda/o ${payload.user.anonymousCode}`)
+      return true
     } catch (error) {
-      if (error instanceof ApiError) {
-        toast.error(error.message);
-      } else {
-        toast.error('Erro ao autenticar. Tente novamente.');
-      }
-      return false;
+      toast.error(error instanceof ApiError ? error.message : 'Falha ao autenticar equipe')
+      return false
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  }, []);
+  }, [])
 
   const logout = useCallback(() => {
-    setUser(null);
-    setIsAuthenticated(false);
-    localStorage.removeItem('wira_user');
-    toast.info('Sessão encerrada com sucesso.');
-  }, []);
+    localStorage.removeItem('wira_user')
+    localStorage.removeItem('wira_token')
+    setUser(null)
+    setIsAuthenticated(false)
+    toast.info('Sessao encerrada')
+  }, [])
 
   return {
     user,
@@ -168,143 +139,109 @@ export function useAuth() {
     login,
     staffLogin,
     logout
-  };
+  }
 }
 
-// Hook para estatísticas do dashboard
 export function useDashboardStats() {
-  return useApi<DashboardStats>(
-    () => apiService.getDashboardStats().then(res => res.data as DashboardStats),
-    []
-  );
+  return useApi<DashboardStats>(() => apiService.getDashboardStats(), [])
 }
 
-// Hook para atividade recente
 export function useRecentActivity() {
-  return useApi<Activity[]>(
-    () => apiService.getRecentActivity().then(res => res.data as Activity[]),
-    []
-  );
+  return useApi<Activity[]>(() => apiService.getRecentActivity(), [])
 }
 
-// Hook para lista de usuários
 export function useUsers(filters?: { status?: string }) {
   return useApi<User[]>(
-    () => apiService.getUsers(filters).then(res => res.data as User[]),
+    () => apiService.getUsers(filters),
     [filters?.status]
-  );
+  )
 }
 
-// Hook para detalhes do usuário
 export function useUserDetails(userId: string) {
-  return useApi<User>(
-    () => apiService.getUserDetails(userId).then(res => res.data as User),
-    [userId]
-  );
+  return useApi<User>(() => apiService.getUserDetails(userId), [userId])
 }
 
-// Hook para cursos
 export function useCourses() {
-  return useApi<Course[]>(
-    () => apiService.getCourses().then(res => res.data as Course[]),
-    []
-  );
+  return useApi<Course[]>(() => apiService.getCourses(), [])
 }
 
-// Hook para ativação de usuário
 export function useUserActivation() {
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(false)
 
   const activateUser = useCallback(async (userData: {
-    realName: string;
-    ngoId: string;
-    dateOfBirth: string;
-    initialSkills?: string;
+    realName: string
+    ngoId: string
+    dateOfBirth: string
+    initialSkills?: string
   }) => {
-    setLoading(true);
+    setLoading(true)
     try {
-      const response = await apiService.activateUser(userData);
-      toast.success('Usuário ativado com sucesso!');
-      return response.data;
+      const user = await apiService.activateUser(userData)
+      toast.success('Beneficiaria ativada com sucesso')
+      return user
     } catch (error) {
-      if (error instanceof ApiError) {
-        toast.error(error.message);
-      } else {
-        toast.error('Erro ao ativar usuário. Tente novamente.');
-      }
-      throw error;
+      toast.error(error instanceof ApiError ? error.message : 'Falha ao ativar beneficiaria')
+      throw error
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  }, []);
+  }, [])
 
   const generateCode = useCallback(async () => {
-    setLoading(true);
+    setLoading(true)
     try {
-      const response = await apiService.generateUserCode();
-      toast.success('Código gerado com sucesso!');
-      return response.data;
+      const code = await apiService.generateUserCode()
+      toast.success('Codigo gerado com sucesso')
+      return code
     } catch (error) {
-      if (error instanceof ApiError) {
-        toast.error(error.message);
-      } else {
-        toast.error('Erro ao gerar código. Tente novamente.');
-      }
-      throw error;
+      toast.error(error instanceof ApiError ? error.message : 'Falha ao gerar codigo')
+      throw error
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  }, []);
+  }, [])
 
   const sendSMS = useCallback(async (code: string, phoneNumber?: string) => {
-    setLoading(true);
+    setLoading(true)
     try {
-      const response = await apiService.sendSMSCode(code, phoneNumber);
-      toast.success('SMS enviado com sucesso!');
-      return response.data;
+      const sms = await apiService.sendSMSCode(code, phoneNumber)
+      toast.success(`SMS enviado via ${sms.provider}`)
+      return sms
     } catch (error) {
-      if (error instanceof ApiError) {
-        toast.error(error.message);
-      } else {
-        toast.error('Erro ao enviar SMS. Tente novamente.');
-      }
-      throw error;
+      toast.error(error instanceof ApiError ? error.message : 'Falha ao enviar SMS')
+      throw error
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  }, []);
+  }, [])
 
   return {
     loading,
     activateUser,
     generateCode,
     sendSMS
-  };
+  }
 }
 
-// Hook para health check da API
 export function useApiHealth() {
-  const [isHealthy, setIsHealthy] = useState<boolean | null>(null);
-  const [lastCheck, setLastCheck] = useState<Date | null>(null);
+  const [isHealthy, setIsHealthy] = useState<boolean | null>(null)
+  const [lastCheck, setLastCheck] = useState<Date | null>(null)
 
   const checkHealth = useCallback(async () => {
-    try {
-      const healthy = await apiService.testConnection();
-      setIsHealthy(healthy);
-      setLastCheck(new Date());
-      return healthy;
-    } catch {
-      setIsHealthy(false);
-      setLastCheck(new Date());
-      return false;
-    }
-  }, []);
+    const healthy = await apiService.testConnection()
+    setIsHealthy(healthy)
+    setLastCheck(new Date())
+    return healthy
+  }, [])
 
   useEffect(() => {
-    checkHealth();
-    const interval = setInterval(checkHealth, 30000); // Verificar a cada 30 segundos
-    return () => clearInterval(interval);
-  }, [checkHealth]);
+    void checkHealth()
+    const interval = setInterval(() => {
+      void checkHealth()
+    }, 30000)
 
-  return { isHealthy, lastCheck, checkHealth };
+    return () => clearInterval(interval)
+  }, [checkHealth])
+
+  return { isHealthy, lastCheck, checkHealth }
 }

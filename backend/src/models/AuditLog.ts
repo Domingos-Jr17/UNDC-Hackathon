@@ -3,6 +3,12 @@ import { AuditLog } from '../types'
 
 const prisma = prismaService.getClient()
 
+const buildWhere = (where?: Partial<AuditLog>) => ({
+  ...(where?.user_code ? { user_code: where.user_code } : {}),
+  ...(where?.action ? { action: where.action } : {}),
+  ...(where?.table_name ? { table_name: where.table_name } : {})
+})
+
 const toAuditLog = (row: {
   id: number
   user_code: string | null
@@ -82,14 +88,10 @@ class AuditLogModel {
     skip?: number
   }): Promise<AuditLog[]> {
     const rows = await prisma.auditLog.findMany({
-      where: {
-        user_code: args?.where?.user_code,
-        action: args?.where?.action,
-        table_name: args?.where?.table_name
-      },
+      where: buildWhere(args?.where),
       orderBy: { timestamp: args?.orderBy?.timestamp ?? 'desc' },
-      take: args?.take,
-      skip: args?.skip
+      ...(args?.take !== undefined ? { take: args.take } : {}),
+      ...(args?.skip !== undefined ? { skip: args.skip } : {})
     })
     return rows.map(toAuditLog)
   }
@@ -115,11 +117,7 @@ class AuditLogModel {
     orderBy?: { timestamp: 'asc' | 'desc' }
   }): Promise<AuditLog | null> {
     const row = await prisma.auditLog.findFirst({
-      where: {
-        user_code: args.where?.user_code,
-        action: args.where?.action,
-        table_name: args.where?.table_name
-      },
+      where: buildWhere(args.where),
       orderBy: { timestamp: args.orderBy?.timestamp ?? 'desc' }
     })
 
@@ -128,11 +126,7 @@ class AuditLogModel {
 
   static async count(where?: Partial<AuditLog>): Promise<number> {
     return prisma.auditLog.count({
-      where: {
-        user_code: where?.user_code,
-        action: where?.action,
-        table_name: where?.table_name
-      }
+      where: buildWhere(where)
     })
   }
 }

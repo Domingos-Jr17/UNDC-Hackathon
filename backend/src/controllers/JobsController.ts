@@ -32,12 +32,14 @@ class JobsController {
     const { location, skill, limit = '20' } = req.query
 
     try {
+      const where = {
+        is_active: true,
+        ...(location ? { location: String(location) } : {}),
+        ...(skill ? { required_skills: { contains: String(skill).toLowerCase() } } : {})
+      }
+
       const jobs = await prisma.job.findMany({
-        where: {
-          is_active: true,
-          location: location ? String(location) : undefined,
-          required_skills: skill ? { contains: String(skill).toLowerCase() } : undefined
-        },
+        where,
         include: {
           employer: {
             select: {

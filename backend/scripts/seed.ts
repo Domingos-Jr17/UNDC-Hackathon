@@ -255,6 +255,148 @@ async function seedJobs(): Promise<void> {
   })
 }
 
+async function seedCourseContent(): Promise<void> {
+  logger.info('Seeding course modules and quiz questions...')
+
+  await prisma.courseModule.createMany({
+    data: [
+      {
+        course_id: 'costura',
+        module_number: 1,
+        title: 'Introducao a Maquina de Costura',
+        description: 'Preparacao inicial da maquina e seguranca operacional.',
+        duration_minutes: 45,
+        video_url: 'https://cdn.wira.training/costura-mod1.mp4',
+        downloadable: true
+      },
+      {
+        course_id: 'costura',
+        module_number: 2,
+        title: 'Tipos de Tecidos',
+        description: 'Selecionar tecidos para uniforme escolar e ajuste de tensao.',
+        duration_minutes: 60,
+        video_url: 'https://cdn.wira.training/costura-mod2.mp4',
+        downloadable: true
+      },
+      {
+        course_id: 'costura',
+        module_number: 3,
+        title: 'Pontos Basicos',
+        description: 'Pontos retos e reforco de acabamento.',
+        duration_minutes: 70,
+        video_url: 'https://cdn.wira.training/costura-mod3.mp4',
+        downloadable: true
+      },
+      {
+        course_id: 'culinaria',
+        module_number: 1,
+        title: 'Higiene e Seguranca Alimentar',
+        description: 'Boas praticas e manipulacao segura de alimentos.',
+        duration_minutes: 40,
+        video_url: 'https://cdn.wira.training/culinaria-mod1.mp4',
+        downloadable: true
+      },
+      {
+        course_id: 'culinaria',
+        module_number: 2,
+        title: 'Tecnicas de Corte',
+        description: 'Cortes padrao para producao em escala.',
+        duration_minutes: 55,
+        video_url: 'https://cdn.wira.training/culinaria-mod2.mp4',
+        downloadable: true
+      },
+      {
+        course_id: 'agricultura',
+        module_number: 1,
+        title: 'Preparacao do Solo',
+        description: 'Conservacao, pH e enriquecimento organico.',
+        duration_minutes: 50,
+        video_url: 'https://cdn.wira.training/agricultura-mod1.mp4',
+        downloadable: true
+      },
+      {
+        course_id: 'agricultura',
+        module_number: 2,
+        title: 'Irrigacao Eficiente',
+        description: 'Manejo de agua e tecnicas de gotejamento.',
+        duration_minutes: 45,
+        video_url: 'https://cdn.wira.training/agricultura-mod2.mp4',
+        downloadable: true
+      }
+    ],
+    skipDuplicates: true
+  })
+
+  await prisma.courseQuizQuestion.createMany({
+    data: [
+      {
+        course_id: 'costura',
+        position: 1,
+        question_text: 'Qual e o primeiro passo ao costurar um bolso?',
+        options_json: JSON.stringify([
+          'Cortar o tecido',
+          'Preparar acabamento das bordas',
+          'Costurar diretamente na peca',
+          'Medir e marcar a posicao'
+        ]),
+        correct_answer: 3,
+        explanation: 'Marcar a posicao garante alinhamento e padrao de qualidade.'
+      },
+      {
+        course_id: 'costura',
+        position: 2,
+        question_text: 'Qual ajuste muda conforme a espessura do tecido?',
+        options_json: JSON.stringify([
+          'Cor da linha',
+          'Tensao da linha',
+          'Altura da cadeira',
+          'Tipo de tomada'
+        ]),
+        correct_answer: 1,
+        explanation: 'Tecidos diferentes exigem ajuste de tensao para pontos consistentes.'
+      },
+      {
+        course_id: 'culinaria',
+        position: 1,
+        question_text: 'Qual temperatura interna minima e segura para frango?',
+        options_json: JSON.stringify(['60C', '68C', '74C', '80C']),
+        correct_answer: 2,
+        explanation: '74C reduz risco microbiologico em preparacoes com frango.'
+      },
+      {
+        course_id: 'culinaria',
+        position: 2,
+        question_text: 'O que significa mise en place?',
+        options_json: JSON.stringify([
+          'Metodo de fritura',
+          'Organizacao previa de ingredientes',
+          'Temperatura de forno',
+          'Tipo de faca'
+        ]),
+        correct_answer: 1,
+        explanation: 'Organizar antes do preparo aumenta seguranca e produtividade.'
+      },
+      {
+        course_id: 'agricultura',
+        position: 1,
+        question_text: 'Qual tecnica economiza mais agua na irrigacao?',
+        options_json: JSON.stringify(['Sulcos', 'Inundacao', 'Aspersao', 'Gotejamento']),
+        correct_answer: 3,
+        explanation: 'Gotejamento aplica agua diretamente na raiz com menor perda.'
+      },
+      {
+        course_id: 'agricultura',
+        position: 2,
+        question_text: 'Faixa de pH mais comum para horticolas?',
+        options_json: JSON.stringify(['4.0-5.0', '5.5-6.5', '7.5-8.5', '8.5-9.0']),
+        correct_answer: 1,
+        explanation: 'A maioria das horticolas performa melhor em solo levemente acido.'
+      }
+    ],
+    skipDuplicates: true
+  })
+}
+
 async function main(): Promise<void> {
   try {
     logger.info('Starting seed...')
@@ -264,6 +406,7 @@ async function main(): Promise<void> {
     await seedProgress()
     await seedCertificates()
     await seedJobs()
+    await seedCourseContent()
     logger.info('Seed completed successfully')
   } finally {
     await prisma.$disconnect()

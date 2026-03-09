@@ -1,6 +1,7 @@
 import express, { Request, Response } from 'express'
 import prismaService from '../services/prisma'
 import { logger } from '../middleware/security'
+import smsProviderService from '../services/smsProvider'
 
 const router = express.Router()
 const prisma = prismaService.getClient()
@@ -333,16 +334,18 @@ router.get('/status', async (_req: Request, res: Response): Promise<void> => {
 })
 
 router.get('/sms/status', (_req: Request, res: Response): void => {
+  const status = smsProviderService.getStatus()
   res.json({
     success: true,
     service: 'WIRA SMS Service',
-    status: 'Online (sandbox)',
-    providerMode: process.env.SMS_API_KEY ? 'configured' : 'sandbox',
+    status: 'Online',
+    providerMode: status.providerMode,
+    provider: status.provider,
     timestamp: new Date().toISOString()
   })
 })
 
-router.post('/sms/send', (req: Request, res: Response): void => {
+router.post('/sms/send', async (req: Request, res: Response): Promise<void> => {
   const { phoneNumber, message } = req.body as {
     phoneNumber?: string
     message?: string
@@ -356,17 +359,25 @@ router.post('/sms/send', (req: Request, res: Response): void => {
     return
   }
 
-  res.json({
-    success: true,
-    mode: process.env.SMS_API_KEY ? 'provider-ready' : 'sandbox',
-    sms: {
-      id: `sms-${Date.now()}`,
-      to: phoneNumber,
-      message,
-      sentAt: new Date().toISOString(),
-      provider: process.env.SMS_USERNAME ?? 'sandbox'
-    }
-  })
+  try {
+    const result = await smsProviderService.send({ phoneNumber, message })
+    res.json({
+      success: true,
+      mode: result.mode,
+      sms: {
+        id: result.messageId,
+        to: result.to,
+        message: result.body,
+        sentAt: result.sentAt,
+        provider: result.provider
+      }
+    })
+  } catch (error) {
+    res.status(502).json({
+      success: false,
+      error: (error as Error).message
+    })
+  }
 })
 
 export default router

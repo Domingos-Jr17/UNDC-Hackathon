@@ -9,12 +9,12 @@ const mapUserListItem = (user: {
   id: number
   anonymous_code: string
   ngo_id: string | null
-  role: string
+  role: 'VICTIM' | 'STAFF' | 'ADMIN'
   is_active: boolean
   last_login_at: Date | null
   created_at: Date
-  progresses: Array<{ percentage: number }>
-  certificates: Array<{ id: string }>
+  progresses?: Array<{ percentage: number }>
+  certificates?: Array<{ id: string }>
 }): {
   id: string
   anonymousCode: string
@@ -27,8 +27,11 @@ const mapUserListItem = (user: {
   totalProgress: number
   createdAt: string
 } => {
-  const totalProgress = user.progresses.length > 0
-    ? Math.round(user.progresses.reduce((acc, item) => acc + item.percentage, 0) / user.progresses.length)
+  const progresses = user.progresses ?? []
+  const certificates = user.certificates ?? []
+
+  const totalProgress = progresses.length > 0
+    ? Math.round(progresses.reduce((acc, item) => acc + item.percentage, 0) / progresses.length)
     : 0
 
   return {
@@ -38,8 +41,8 @@ const mapUserListItem = (user: {
     role: user.role,
     status: user.is_active ? 'Ativo' : 'Inativo',
     lastActivity: (user.last_login_at ?? user.created_at).toISOString(),
-    coursesCompleted: user.progresses.filter(item => item.percentage >= 100).length,
-    certificatesEarned: user.certificates.length,
+    coursesCompleted: progresses.filter(item => item.percentage >= 100).length,
+    certificatesEarned: certificates.length,
     totalProgress,
     createdAt: user.created_at.toISOString()
   }
@@ -50,16 +53,15 @@ class UsersController {
     const { status, limit = '50', offset = '0' } = req.query
     const parsedLimit = Math.min(parseInt(String(limit), 10) || 50, 200)
     const parsedOffset = parseInt(String(offset), 10) || 0
+    const statusFilter = status === 'Ativo' ? true : status === 'Inativo' ? false : null
+    const where = {
+      role: 'VICTIM' as const,
+      ...(statusFilter === null ? {} : { is_active: statusFilter })
+    }
 
     try {
       const users = await prisma.user.findMany({
-        where: {
-          role: 'VICTIM',
-          is_active:
-            status === 'Ativo' ? true
-              : status === 'Inativo' ? false
-                : undefined
-        },
+        where,
         include: {
           progresses: {
             select: { percentage: true }
@@ -75,18 +77,12 @@ class UsersController {
       })
 
       const total = await prisma.user.count({
-        where: {
-          role: 'VICTIM',
-          is_active:
-            status === 'Ativo' ? true
-              : status === 'Inativo' ? false
-                : undefined
-        }
+        where
       })
 
       res.json({
         success: true,
-        users: users.map(mapUserListItem),
+        users: users.map(user => mapUserListItem(user)),
         pagination: {
           limit: parsedLimit,
           offset: parsedOffset,

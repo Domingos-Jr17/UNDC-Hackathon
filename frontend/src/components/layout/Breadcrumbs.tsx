@@ -17,10 +17,10 @@ interface BreadcrumbsProps {
 
 const routeMap: Record<string, string> = {
   '/dashboard': 'Dashboard',
-  '/active': 'Ativar Usuários',
+  '/active': 'Ativar Utilizadores',
   '/monitor': 'Monitorar Progresso',
-  '/users': 'Usuários',
-  '/users/[id]': 'Detalhes do Usuário',
+  '/users': 'Utilizadores',
+  '/users/[id]': 'Detalhes do Utilizador',
   '/courses': 'Cursos',
   '/courses/[id]': 'Detalhes do Curso',
   '/reports': 'Relatórios',

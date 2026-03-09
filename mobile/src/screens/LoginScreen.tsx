@@ -15,12 +15,10 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
   const [accessCode, setAccessCode] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  const demoCodes = ['V0042', 'V0038', 'V0031']
-
   const handleLogin = async (): Promise<void> => {
     const normalizedCode = accessCode.trim().toUpperCase()
     if (!normalizedCode) {
-      Alert.alert('Erro', 'Por favor, insira seu código de acesso')
+      Alert.alert('Erro', 'Por favor, insira seu codigo de acesso')
       return
     }
 
@@ -30,30 +28,23 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
       await sessionService.setSession(response.token, response.user.anonymousCode)
       navigation.navigate('Home')
     } catch (error) {
-      Alert.alert(
-        'Falha no Login',
-        `${(error as Error).message}\n\nCódigos de demo: ${demoCodes.join(', ')}`
-      )
+      Alert.alert('Falha no Login', (error as Error).message)
     } finally {
       setIsSubmitting(false)
     }
-  }
-
-  const handleDemoLogin = (code: string): void => {
-    setAccessCode(code)
   }
 
   return (
     <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>Acesso WIRA</Text>
-        <Text style={styles.subtitle}>Insira seu código anônimo de acesso</Text>
+        <Text style={styles.subtitle}>Insira seu codigo anonimo de acesso</Text>
       </View>
 
       <View style={styles.form}>
         <TextInput
           style={styles.input}
-          placeholder="Código (ex: V0042)"
+          placeholder="Codigo (ex: V0001)"
           value={accessCode}
           onChangeText={setAccessCode}
           autoCapitalize="characters"
@@ -75,20 +66,13 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
           )}
         </TouchableOpacity>
 
-        <View style={styles.divider} />
-
-        <Text style={styles.demoText}>Acesso Demo:</Text>
-        <View style={styles.demoButtons}>
-          {demoCodes.map(code => (
-            <TouchableOpacity key={code} style={styles.demoButton} onPress={() => handleDemoLogin(code)}>
-              <Text style={styles.demoButtonText}>{code}</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
+        <Text style={styles.helperText}>
+          Use o codigo anonimo fornecido pela ONG parceira no formato V####.
+        </Text>
       </View>
 
       <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-        <Text style={styles.backButtonText}>← Voltar</Text>
+        <Text style={styles.backButtonText}>Voltar</Text>
       </TouchableOpacity>
     </View>
   )
@@ -133,7 +117,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     paddingVertical: 16,
     borderRadius: 8,
-    marginBottom: 30,
+    marginBottom: 20,
     alignItems: 'center'
   },
   loginButtonDisabled: {
@@ -145,33 +129,11 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     textAlign: 'center'
   },
-  divider: {
-    height: 1,
-    backgroundColor: '#90CAF9',
-    marginVertical: 20
-  },
-  demoText: {
+  helperText: {
     color: '#90CAF9',
-    fontSize: 14,
+    fontSize: 13,
     textAlign: 'center',
-    marginBottom: 15
-  },
-  demoButtons: {
-    flexDirection: 'row',
-    justifyContent: 'space-around'
-  },
-  demoButton: {
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    borderWidth: 1,
-    borderColor: '#FFFFFF',
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderRadius: 8
-  },
-  demoButtonText: {
-    color: '#FFFFFF',
-    fontSize: 14,
-    fontWeight: 'bold'
+    marginTop: 4
   },
   backButton: {
     marginBottom: 40

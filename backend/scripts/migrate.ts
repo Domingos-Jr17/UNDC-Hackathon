@@ -108,6 +108,86 @@ async function initializeDefaultData(prisma: PrismaClient) {
     skipDuplicates: true
   })
 
+  await prisma.courseModule.createMany({
+    data: [
+      {
+        course_id: 'costura',
+        module_number: 1,
+        title: 'Introducao a maquina de costura',
+        description: 'Conhecer pecas, seguranca basica e manutencao inicial.',
+        duration_minutes: 30,
+        video_url: 'https://cdn.wira.local/videos/costura-mod-1.mp4',
+        downloadable: true
+      },
+      {
+        course_id: 'costura',
+        module_number: 2,
+        title: 'Pontos basicos e acabamento',
+        description: 'Treino de pontos essenciais e tecnicas de acabamento.',
+        duration_minutes: 45,
+        video_url: 'https://cdn.wira.local/videos/costura-mod-2.mp4',
+        downloadable: true
+      },
+      {
+        course_id: 'culinaria',
+        module_number: 1,
+        title: 'Higiene e seguranca alimentar',
+        description: 'Boas praticas para manipulacao de alimentos.',
+        duration_minutes: 35,
+        video_url: 'https://cdn.wira.local/videos/culinaria-mod-1.mp4',
+        downloadable: false
+      },
+      {
+        course_id: 'agricultura',
+        module_number: 1,
+        title: 'Planeamento de cultivo',
+        description: 'Preparacao do solo e calendario de plantio.',
+        duration_minutes: 40,
+        video_url: 'https://cdn.wira.local/videos/agricultura-mod-1.mp4',
+        downloadable: false
+      }
+    ],
+    skipDuplicates: true
+  })
+
+  await prisma.courseQuizQuestion.createMany({
+    data: [
+      {
+        course_id: 'costura',
+        position: 1,
+        question_text: 'Qual item deve ser verificado antes de ligar a maquina?',
+        options_json: JSON.stringify(['Linha e agulha', 'Somente pedal', 'Apenas iluminacao', 'Nada']),
+        correct_answer: 1,
+        explanation: 'Linha, agulha e estado geral da maquina devem ser verificados antes do uso.'
+      },
+      {
+        course_id: 'costura',
+        position: 2,
+        question_text: 'Qual objetivo principal do acabamento?',
+        options_json: JSON.stringify(['Reduzir tempo', 'Melhorar durabilidade', 'Aumentar ruido', 'Ignorar defeitos']),
+        correct_answer: 2,
+        explanation: 'Um bom acabamento aumenta a qualidade e a durabilidade da peca.'
+      },
+      {
+        course_id: 'culinaria',
+        position: 1,
+        question_text: 'Qual pratica evita contaminacao cruzada?',
+        options_json: JSON.stringify(['Mesma tabua para tudo', 'Separar utensilios por alimento', 'Nao lavar as maos', 'Misturar cru com cozido']),
+        correct_answer: 2,
+        explanation: 'Separar utensilios para alimentos crus e cozidos reduz risco de contaminacao.'
+      },
+      {
+        course_id: 'agricultura',
+        position: 1,
+        question_text: 'O que e essencial no planeamento de cultivo?',
+        options_json: JSON.stringify(['Ignorar clima', 'Calendario e analise do solo', 'Plantar sem espacamento', 'Irrigar ao acaso']),
+        correct_answer: 2,
+        explanation: 'Planeamento considera clima, solo e calendario para melhorar produtividade.'
+      }
+    ],
+    skipDuplicates: true
+  })
+
   await prisma.employer.createMany({
     data: [
       {

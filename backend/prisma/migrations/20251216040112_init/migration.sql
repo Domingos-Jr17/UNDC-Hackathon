@@ -50,6 +50,37 @@ CREATE TABLE "Course" (
 );
 
 -- CreateTable
+CREATE TABLE "CourseModule" (
+    "id" SERIAL NOT NULL,
+    "course_id" TEXT NOT NULL,
+    "module_number" INTEGER NOT NULL,
+    "title" TEXT NOT NULL,
+    "description" TEXT,
+    "duration_minutes" INTEGER NOT NULL,
+    "video_url" TEXT,
+    "downloadable" BOOLEAN NOT NULL DEFAULT false,
+    "is_active" BOOLEAN NOT NULL DEFAULT true,
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP(3),
+    CONSTRAINT "CourseModule_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "CourseQuizQuestion" (
+    "id" SERIAL NOT NULL,
+    "course_id" TEXT NOT NULL,
+    "position" INTEGER NOT NULL,
+    "question_text" TEXT NOT NULL,
+    "options_json" TEXT NOT NULL,
+    "correct_answer" INTEGER NOT NULL,
+    "explanation" TEXT NOT NULL,
+    "is_active" BOOLEAN NOT NULL DEFAULT true,
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP(3),
+    CONSTRAINT "CourseQuizQuestion_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "Progress" (
     "id" SERIAL NOT NULL,
     "user_code" TEXT NOT NULL,
@@ -176,6 +207,18 @@ CREATE INDEX "User_role_is_active_idx" ON "User"("role", "is_active");
 CREATE INDEX "Course_is_active_idx" ON "Course"("is_active");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "CourseModule_course_id_module_number_key" ON "CourseModule"("course_id", "module_number");
+
+-- CreateIndex
+CREATE INDEX "CourseModule_course_id_is_active_idx" ON "CourseModule"("course_id", "is_active");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "CourseQuizQuestion_course_id_position_key" ON "CourseQuizQuestion"("course_id", "position");
+
+-- CreateIndex
+CREATE INDEX "CourseQuizQuestion_course_id_is_active_idx" ON "CourseQuizQuestion"("course_id", "is_active");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "Progress_user_code_course_id_key" ON "Progress"("user_code", "course_id");
 
 -- CreateIndex
@@ -222,6 +265,12 @@ ALTER TABLE "Progress" ADD CONSTRAINT "Progress_user_code_fkey" FOREIGN KEY ("us
 
 -- AddForeignKey
 ALTER TABLE "Progress" ADD CONSTRAINT "Progress_course_id_fkey" FOREIGN KEY ("course_id") REFERENCES "Course"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "CourseModule" ADD CONSTRAINT "CourseModule_course_id_fkey" FOREIGN KEY ("course_id") REFERENCES "Course"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "CourseQuizQuestion" ADD CONSTRAINT "CourseQuizQuestion_course_id_fkey" FOREIGN KEY ("course_id") REFERENCES "Course"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Certificate" ADD CONSTRAINT "Certificate_anonymous_code_fkey" FOREIGN KEY ("anonymous_code") REFERENCES "User"("anonymous_code") ON DELETE RESTRICT ON UPDATE CASCADE;

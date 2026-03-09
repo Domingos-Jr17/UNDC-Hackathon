@@ -307,7 +307,7 @@ const ussdConfig = {
 ### **Demo Access Codes**
 - **V0042**: Beneficiaria A - Sewing (37% complete)
 - **V0038**: Beneficiaria B - Cooking (New)
-- **V0031**: JoÃ£o Sitoe - Agriculture (15% complete)
+- **V0031**: Beneficiario C - Agriculture (15% complete)
 
 ---
 

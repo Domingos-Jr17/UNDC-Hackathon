@@ -48,15 +48,11 @@ export default function Header({ onMenuClick, className }: HeaderProps) {
 
   const toggleDarkMode = () => {
     setIsDarkMode(!isDarkMode);
-    // TODO: Implement dark mode logic
     announceToScreenReader(`Modo ${!isDarkMode ? 'escuro' : 'claro'} ativado`);
   };
 
-  const userInitials = user?.email
-    ? user.email
-        .split('@')[0]
-        .slice(0, 2)
-        .toUpperCase()
+  const userInitials = user?.anonymousCode
+    ? user.anonymousCode.slice(0, 2).toUpperCase()
     : 'ST';
 
   return (
@@ -101,7 +97,7 @@ export default function Header({ onMenuClick, className }: HeaderProps) {
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               type="search"
-              placeholder="Buscar usuários, cursos, relatórios..."
+              placeholder="Buscar utilizadores, cursos, relatórios..."
               className="pl-10"
               aria-label="Buscar na plataforma"
             />
@@ -145,7 +141,7 @@ export default function Header({ onMenuClick, className }: HeaderProps) {
                     <div className="space-y-1">
                       <p className="text-sm font-medium">Novo usuário cadastrado</p>
                       <p className="text-xs text-muted-foreground">
-                        Maria Silva (V0050) aguarda ativação
+                        Beneficiária V0050 aguarda ativação
                       </p>
                       <p className="text-xs text-muted-foreground">Há 5 minutos</p>
                     </div>
@@ -156,7 +152,7 @@ export default function Header({ onMenuClick, className }: HeaderProps) {
                   <div className="space-y-1">
                     <p className="text-sm font-medium">Progresso atualizado</p>
                     <p className="text-xs text-muted-foreground">
-                      João Santos completou módulo de Costura
+                      Beneficiária V0048 completou módulo de Costura
                     </p>
                     <p className="text-xs text-muted-foreground">Há 1 hora</p>
                   </div>
@@ -200,9 +196,9 @@ export default function Header({ onMenuClick, className }: HeaderProps) {
             <DropdownMenuContent className="w-56" align="end" forceMount>
               <DropdownMenuLabel className="font-normal">
                 <div className="flex flex-col space-y-1">
-                  <p className="text-sm font-medium leading-none">{user?.email?.split('@')[0] || 'Staff User'}</p>
+                  <p className="text-sm font-medium leading-none">{user?.anonymousCode || 'STAFF'}</p>
                   <p className="text-xs leading-none text-muted-foreground">
-                    {user?.email || 'staff@wira.org'}
+                    {user?.role || 'STAFF'}
                   </p>
                 </div>
               </DropdownMenuLabel>
@@ -227,3 +223,4 @@ export default function Header({ onMenuClick, className }: HeaderProps) {
     </header>
   );
 }
+

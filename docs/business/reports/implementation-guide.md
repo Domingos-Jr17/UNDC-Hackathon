@@ -453,7 +453,7 @@ curl http://localhost:3000/api/certificates/verify/WIRA-CERT-V0042-sewing-2025
 # Test user activation
 curl -X POST http://localhost:3000/api/users/activate \
   -H "Content-Type: application/json" \
-  -d '{"realName": "Maria Silva", "ngoId": "ngo-001", "initialSkills": "Basic Sewing"}'
+  -d '{"realName": "Beneficiaria A", "ngoId": "ngo-001", "initialSkills": "Basic Sewing"}'
 
 # Test progress monitoring
 curl http://localhost:3000/api/users/progress/ngo-001

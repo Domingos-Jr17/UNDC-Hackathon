@@ -1,84 +1,56 @@
 import AsyncStorage from '@react-native-async-storage/async-storage'
-
-type SecureStoreLike = {
-  getItemAsync: (key: string) => Promise<string | null>
-  setItemAsync: (key: string, value: string) => Promise<void>
-  deleteItemAsync: (key: string) => Promise<void>
-}
-
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === 'object' && value !== null
-
-const isSecureStoreLike = (value: unknown): value is SecureStoreLike => {
-  if (!isRecord(value)) {
-    return false
-  }
-
-  return (
-    typeof value.getItemAsync === 'function' &&
-    typeof value.setItemAsync === 'function' &&
-    typeof value.deleteItemAsync === 'function'
-  )
-}
-
-let secureStore: SecureStoreLike | null = null
-
-try {
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const loaded: unknown = require('expo-secure-store')
-  if (isSecureStoreLike(loaded)) {
-    secureStore = loaded
-  }
-} catch {
-  secureStore = null
-}
+import * as SecureStore from 'expo-secure-store'
 
 const TOKEN_KEY = 'wira_token'
 const USER_CODE_KEY = 'wira_user_code'
 
-const setItem = async (key: string, value: string): Promise<void> => {
-  if (secureStore) {
-    await secureStore.setItemAsync(key, value)
-    return
+let secureStoreAvailable: boolean | null = null
+
+const ensureSecureStore = async (): Promise<void> => {
+  if (secureStoreAvailable === null) {
+    secureStoreAvailable = await SecureStore.isAvailableAsync()
   }
-  await AsyncStorage.setItem(key, value)
+
+  if (!secureStoreAvailable) {
+    throw new Error('SecureStore indisponivel neste dispositivo')
+  }
 }
 
-const getItem = async (key: string): Promise<string | null> => {
-  if (secureStore) {
-    return secureStore.getItemAsync(key)
-  }
-  return AsyncStorage.getItem(key)
+const setToken = async (token: string): Promise<void> => {
+  await ensureSecureStore()
+  await SecureStore.setItemAsync(TOKEN_KEY, token)
 }
 
-const removeItem = async (key: string): Promise<void> => {
-  if (secureStore) {
-    await secureStore.deleteItemAsync(key)
-    return
-  }
-  await AsyncStorage.removeItem(key)
+const getToken = async (): Promise<string | null> => {
+  await ensureSecureStore()
+  return SecureStore.getItemAsync(TOKEN_KEY)
+}
+
+const clearToken = async (): Promise<void> => {
+  await ensureSecureStore()
+  await SecureStore.deleteItemAsync(TOKEN_KEY)
 }
 
 export const sessionService = {
   async setSession(token: string, userCode: string): Promise<void> {
     await Promise.all([
-      setItem(TOKEN_KEY, token),
-      setItem(USER_CODE_KEY, userCode)
+      setToken(token),
+      AsyncStorage.setItem(USER_CODE_KEY, userCode)
     ])
   },
 
   async getToken(): Promise<string | null> {
-    return getItem(TOKEN_KEY)
+    return getToken()
   },
 
   async getUserCode(): Promise<string | null> {
-    return getItem(USER_CODE_KEY)
+    return AsyncStorage.getItem(USER_CODE_KEY)
   },
 
   async clearSession(): Promise<void> {
     await Promise.all([
-      removeItem(TOKEN_KEY),
-      removeItem(USER_CODE_KEY)
+      clearToken(),
+      AsyncStorage.removeItem(USER_CODE_KEY)
     ])
   }
 }

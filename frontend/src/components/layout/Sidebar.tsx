@@ -35,10 +35,10 @@ const sidebarItems: SidebarItem[] = [
   },
   {
     id: 'active',
-    label: 'Ativar Usuários',
+    label: 'Ativar Utilizadores',
     icon: UserCheck,
     path: '/active',
-    description: 'Ativação de novos usuários'
+    description: 'Ativação de novos utilizadores'
   },
   // {
   //   id: 'monitor',
@@ -53,7 +53,7 @@ const sidebarItems: SidebarItem[] = [
     icon: Users,
     path: '/users',
     badge: 42,
-    description: 'Gestão de usuários'
+    description: 'Gestão de utilizadores'
   },
   {
     id: 'courses',

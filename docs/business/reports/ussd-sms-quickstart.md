@@ -145,9 +145,9 @@ curl -X POST http://localhost:3000/api/ussd \
 ```
 
 ### **3.3 Available Access Codes**
-- **V0042** - Maria Silva (Sewing 37%, Cooking 14%)
-- **V0038** - Ana Costa (Cooking 14%)
-- **V0031** - João Matos (Sewing 100% - with certificate)
+- **V0042** - Beneficiaria A (Sewing 37%, Cooking 14%)
+- **V0038** - Beneficiaria B (Cooking 14%)
+- **V0031** - Beneficiario F (Sewing 100% - with certificate)
 
 ---
 

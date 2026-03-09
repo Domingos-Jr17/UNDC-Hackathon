@@ -63,17 +63,19 @@ class NGOModel {
   }
 
   static async update(id: string, ngoData: Partial<NGO>): Promise<void> {
+    const updateData = {
+      ...(ngoData.name !== undefined ? { name: ngoData.name } : {}),
+      ...(ngoData.contact_person !== undefined ? { contact_person: ngoData.contact_person } : {}),
+      ...(ngoData.phone !== undefined ? { phone: ngoData.phone } : {}),
+      ...(ngoData.email !== undefined ? { email: ngoData.email } : {}),
+      ...(ngoData.address !== undefined ? { address: ngoData.address } : {}),
+      ...(ngoData.license_number !== undefined ? { license_number: ngoData.license_number } : {}),
+      updated_at: new Date()
+    }
+
     await prisma.nGO.update({
       where: { id },
-      data: {
-        name: ngoData.name,
-        contact_person: ngoData.contact_person,
-        phone: ngoData.phone,
-        email: ngoData.email,
-        address: ngoData.address,
-        license_number: ngoData.license_number,
-        updated_at: new Date()
-      }
+      data: updateData
     })
   }
 
@@ -117,17 +119,19 @@ class NGOModel {
     data: Partial<Omit<NGO, 'id' | 'created_at' | 'updated_at' | 'is_active'>>
   ): Promise<NGO | null> {
     try {
+      const updateData = {
+        ...(data.name !== undefined ? { name: data.name } : {}),
+        ...(data.contact_person !== undefined ? { contact_person: data.contact_person } : {}),
+        ...(data.phone !== undefined ? { phone: data.phone } : {}),
+        ...(data.email !== undefined ? { email: data.email } : {}),
+        ...(data.address !== undefined ? { address: data.address } : {}),
+        ...(data.license_number !== undefined ? { license_number: data.license_number } : {}),
+        updated_at: new Date()
+      }
+
       const row = await prisma.nGO.update({
         where,
-        data: {
-          name: data.name,
-          contact_person: data.contact_person,
-          phone: data.phone,
-          email: data.email,
-          address: data.address,
-          license_number: data.license_number,
-          updated_at: new Date()
-        }
+        data: updateData
       })
       return toNGO(row)
     } catch {

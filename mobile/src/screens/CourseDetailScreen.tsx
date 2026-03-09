@@ -1,483 +1,312 @@
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Alert } from 'react-native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { RouteProp } from '@react-navigation/native';
-import { RootStackParamList } from '../types/navigation';
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import { ActivityIndicator, Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import { NativeStackNavigationProp } from '@react-navigation/native-stack'
+import { RouteProp } from '@react-navigation/native'
+import { RootStackParamList } from '../types/navigation'
+import apiService, { AggregatedProgress, CourseItem, CourseModule } from '../services/api'
+import sessionService from '../services/session'
 
-type CourseDetailScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'CourseDetail'>;
-type CourseDetailScreenRouteProp = RouteProp<RootStackParamList, 'CourseDetail'>;
+type CourseDetailScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'CourseDetail'>
+type CourseDetailScreenRouteProp = RouteProp<RootStackParamList, 'CourseDetail'>
 
 interface CourseDetailScreenProps {
-    route: CourseDetailScreenRouteProp;
-    navigation: CourseDetailScreenNavigationProp;
+  route: CourseDetailScreenRouteProp
+  navigation: CourseDetailScreenNavigationProp
 }
 
-export default function CourseDetailScreen({ navigation, route }: CourseDetailScreenProps) {
-    const { courseId } = route.params;
-    const [activeTab, setActiveTab] = useState('modules');
-    const [selectedModuleId, setSelectedModuleId] = useState<string>('1'); // Módulo padrão
+interface DetailState {
+  course: CourseItem | null
+  modules: CourseModule[]
+  progress: AggregatedProgress | null
+}
 
-    // Dados demo para hackathon
-    const coursesData = {
-        costura: {
-            title: 'Costura Avançada',
-            instructor: 'Professora Ana Machel',
-            totalModules: 8,
-            completedModules: 3,
-            progress: 37.5,
-            icon: '🧵',
-            description: 'Curso completo de costura profissional para iniciar seu próprio negócio.',
-            modules: [
-                { id: 1, title: 'Introdução à Máquina de Costura', duration: '45 min', completed: true },
-                { id: 2, title: 'Tipos de Tecidos e Suas Aplicações', duration: '60 min', completed: true },
-                { id: 3, title: 'Pontos Básicos e Costura Retal', duration: '90 min', completed: true },
-                { id: 4, title: 'Montagem de Blusas Simples', duration: '120 min', completed: false },
-                { id: 5, title: 'Montagem de Calças Jeans', duration: '180 min', completed: false },
-                { id: 6, title: 'Acabamentos Profissionais', duration: '90 min', completed: false },
-                { id: 7, title: 'Criando seu Próprio Negócio', duration: '60 min', completed: false },
-                { id: 8, title: 'Projeto Final e Certificação', duration: '120 min', completed: false },
-            ],
-            materials: [
-                { id: 1, title: 'Guia de Máquinas de Costura', type: 'PDF', size: '2.3 MB' },
-                { id: 2, title: 'Catálogo de Tecidos', type: 'PDF', size: '5.1 MB' },
-                { id: 3, title: 'Vídeo: Pontos Básicos', type: 'MP4', size: '125 MB' },
-            ]
-        },
-        culinaria: {
-            title: 'Culinária Profissional',
-            instructor: 'Chef João Sitoe',
-            totalModules: 7,
-            completedModules: 0,
-            progress: 0,
-            icon: '👨‍🍳',
-            description: 'Aprenda técnicas culinárias profissionais para gerar renda.',
-            modules: [
-                { id: 1, title: 'Higiene e Segurança na Cozinha', duration: '30 min', completed: false },
-                { id: 2, title: 'Ferramentas e Equipamentos', duration: '45 min', completed: false },
-                { id: 3, title: 'Técnicas de Corte', duration: '60 min', completed: false },
-                { id: 4, title: 'Temperos e Condimentos', duration: '45 min', completed: false },
-                { id: 5, title: 'Pratos Tradicionais Moçambicanos', duration: '120 min', completed: false },
-                { id: 6, title: 'Apresentação de Pratos', duration: '60 min', completed: false },
-                { id: 7, title: 'Gestão de Negócio de Alimentação', duration: '90 min', completed: false },
-            ],
-            materials: [
-                { id: 1, title: 'Guia de Higiene na Cozinha', type: 'PDF', size: '1.8 MB' },
-                { id: 2, title: 'Receitas Tradicionais', type: 'PDF', size: '3.2 MB' },
-            ]
-        },
-        agricultura: {
-            title: 'Agricultura Sustentável',
-            instructor: 'Eng. Maria Cossa',
-            totalModules: 6,
-            completedModules: 0,
-            progress: 0,
-            icon: '🌱',
-            description: 'Técnicas modernas de agricultura para sustentabilidade.',
-            modules: [
-                { id: 1, title: 'Preparação do Solo', duration: '60 min', completed: false },
-                { id: 2, title: 'Irrigação e Gestão da Água', duration: '45 min', completed: false },
-                { id: 3, title: 'Seleção de Sementes', duration: '30 min', completed: false },
-                { id: 4, title: 'Controle Natural de Pragas', duration: '60 min', completed: false },
-                { id: 5, title: 'Colheita e Armazenamento', duration: '45 min', completed: false },
-                { id: 6, title: 'Comercialização da Produção', duration: '90 min', completed: false },
-            ],
-            materials: [
-                { id: 1, title: 'Guia de Preparação do Solo', type: 'PDF', size: '2.1 MB' },
-                { id: 2, title: 'Calendário Agrícola', type: 'PDF', size: '1.5 MB' },
-            ]
-        }
-    };
+const initialState: DetailState = {
+  course: null,
+  modules: [],
+  progress: null
+}
 
-    const course = coursesData[courseId as keyof typeof coursesData] || coursesData.costura;
+export default function CourseDetailScreen({ route, navigation }: CourseDetailScreenProps) {
+  const { courseId } = route.params
+  const [state, setState] = useState<DetailState>(initialState)
+  const [loading, setLoading] = useState(true)
 
-    const handleBack = () => {
-        navigation.goBack();
-    };
+  const loadData = useCallback(async (): Promise<void> => {
+    try {
+      const userCode = await sessionService.getUserCode()
+      if (!userCode) {
+        navigation.navigate('Login')
+        return
+      }
 
-    const handleModulePress = (moduleId: number) => {
-        const module = course.modules.find((m: any) => m.id === moduleId);
-        if (!module) {
-            Alert.alert('Erro', 'Módulo não encontrado.');
-            return;
-        }
+      const [courses, modules, progress] = await Promise.all([
+        apiService.getCourses(),
+        apiService.getCourseModules(courseId),
+        apiService.getAggregatedProgress(userCode)
+      ])
 
-        // Define o módulo selecionado para o quiz
-        setSelectedModuleId(moduleId.toString());
+      const course = courses.find(item => item.id === courseId) ?? null
+      setState({ course, modules, progress })
+    } catch (error) {
+      Alert.alert('Erro', (error as Error).message)
+    } finally {
+      setLoading(false)
+    }
+  }, [courseId, navigation])
 
-        if (module.completed) {
-            Alert.alert('Módulo Concluído', 'Você já completou este módulo. Deseja refazer o quiz?', [
-                { text: 'Cancelar', style: 'cancel' },
-                { text: 'Refazer Quiz', onPress: () => handleStartQuiz() }
-            ]);
-        } else {
-            Alert.alert('Iniciar Módulo', `Iniciar "${module.title}"?`, [
-                { text: 'Cancelar', style: 'cancel' },
-                { text: 'Fazer Quiz', onPress: () => handleStartQuiz() },
-                { text: 'Ver Aula', onPress: () => {
-                    navigation.navigate('VideoLesson', {
-                        courseId: courseId,
-                        moduleId: moduleId.toString()
-                    });
-                }}
-            ]);
-        }
-    };
+  useEffect(() => {
+    void loadData()
+  }, [loadData])
 
-    const handleMaterialDownload = (material: { id: number, title: string }) => {
-        Alert.alert('Download', `Baixando ${material.title}...`);
-    };
+  const progressItem = useMemo(
+    () => state.progress?.courses.find(item => item.courseId === courseId),
+    [state.progress, courseId]
+  )
 
-    const handleStartQuiz = () => {
-        Alert.alert(
-            'Iniciar Quiz',
-            `Deseja iniciar a avaliação do módulo ${selectedModuleId}?`,
-            [
-                {
-                    text: 'Cancelar',
-                    style: 'cancel',
-                },
-                {
-                    text: 'Iniciar',
-                    onPress: () => {
-                        navigation.navigate('Quiz', {
-                            courseId: courseId,
-                            moduleId: selectedModuleId
-                        });
-                    }
-                }
-            ]
-        );
-    };
+  const completed = useMemo(() => new Set(progressItem?.completedModules ?? []), [progressItem])
 
+  const currentModule = useMemo(() => {
+    const firstPending = state.modules.find(module => !completed.has(String(module.id)))
+    return firstPending?.id ?? state.modules[state.modules.length - 1]?.id ?? 1
+  }, [state.modules, completed])
+
+  const openModule = (moduleId: number): void => {
+    navigation.navigate('VideoLesson', { courseId, moduleId: String(moduleId) })
+  }
+
+  const openQuiz = (moduleId: number): void => {
+    navigation.navigate('Quiz', { courseId, moduleId: String(moduleId) })
+  }
+
+  if (loading) {
     return (
-        <ScrollView style={styles.container}>
-            {/* Header */}
-            <View style={styles.header}>
-                <TouchableOpacity onPress={handleBack}>
-                    <Text style={styles.backButton}>←</Text>
-                </TouchableOpacity>
-                <Text style={styles.headerTitle}>{course.title}</Text>
-                <View style={{ width: 30 }} />
-            </View>
+      <View style={styles.loaderContainer}>
+        <ActivityIndicator size="large" color="#1E3A8A" />
+      </View>
+    )
+  }
 
-            {/* Course Info */}
-            <View style={styles.courseInfo}>
-                <Text style={styles.courseIcon}>{course.icon}</Text>
-                <Text style={styles.courseTitle}>{course.title}</Text>
-                <Text style={styles.courseInstructor}>{course.instructor}</Text>
-                <Text style={styles.courseDescription}>{course.description}</Text>
-            </View>
+  if (!state.course) {
+    return (
+      <View style={styles.loaderContainer}>
+        <Text style={styles.errorText}>Curso nao encontrado.</Text>
+      </View>
+    )
+  }
 
-            {/* Progress */}
-            <View style={styles.progressContainer}>
-                <Text style={styles.progressTitle}>Seu Progresso</Text>
-                <View style={styles.progressBar}>
-                    <View style={[styles.progressFill, { width: `${course.progress}%` }]} />
-                </View>
-                <Text style={styles.progressText}>
-                    {course.completedModules} de {course.totalModules} módulos concluídos ({course.progress}%)
+  return (
+    <ScrollView style={styles.container}>
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => navigation.goBack()}>
+          <Text style={styles.backButton}>Voltar</Text>
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>{state.course.title}</Text>
+      </View>
+
+      <View style={styles.summaryCard}>
+        <Text style={styles.summaryInstructor}>{state.course.instructor ?? 'Equipe Tecnica WIRA'}</Text>
+        <Text style={styles.summaryMeta}>
+          {state.course.duration_hours}h • {state.course.modules_count} modulos • {state.course.level}
+        </Text>
+        <Text style={styles.summaryDescription}>{state.course.description ?? 'Formacao profissional com certificado.'}</Text>
+        <View style={styles.progressTrack}>
+          <View style={[styles.progressFill, { width: `${progressItem?.progress ?? 0}%` }]} />
+        </View>
+        <Text style={styles.progressText}>
+          {progressItem?.progress ?? 0}% completo • modulo atual {progressItem?.currentModule ?? 1}
+        </Text>
+      </View>
+
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Modulos</Text>
+        {state.modules.map(module => {
+          const done = completed.has(String(module.id))
+          return (
+            <View key={module.id} style={styles.moduleCard}>
+              <View style={styles.moduleHeader}>
+                <Text style={styles.moduleTitle}>Modulo {module.id}: {module.title}</Text>
+                <Text style={[styles.badge, done ? styles.badgeDone : styles.badgePending]}>
+                  {done ? 'Concluido' : 'Pendente'}
                 </Text>
-            </View>
+              </View>
+              <Text style={styles.moduleDescription}>{module.description ?? 'Sem descricao detalhada.'}</Text>
+              <Text style={styles.moduleMeta}>Duracao: {module.duration}</Text>
 
-            {/* Tabs */}
-            <View style={styles.tabContainer}>
-                <TouchableOpacity
-                    style={[styles.tab, activeTab === 'modules' && styles.activeTab]}
-                    onPress={() => setActiveTab('modules')}
-                >
-                    <Text style={[styles.tabText, activeTab === 'modules' && styles.activeTabText]}>
-                        Módulos
-                    </Text>
+              <View style={styles.moduleActions}>
+                <TouchableOpacity style={styles.secondaryButton} onPress={() => openModule(module.id)}>
+                  <Text style={styles.secondaryButtonText}>Ver Aula</Text>
                 </TouchableOpacity>
-                <TouchableOpacity
-                    style={[styles.tab, activeTab === 'materials' && styles.activeTab]}
-                    onPress={() => setActiveTab('materials')}
-                >
-                    <Text style={[styles.tabText, activeTab === 'materials' && styles.activeTabText]}>
-                        Materiais
-                    </Text>
+                <TouchableOpacity style={styles.primaryButton} onPress={() => openQuiz(module.id)}>
+                  <Text style={styles.primaryButtonText}>Fazer Quiz</Text>
                 </TouchableOpacity>
+              </View>
             </View>
+          )
+        })}
+      </View>
 
-            {/* Content */}
-            {activeTab === 'modules' ? (
-                <View style={styles.modulesContainer}>
-                    {course.modules.map((module: any) => (
-                        <TouchableOpacity
-                            key={module.id}
-                            style={styles.moduleCard}
-                            onPress={() => handleModulePress(module.id)}
-                        >
-                            <View style={styles.moduleHeader}>
-                                <View style={styles.moduleNumber}>
-                                    <Text style={styles.moduleNumberText}>{module.id}</Text>
-                                </View>
-                                <View style={styles.moduleTitle}>
-                                    <Text style={styles.moduleTitleText}>{module.title}</Text>
-                                </View>
-                                {module.completed && (
-                                    <View style={styles.completedBadge}>
-                                        <Text style={styles.completedText}>✓</Text>
-                                    </View>
-                                )}
-                            </View>
-                            <Text style={styles.moduleDuration}>Duração: {module.duration}</Text>
-                        </TouchableOpacity>
-                    ))}
-                </View>
-            ) : (
-                <View style={styles.materialsContainer}>
-                    {course.materials.map((material: any) => (
-                        <TouchableOpacity
-                            key={material.id}
-                            style={styles.materialCard}
-                            onPress={() => handleMaterialDownload(material)}
-                        >
-                            <View style={styles.materialHeader}>
-                                <Text style={styles.materialTitle}>{material.title}</Text>
-                                <Text style={styles.materialType}>{material.type}</Text>
-                            </View>
-                            <Text style={styles.materialSize}>Tamanho: {material.size}</Text>
-                        </TouchableOpacity>
-                    ))}
-                </View>
-            )}
-
-            {/* Action Button */}
-            {course.completedModules < course.totalModules && (
-                <View style={styles.actionContainer}>
-                    <TouchableOpacity style={styles.quizButton} onPress={handleStartQuiz}>
-                        <Text style={styles.quizButtonText}>Fazer Quiz do Módulo Atual</Text>
-                    </TouchableOpacity>
-                </View>
-            )}
-        </ScrollView>
-    );
+      <View style={styles.footerAction}>
+        <TouchableOpacity style={styles.primaryButton} onPress={() => openQuiz(currentModule)}>
+          <Text style={styles.primaryButtonText}>Quiz do modulo atual</Text>
+        </TouchableOpacity>
+      </View>
+    </ScrollView>
+  )
 }
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: '#F5F5F5',
-    },
-    header: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        padding: 20,
-        paddingTop: 60,
-        backgroundColor: '#1E3A8A',
-    },
-    backButton: {
-        fontSize: 24,
-        color: '#FFFFFF',
-        marginRight: 15,
-    },
-    headerTitle: {
-        fontSize: 20,
-        fontWeight: 'bold',
-        color: '#FFFFFF',
-        flex: 1,
-        textAlign: 'center',
-        marginRight: 30,
-    },
-    courseInfo: {
-        backgroundColor: '#FFFFFF',
-        padding: 20,
-        alignItems: 'center',
-        borderBottomWidth: 1,
-        borderBottomColor: '#E0E0E0',
-    },
-    courseIcon: {
-        fontSize: 48,
-        marginBottom: 10,
-    },
-    courseTitle: {
-        fontSize: 20,
-        fontWeight: 'bold',
-        color: '#1E3A8A',
-        marginBottom: 5,
-        textAlign: 'center',
-    },
-    courseInstructor: {
-        fontSize: 14,
-        color: '#666666',
-        marginBottom: 10,
-    },
-    courseDescription: {
-        fontSize: 14,
-        color: '#333333',
-        textAlign: 'center',
-        lineHeight: 20,
-    },
-    progressContainer: {
-        backgroundColor: '#FFFFFF',
-        padding: 20,
-        margin: 20,
-        borderRadius: 12,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-        elevation: 3,
-    },
-    progressTitle: {
-        fontSize: 16,
-        fontWeight: 'bold',
-        color: '#1E3A8A',
-        marginBottom: 10,
-    },
-    progressBar: {
-        height: 8,
-        backgroundColor: '#E0E0E0',
-        borderRadius: 4,
-        marginBottom: 8,
-    },
-    progressFill: {
-        height: '100%',
-        backgroundColor: '#4CAF50',
-        borderRadius: 4,
-    },
-    progressText: {
-        fontSize: 14,
-        color: '#666666',
-        textAlign: 'center',
-    },
-    tabContainer: {
-        flexDirection: 'row',
-        backgroundColor: '#FFFFFF',
-        marginHorizontal: 20,
-        borderRadius: 8,
-        padding: 4,
-        marginBottom: 20,
-    },
-    tab: {
-        flex: 1,
-        paddingVertical: 12,
-        alignItems: 'center',
-        borderRadius: 6,
-    },
-    activeTab: {
-        backgroundColor: '#1E3A8A',
-    },
-    tabText: {
-        fontSize: 14,
-        color: '#666666',
-        fontWeight: '500',
-    },
-    activeTabText: {
-        color: '#FFFFFF',
-    },
-    modulesContainer: {
-        paddingHorizontal: 20,
-    },
-    moduleCard: {
-        backgroundColor: '#FFFFFF',
-        padding: 15,
-        borderRadius: 8,
-        marginBottom: 10,
-        flexDirection: 'row',
-        alignItems: 'center',
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.05,
-        shadowRadius: 2,
-        elevation: 2,
-    },
-    moduleHeader: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        flex: 1,
-    },
-    moduleNumber: {
-        width: 30,
-        height: 30,
-        borderRadius: 15,
-        backgroundColor: '#E3F2FD',
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginRight: 12,
-    },
-    moduleNumberText: {
-        fontSize: 14,
-        fontWeight: 'bold',
-        color: '#1E3A8A',
-    },
-    moduleTitle: {
-        flex: 1,
-    },
-    moduleTitleText: {
-        fontSize: 14,
-        color: '#333333',
-        fontWeight: '500',
-    },
-    completedBadge: {
-        backgroundColor: '#4CAF50',
-        width: 24,
-        height: 24,
-        borderRadius: 12,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    completedText: {
-        color: '#FFFFFF',
-        fontSize: 12,
-        fontWeight: 'bold',
-    },
-    moduleDuration: {
-        fontSize: 12,
-        color: '#666666',
-        marginTop: 5,
-    },
-    materialsContainer: {
-        paddingHorizontal: 20,
-    },
-    materialCard: {
-        backgroundColor: '#FFFFFF',
-        padding: 15,
-        borderRadius: 8,
-        marginBottom: 10,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.05,
-        shadowRadius: 2,
-        elevation: 2,
-    },
-    materialHeader: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: 8,
-    },
-    materialTitle: {
-        fontSize: 14,
-        color: '#333333',
-        fontWeight: '500',
-        flex: 1,
-    },
-    materialType: {
-        fontSize: 12,
-        color: '#1E3A8A',
-        backgroundColor: '#E3F2FD',
-        paddingHorizontal: 8,
-        paddingVertical: 4,
-        borderRadius: 4,
-    },
-    materialSize: {
-        fontSize: 12,
-        color: '#666666',
-    },
-    actionContainer: {
-        padding: 20,
-    },
-    quizButton: {
-        backgroundColor: '#1E3A8A',
-        paddingVertical: 15,
-        borderRadius: 8,
-        alignItems: 'center',
-    },
-    quizButtonText: {
-        color: '#FFFFFF',
-        fontSize: 16,
-        fontWeight: 'bold',
-    },
-});
+  loaderContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#F5F5F5'
+  },
+  errorText: {
+    color: '#B91C1C',
+    fontSize: 16,
+    fontWeight: '600'
+  },
+  container: {
+    flex: 1,
+    backgroundColor: '#F5F5F5'
+  },
+  header: {
+    backgroundColor: '#1E3A8A',
+    paddingTop: 56,
+    paddingHorizontal: 20,
+    paddingBottom: 20
+  },
+  backButton: {
+    color: '#90CAF9',
+    marginBottom: 8,
+    fontSize: 15
+  },
+  headerTitle: {
+    color: '#FFFFFF',
+    fontSize: 22,
+    fontWeight: '700'
+  },
+  summaryCard: {
+    backgroundColor: '#FFFFFF',
+    margin: 20,
+    borderRadius: 12,
+    padding: 16
+  },
+  summaryInstructor: {
+    fontSize: 15,
+    color: '#1F2937',
+    fontWeight: '600'
+  },
+  summaryMeta: {
+    marginTop: 6,
+    color: '#6B7280',
+    fontSize: 13
+  },
+  summaryDescription: {
+    marginTop: 10,
+    color: '#374151',
+    lineHeight: 18
+  },
+  progressTrack: {
+    marginTop: 14,
+    height: 8,
+    borderRadius: 8,
+    overflow: 'hidden',
+    backgroundColor: '#E5E7EB'
+  },
+  progressFill: {
+    height: '100%',
+    backgroundColor: '#1E3A8A'
+  },
+  progressText: {
+    marginTop: 8,
+    color: '#1E3A8A',
+    fontWeight: '600',
+    fontSize: 12
+  },
+  section: {
+    paddingHorizontal: 20
+  },
+  sectionTitle: {
+    fontSize: 19,
+    fontWeight: '700',
+    color: '#111827',
+    marginBottom: 12
+  },
+  moduleCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    padding: 14,
+    marginBottom: 10
+  },
+  moduleHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    gap: 8
+  },
+  moduleTitle: {
+    flex: 1,
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#1F2937'
+  },
+  badge: {
+    fontSize: 11,
+    fontWeight: '700',
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 4
+  },
+  badgeDone: {
+    backgroundColor: '#DCFCE7',
+    color: '#166534'
+  },
+  badgePending: {
+    backgroundColor: '#FEF3C7',
+    color: '#92400E'
+  },
+  moduleDescription: {
+    marginTop: 8,
+    fontSize: 13,
+    color: '#4B5563'
+  },
+  moduleMeta: {
+    marginTop: 6,
+    fontSize: 12,
+    color: '#6B7280'
+  },
+  moduleActions: {
+    marginTop: 12,
+    flexDirection: 'row',
+    gap: 8
+  },
+  primaryButton: {
+    flex: 1,
+    backgroundColor: '#1E3A8A',
+    paddingVertical: 11,
+    borderRadius: 8,
+    alignItems: 'center'
+  },
+  primaryButtonText: {
+    color: '#FFFFFF',
+    fontWeight: '700',
+    fontSize: 13
+  },
+  secondaryButton: {
+    flex: 1,
+    backgroundColor: '#E5E7EB',
+    paddingVertical: 11,
+    borderRadius: 8,
+    alignItems: 'center'
+  },
+  secondaryButtonText: {
+    color: '#1F2937',
+    fontWeight: '700',
+    fontSize: 13
+  },
+  footerAction: {
+    padding: 20,
+    paddingTop: 8
+  }
+})

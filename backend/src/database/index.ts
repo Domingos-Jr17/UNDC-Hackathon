@@ -374,7 +374,7 @@ function insertSampleData(): void {
     {
       id: 'ong-001',
       name: 'Centro de Acolhimento Maputo',
-      contact_person: 'Ana Machel',
+      contact_person: 'Instrutora A',
       phone: '+258 84 123 4567',
       email: 'ana@ongmaputo.org',
       address: 'Av. Eduardo Mondlane, Maputo',
@@ -385,7 +385,7 @@ function insertSampleData(): void {
     {
       id: 'ong-002',
       name: 'Projeto Esperança',
-      contact_person: 'João Sitoe',
+      contact_person: 'Contato C',
       phone: '+258 84 987 6543',
       email: 'joao@projetoesperanca.org',
       address: 'Rua da Esperança, Matola',
@@ -404,9 +404,9 @@ function insertSampleData(): void {
 
   // Insert sample users with encryption
   const users: Partial<User>[] = [
-    { anonymous_code: 'V0042', ngo_id: 'ong-001', real_name: 'Maria Silva', phone: '+258 84 111 2222' },
-    { anonymous_code: 'V0038', ngo_id: 'ong-001', real_name: 'Ana Machel', phone: '+258 84 333 4444' },
-    { anonymous_code: 'V0031', ngo_id: 'ong-002', real_name: 'João Sitoe', phone: '+258 84 555 6666' }
+    { anonymous_code: 'V0042', ngo_id: 'ong-001', real_name: 'Beneficiaria A', phone: '+258 84 111 2222' },
+    { anonymous_code: 'V0038', ngo_id: 'ong-001', real_name: 'Instrutora A', phone: '+258 84 333 4444' },
+    { anonymous_code: 'V0031', ngo_id: 'ong-002', real_name: 'Beneficiario C', phone: '+258 84 555 6666' }
   ]
 
   users.forEach(user => {
@@ -433,7 +433,7 @@ function insertSampleData(): void {
       id: 'costura',
       title: 'Costura Avançada - Uniformes Escolares',
       description: 'Curso completo de costura industrial focado em produção de uniformes escolares.',
-      instructor: 'Professora Ana Machel',
+      instructor: 'Professora Instrutora A',
       duration_hours: 40,
       modules_count: 8,
       level: 'Intermediário',
@@ -445,7 +445,7 @@ function insertSampleData(): void {
       id: 'culinaria',
       title: 'Culinária Profissional Moçambicana',
       description: 'Técnicas de cozinha profissional focadas em pratos moçambicanos.',
-      instructor: 'Chef João Sitoe',
+      instructor: 'Chef Instrutor',
       duration_hours: 35,
       modules_count: 7,
       level: 'Básico',
@@ -457,7 +457,7 @@ function insertSampleData(): void {
       id: 'agricultura',
       title: 'Agricultura Sustentável',
       description: 'Técnicas modernas de cultivo de milho e hortaliças.',
-      instructor: 'Eng. Maria Cossa',
+      instructor: 'Eng. Instrutora B',
       duration_hours: 30,
       modules_count: 6,
       level: 'Básico',
@@ -572,3 +572,4 @@ export {
 }
 
 export default db
+

@@ -26,7 +26,7 @@ const staffLoginSchema = z.object({
 // Victim login schema
 const victimLoginSchema = z.object({
   code: z.string()
-    .regex(/^V\d{4}$/i, 'Código deve estar no formato V#### (ex: V0042)')
+    .regex(/^V\d{4}$/i, 'Código deve estar no formato V#### (ex: V0001)')
     .length(5, 'Código deve ter exatamente 5 caracteres'),
 });
 
@@ -154,7 +154,7 @@ export default function StaffLogin() {
                   <Input
                     id="code"
                     type="text"
-                    placeholder="V0042"
+                    placeholder="V0001"
                     maxLength={5}
                     {...victimForm.register('code')}
                     aria-invalid={!!victimForm.formState.errors.code}
@@ -166,7 +166,7 @@ export default function StaffLogin() {
                     </p>
                   )}
                   <p className="text-xs text-muted-foreground mt-2">
-                    Códigos válidos para demonstração: V0042, V0038, V0031
+                    Use o código anônimo informado pela equipe da ONG.
                   </p>
                 </div>
 

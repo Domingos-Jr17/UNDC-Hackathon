@@ -15,28 +15,28 @@ const STAFF_ACCOUNTS = [
   },
   {
     anonymous_code: 'STAFF001',
-    email: 'maria.silva@ong-001.org',
+    email: 'staff001@ong-001.org',
     password: 'staff123',
     role: 'STAFF',
-    real_name: 'Maria Silva',
+    real_name: 'Equipe A',
     ngo_id: 'ONG-001',
     phone: '+25882123456780'
   },
   {
     anonymous_code: 'STAFF002',
-    email: 'joao.santos@ong-002.org',
+    email: 'staff002@ong-002.org',
     password: 'joao123',
     role: 'STAFF',
-    real_name: 'João Santos',
+    real_name: 'Equipe B',
     ngo_id: 'ONG-002',
     phone: '+25882123456781'
   },
   {
     anonymous_code: 'STAFF003',
-    email: 'ana.costa@ong-001.org',
+    email: 'staff003@ong-001.org',
     password: 'ana123',
     role: 'STAFF',
-    real_name: 'Ana Costa',
+    real_name: 'Equipe C',
     ngo_id: 'ONG-001',
     phone: '+25882123456782'
   }
@@ -46,7 +46,7 @@ const NGOS = [
   {
     id: 'ONG-001',
     name: 'Centro de Acolhimento Maputo',
-    contact_person: 'Dra. Isabel Manhique',
+    contact_person: 'Contato A',
     phone: '+25882123456789',
     email: 'contact@ong-001.org',
     address: 'Av. Eduardo Mondlane 1234, Maputo',
@@ -55,7 +55,7 @@ const NGOS = [
   {
     id: 'ONG-002',
     name: 'Projeto Esperança',
-    contact_person: 'Dr. Pedro Mutola',
+    contact_person: 'Contato B',
     phone: '+25882123456790',
     email: 'contato@projeto-esperanca.org',
     address: 'Rua da Esperança 456, Beira',

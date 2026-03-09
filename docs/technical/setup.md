@@ -106,7 +106,7 @@ npm start
 - **iOS**: Use Expo Go app and scan the QR code
 
 ### 4.4 Demo Access Codes
-- **V0042**: Maria Silva (Sewing - 37% complete)
+- **V0042**: Beneficiaria A (Sewing - 37% complete)
 - **V0038**: Ana Joaquim (Cooking - New)
 - **V0031**: João Mandlate (Agriculture - 15% complete)
 
