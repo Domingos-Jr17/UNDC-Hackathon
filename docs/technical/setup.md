@@ -1,6 +1,6 @@
-﻿# ðŸš€ WIRA Development Environment Setup Guide
+﻿# WIRA Development Environment Setup Guide
 
-## ðŸ“‹ Overview
+## Overview
 
 This guide will help you set up and start all components of the WIRA platform in development mode:
 
@@ -10,7 +10,7 @@ This guide will help you set up and start all components of the WIRA platform in
 
 ---
 
-## ðŸ”§ Step 1: Check Prerequisites
+## Step 1: Check Prerequisites
 
 ### Node.js and npm
 
@@ -28,7 +28,7 @@ git --version
 
 ---
 
-## ðŸ—„ï¸ Step 2: Set Up Backend
+## Step 2: Set Up Backend
 
 ### 2.1 Install Dependencies
 
@@ -36,6 +36,17 @@ git --version
 cd wira-platform/backend
 npm install
 ```
+
+### 2.1.1 Configure environment
+
+```bash
+cp .env.example .env
+```
+
+Minimum variables required for local startup:
+- `DATABASE_URL` (PostgreSQL)
+- `JWT_SECRET`
+- `ENCRYPTION_KEY`
 
 ### 2.2 Initialize Database
 
@@ -68,7 +79,7 @@ curl http://localhost:3000/api
 
 ---
 
-## ðŸ–¥ï¸ Step 3: Set Up Web Frontend
+## Step 3: Set Up Web Frontend
 
 ### 3.1 Install Dependencies
 
@@ -94,7 +105,7 @@ The web frontend will start at: **http://localhost:5173**
 
 ---
 
-## ðŸ“± Step 4: Set Up Mobile Application
+## Step 4: Set Up Mobile Application
 
 ### 4.1 Install Dependencies
 
@@ -119,16 +130,16 @@ npm start
 
 - **V0042**: Beneficiária A (Sewing - 37% complete)
 - **V0038**: Ana Joaquim (Cooking - New)
-- **V0031**: JoÃ£o Mandlate (Agriculture - 15% complete)
+- **V0031**: João Mandlate (Agriculture - 15% complete)
 
 ---
 
-## ðŸ§ª Step 5: Verify Connectivity
+## Step 5: Verify Connectivity
 
 ### 5.1 Test API Endpoints
 
 ```bash
-# Verify API status
+# verify API status
 curl http://localhost:3000/health
 
 # Test authentication
@@ -154,7 +165,7 @@ curl -X POST http://localhost:3000/api/ussd/test \
 
 ---
 
-## ðŸ› ï¸ Service Structure
+## Service Structure
 
 ### Backend (Port 3000)
 
@@ -178,7 +189,7 @@ curl -X POST http://localhost:3000/api/ussd/test \
 
 ---
 
-## ðŸ” Final Verification
+## Final Verification
 
 ### Functionality Checklist
 
@@ -199,7 +210,7 @@ curl -X POST http://localhost:3000/api/ussd/test \
 
 ---
 
-## ðŸš¨ Troubleshooting
+## Troubleshooting
 
 ### Occupied Ports
 
@@ -232,7 +243,7 @@ npm install
 
 ---
 
-## ðŸ“ Next Steps
+## Next Steps
 
 1. **Run automated tests**: `npm test` (in each directory)
 2. **Validate critical flows**: Login, courses, certificates
@@ -242,7 +253,7 @@ npm install
 
 ---
 
-## ðŸŽ¯ Priority Test Scenarios
+## Priority Test Scenarios
 
 ### 1. Authentication and Access
 
@@ -276,6 +287,6 @@ npm install
 
 ---
 
-**Environment successfully configured!** ðŸŽ‰
+**Environment successfully configured!**
 
 Now you're ready to start testing the WIRA platform in development mode.

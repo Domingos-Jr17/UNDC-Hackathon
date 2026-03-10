@@ -1,12 +1,12 @@
-﻿# ðŸ“± WIRA USSD System - Complete Documentation
+﻿# WIRA USSD System - Complete Documentation
 
-## ðŸŽ¯ Overview
+## Overview
 
 The WIRA USSD System allows human trafficking victims to access the educational platform through basic phones, without requiring internet. This digital inclusion ensures that all beneficiaries can have access to professional training, regardless of their device or location.
 
 ---
 
-## ðŸ—ï¸ Technical Architecture
+## Technical Architecture
 
 ### **Implemented Components**
 
@@ -28,7 +28,7 @@ The WIRA USSD System allows human trafficking victims to access the educational 
 
 ---
 
-## ðŸ“‹ USSD Navigation Flows
+## USSD Navigation Flows
 
 ### **Flow 1: Login and Access**
 
@@ -99,9 +99,9 @@ Study Hours: 127
 Last Activity: Today
 
 Statistics:
-â€¢ Sewing: 37% complete
-â€¢ Cooking: New
-â€¢ Agriculture: 15% complete
+• Sewing: 37% complete
+• Cooking: New
+• Agriculture: 15% complete
 
 0. Return to menu
 ```
@@ -116,13 +116,13 @@ CON WIRA - HELP CENTER
 We are here to help!
 
 Access Codes:
-â€¢ Format: V#### (e.g.: V0042)
-â€¢ Provided by your NGO
+• Format: V#### (e.g.: V0042)
+• Provided by your NGO
 
 Support:
-â€¢ Phone: +258 84 123 4567
-â€¢ WhatsApp: +258 84 123 4567
-â€¢ Email: ajuda@wira.org
+• Phone: +258 84 123 4567
+• WhatsApp: +258 84 123 4567
+• Email: ajuda@wira.org
 
 Hours: Mon-Fri, 8am-5pm
 
@@ -131,7 +131,7 @@ Hours: Mon-Fri, 8am-5pm
 
 ---
 
-## ðŸ”§ Configuration and Installation
+## Configuration and Installation
 
 ### **Prerequisites**
 
@@ -183,7 +183,7 @@ Content-Type: application/json
 
 ---
 
-## ðŸ§ª Testing and Simulation
+## Testing and Simulation
 
 ### **Local Testing with cURL**
 
@@ -229,7 +229,7 @@ curl -X POST http://localhost:3000/api/ussd/test \
 
 BASE_URL="http://localhost:3000/api/ussd/test"
 
-echo "ðŸ§ª WIRA USSD TEST - Complete Sequence"
+echo "WIRA USSD TEST - Complete Sequence"
 echo "====================================="
 
 # Test 1: Welcome
@@ -250,12 +250,12 @@ curl -s -X POST $BASE_URL \
   -H "Content-Type: application/json" \
   -d '{"text": "V0042"}' | head -1
 
-echo -e "\nâœ… Tests completed!"
+echo -e "\nTests completed!"
 ```
 
 ---
 
-## ðŸŒ Operator Integration
+## Operator Integration
 
 ### **Standard USSD Format**
 
@@ -297,25 +297,25 @@ const ussdConfig = {
 
 ---
 
-## ðŸ”’ Security and Validation
+## Security and Validation
 
 ### **Implemented**
 
-- âœ… **Code validation**: V#### format mandatory
-- âœ… **Session timeout**: 5 minutes inactive
-- âœ… **Rate limiting**: Prevention against abuse
-- âœ… **Input sanitization**: Data cleaning
-- âœ… **Logging**: Access audit
+- **Code validation**: V#### format mandatory
+- **Session timeout**: 5 minutes inactive
+- **Rate limiting**: Prevention against abuse
+- **Input sanitization**: Data cleaning
+- **Logging**: Access audit
 
 ### **Demo Access Codes**
 
 - **V0042**: Beneficiária A - Sewing (37% complete)
 - **V0038**: Beneficiária B - Cooking (New)
-- **V0031**: Beneficiário C - Agriculture (15% complete)
+- **V0031**: Beneficiary C - Agriculture (15% complete)
 
 ---
 
-## ðŸ“Š Monitoring and Debugging
+## Monitoring and Debugging
 
 ### **System Logs**
 
@@ -324,10 +324,10 @@ const ussdConfig = {
 npm run dev
 
 # USSD logs appear as:
-ðŸ“± USSD Request: Session=session_123, Phone=+258840000000, Text="V0042"
-ðŸ“¤ USSD Response: CON Welcome to WIRA...
-âœ… User authenticated: V0042
-ðŸ—‘ï¸ Session expired: session_456
+USSD Request: Session=session_123, Phone=+258840000000, Text="V0042"
+USSD Response: CON Welcome to WIRA...
+User authenticated: V0042
+Session expired: session_456
 ```
 
 ### **Service Status**
@@ -364,7 +364,7 @@ curl http://localhost:3000/health
 
 ---
 
-## ðŸš€ Production Deploy
+## Production Deploy
 
 ### **Environment Variables**
 
@@ -416,7 +416,7 @@ server {
 
 ---
 
-## ðŸ“ˆ Metrics and KPIs
+## Metrics and KPIs
 
 ### **Usage Metrics**
 
@@ -434,7 +434,7 @@ server {
 
 ---
 
-## ðŸ†˜ Support and Troubleshooting
+## Support and Troubleshooting
 
 ### **Common Problems**
 
@@ -469,25 +469,25 @@ tail -f /var/log/wira/ussd.log
 
 ---
 
-## ðŸ”„ Future Roadmap
+## Future Roadmap
 
 ### **V1.1 (3 months)**
 
-- ðŸ”„ M-Pesa integration for certificates
-- ðŸ”„ Offline system with SMS
-- ðŸ”„ Multilingual support (Emakhuwa, Xichangana)
-- ðŸ”„ Advanced analytics
+- M-Pesa integration for certificates
+- Offline system with SMS
+- Multilingual support (Emakhuwa, Xichangana)
+- Advanced analytics
 
 ### **V2.0 (6 months)**
 
-- ðŸ”„ AI for personalized recommendations
-- ðŸ”„ Voice (IVR) complementary to USSD
-- ðŸ”„ WhatsApp Business integration
-- ðŸ”„ Dashboard USSD Analytics
+- AI for personalized recommendations
+- Voice (IVR) complementary to USSD
+- WhatsApp Business integration
+- Dashboard USSD Analytics
 
 ---
 
-## ðŸ“š References
+## References
 
 - **USSD Guidelines**: GSMA USSD Best Practices
 - **Security**: OWASP Mobile Security
@@ -498,4 +498,4 @@ tail -f /var/log/wira/ussd.log
 
 **WIRA USSD System** - Digital inclusion through accessible and empowering technology.
 
-_Developed with â¤ï¸ for human trafficking victims in Mozambique_
+_Developed with love for human trafficking victims in Mozambique_

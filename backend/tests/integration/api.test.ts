@@ -5,10 +5,11 @@ describe('API Integration', () => {
   test('GET /health should return service status', async () => {
     const response = await request(app).get('/health')
 
-    expect(response.status).toBe(200)
+    expect([200, 503]).toContain(response.status)
     expect(response.body.status).toBeDefined()
     expect(response.body.services).toBeDefined()
     expect(response.body.services.api).toBe('online')
+    expect(['connected', 'disconnected', 'error']).toContain(response.body.services.database)
   })
 
   test('GET /api should expose endpoint documentation', async () => {

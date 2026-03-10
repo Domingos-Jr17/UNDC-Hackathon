@@ -1,6 +1,6 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+﻿import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { ActivityIndicator, Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
-import { Video, ResizeMode } from 'expo-av'
+import { VideoView, useVideoPlayer } from 'expo-video'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import { RouteProp } from '@react-navigation/native'
 import { RootStackParamList } from '../types/navigation'
@@ -29,11 +29,14 @@ const initialState: VideoState = {
 
 export default function VideoLessonScreen({ route, navigation }: VideoLessonScreenProps) {
   const { courseId, moduleId } = route.params
-  const videoRef = useRef<Video>(null)
   const [state, setState] = useState<VideoState>(initialState)
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [isPlaying, setIsPlaying] = useState(false)
+  const [videoSource, setVideoSource] = useState<string | null>(null)
+  const videoPlayer = useVideoPlayer(videoSource ? { uri: videoSource } : null, player => {
+    player.loop = false
+  })
 
   const loadData = useCallback(async (): Promise<void> => {
     try {
@@ -49,6 +52,8 @@ export default function VideoLessonScreen({ route, navigation }: VideoLessonScre
       ])
 
       const module = modules.find(item => String(item.id) === moduleId) ?? null
+      setVideoSource(module?.videoUrl ?? null)
+      setIsPlaying(false)
       setState({
         userCode,
         module,
@@ -72,14 +77,14 @@ export default function VideoLessonScreen({ route, navigation }: VideoLessonScre
 
   const togglePlayPause = (): void => {
     if (!state.module?.videoUrl) {
-      Alert.alert('Vídeo indisponível', 'Este módulo ainda não possui vídeo publicado.')
+      Alert.alert('VÃ­deo indisponÃ­vel', 'Este mÃ³dulo ainda nÃ£o possui vÃ­deo publicado.')
       return
     }
 
     if (isPlaying) {
-      void videoRef.current?.pauseAsync()
+      videoPlayer.pause()
     } else {
-      void videoRef.current?.playAsync()
+      videoPlayer.play()
     }
     setIsPlaying(!isPlaying)
   }
@@ -91,8 +96,8 @@ export default function VideoLessonScreen({ route, navigation }: VideoLessonScre
     }
 
     Alert.alert(
-      'Offline indisponível',
-      'Pacote offline não disponível para este módulo no backend atual.'
+      'Offline indisponÃ­vel',
+      'Pacote offline nÃ£o disponÃ­vel para este mÃ³dulo no backend atual.'
     )
   }
 
@@ -149,21 +154,17 @@ export default function VideoLessonScreen({ route, navigation }: VideoLessonScre
 
       <View style={styles.videoWrapper}>
         {state.module.videoUrl ? (
-          <Video
-            ref={videoRef}
-            source={{ uri: state.module.videoUrl }}
+          <VideoView
+            player={videoPlayer}
             style={styles.video}
-            useNativeControls
-            resizeMode={ResizeMode.CONTAIN}
-            onPlaybackStatusUpdate={status => {
-              if (status.isLoaded) {
-                setIsPlaying(status.isPlaying ?? false)
-              }
-            }}
+            nativeControls
+            contentFit="contain"
+            allowsFullscreen
+            allowsPictureInPicture
           />
         ) : (
           <View style={styles.videoUnavailable}>
-            <Text style={styles.videoUnavailableText}>Vídeo ainda não publicado para este módulo.</Text>
+            <Text style={styles.videoUnavailableText}>VÃ­deo ainda nÃ£o publicado para este mÃ³dulo.</Text>
           </View>
         )}
       </View>
@@ -198,7 +199,7 @@ export default function VideoLessonScreen({ route, navigation }: VideoLessonScre
           style={styles.quizButton}
           onPress={() => navigation.navigate('Quiz', { courseId, moduleId: String(state.module?.id ?? moduleId) })}
         >
-          <Text style={styles.quizButtonText}>Fazer Quiz deste módulo</Text>
+          <Text style={styles.quizButtonText}>Fazer Quiz deste mÃ³dulo</Text>
         </TouchableOpacity>
       </View>
     </ScrollView>
@@ -318,3 +319,4 @@ const styles = StyleSheet.create({
     fontWeight: '700'
   }
 })
+

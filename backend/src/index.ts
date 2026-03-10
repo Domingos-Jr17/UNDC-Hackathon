@@ -1,5 +1,32 @@
 import 'dotenv/config' // Load environment variables first
 
+// Development defaults to avoid local startup failure when .env is missing.
+if ((process.env.NODE_ENV ?? 'development') === 'development') {
+  if (!process.env.DATABASE_URL) {
+    process.env.DATABASE_URL = 'postgresql://postgres:postgres@localhost:5432/wira_platform?schema=public'
+    // eslint-disable-next-line no-console
+    console.warn('[WIRA] DATABASE_URL not set. Using development fallback URL (localhost:5432/wira_platform).')
+  }
+
+  if (!process.env.SHADOW_DATABASE_URL) {
+    process.env.SHADOW_DATABASE_URL = 'postgresql://postgres:postgres@localhost:5432/wira_platform_shadow?schema=public'
+    // eslint-disable-next-line no-console
+    console.warn('[WIRA] SHADOW_DATABASE_URL not set. Using development fallback URL.')
+  }
+
+  if (!process.env.JWT_SECRET) {
+    process.env.JWT_SECRET = 'dev-jwt-secret-change-before-staging'
+    // eslint-disable-next-line no-console
+    console.warn('[WIRA] JWT_SECRET not set. Using development fallback secret.')
+  }
+
+  if (!process.env.ENCRYPTION_KEY) {
+    process.env.ENCRYPTION_KEY = 'dev-encryption-key-change-before-staging'
+    // eslint-disable-next-line no-console
+    console.warn('[WIRA] ENCRYPTION_KEY not set. Using development fallback key.')
+  }
+}
+
 import express from 'express'
 import cors from 'cors'
 import helmet from 'helmet'
@@ -38,6 +65,7 @@ import {
 
 // Import services
 import cacheService from './services/cache'
+import prismaService from './services/prisma'
 
 // Import types
 import { HealthCheckResponse } from './types'
@@ -121,14 +149,22 @@ app.get('/health', async (_req: express.Request, res: express.Response): Promise
   // Cache status (Redis disabled)
   healthCheck.services.cache = 'disabled'
 
-  // Check database connection (simplified for TypeScript)
-  try {
-    // In a real implementation, you would check the database connection
-    healthCheck.services.database = 'connected'
-  } catch (error) {
-    logger.error('Database health check error', { error: (error as Error).message })
+  // Check database connection (skip active probing during test runs).
+  if ((process.env.NODE_ENV ?? 'development') === 'test') {
     healthCheck.services.database = 'disconnected'
     healthCheck.status = 'DEGRADED'
+  } else {
+    try {
+      const dbHealth = await prismaService.healthCheck()
+      healthCheck.services.database = dbHealth.status === 'healthy' ? 'connected' : 'disconnected'
+      if (dbHealth.status !== 'healthy') {
+        healthCheck.status = 'DEGRADED'
+      }
+    } catch (error) {
+      logger.error('Database health check error', { error: (error as Error).message })
+      healthCheck.services.database = 'disconnected'
+      healthCheck.status = 'DEGRADED'
+    }
   }
 
   const statusCode = healthCheck.status === 'OK' ? 200 : 503

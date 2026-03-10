@@ -1,6 +1,47 @@
+import { Platform } from 'react-native'
 import sessionService from './session'
 
-const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL ?? 'http://localhost:3000'
+const ENV_API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL?.trim()
+let cachedApiBaseUrl: string | null = ENV_API_BASE_URL ?? null
+
+const normalizeBaseUrl = (value: string): string => value.replace(/\/+$/, '')
+
+const getDefaultBaseUrl = (): string => {
+  if (Platform.OS === 'android') {
+    return 'http://10.0.2.2:3000'
+  }
+
+  if (Platform.OS === 'web' && typeof window !== 'undefined') {
+    const host = window.location.hostname || 'localhost'
+    return `http://${host}:3000`
+  }
+
+  return 'http://localhost:3000'
+}
+
+const buildCandidateBaseUrls = (): string[] => {
+  const primary = normalizeBaseUrl(ENV_API_BASE_URL ?? getDefaultBaseUrl())
+
+  if (ENV_API_BASE_URL) {
+    return [primary]
+  }
+
+  const candidates = [primary]
+  const match = primary.match(/^(https?:\/\/[^/:]+):(\d+)$/i)
+  if (match) {
+    const host = match[1]
+    const port = Number(match[2])
+    const fallbackPorts = [port, 3000, 3001, 3002]
+    fallbackPorts.forEach(candidatePort => {
+      const url = `${host}:${candidatePort}`
+      if (!candidates.includes(url)) {
+        candidates.push(url)
+      }
+    })
+  }
+
+  return candidates
+}
 
 interface ApiEnvelope<T> {
   success: boolean
@@ -100,7 +141,35 @@ export interface JobRecord {
   }
 }
 
-const buildUrl = (path: string): string => `${API_BASE_URL}${path}`
+type ApiFetchResult = {
+  response: Response
+  baseUrl: string
+}
+
+const fetchWithBaseUrlFallback = async (path: string, init: RequestInit): Promise<ApiFetchResult> => {
+  const candidates = cachedApiBaseUrl
+    ? [cachedApiBaseUrl]
+    : buildCandidateBaseUrls()
+
+  let lastNetworkError: Error | null = null
+
+  for (const candidate of candidates) {
+    const baseUrl = normalizeBaseUrl(candidate)
+    try {
+      const response = await fetch(`${baseUrl}${path}`, init)
+      cachedApiBaseUrl = baseUrl
+      return { response, baseUrl }
+    } catch (error) {
+      lastNetworkError = error as Error
+    }
+  }
+
+  const attempted = candidates.join(', ')
+  throw new Error(
+    `Nao foi possivel conectar ao backend (${attempted}). Inicie a API e confira EXPO_PUBLIC_API_BASE_URL. ` +
+    `Detalhe: ${lastNetworkError?.message ?? 'erro de rede'}`
+  )
+}
 
 const parseJson = async <T>(response: Response): Promise<T> => {
   const data = (await response.json()) as T
@@ -121,14 +190,14 @@ class ApiService {
       }
     }
 
-    const response = await fetch(buildUrl(path), {
+    const { response, baseUrl } = await fetchWithBaseUrlFallback(path, {
       ...init,
       headers
     })
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({} as { error?: string; message?: string }))
-      throw new Error(errorData.error ?? errorData.message ?? `HTTP ${response.status}`)
+      throw new Error(errorData.error ?? errorData.message ?? `HTTP ${response.status} (${baseUrl}${path})`)
     }
 
     return parseJson<T>(response)
