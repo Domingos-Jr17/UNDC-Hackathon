@@ -1,4 +1,4 @@
-import { useState } from 'react';
+﻿import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Bell,
@@ -48,7 +48,7 @@ export default function Header({ onMenuClick, className }: HeaderProps) {
 
   const toggleDarkMode = () => {
     setIsDarkMode(!isDarkMode);
-    announceToScreenReader(`Modo ${!isDarkMode ? 'escuro' : 'claro'} ativado`);
+    announceToScreenReader(`Modo ${!isDarkMode ? 'escuro' : 'claro'} activado`);
   };
 
   const userInitials = user?.anonymousCode
@@ -97,7 +97,7 @@ export default function Header({ onMenuClick, className }: HeaderProps) {
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               type="search"
-              placeholder="Buscar utilizadores, cursos, relatórios..."
+              placeholder="Buscar usuários, cursos, relatórios..."
               className="pl-10"
               aria-label="Buscar na plataforma"
             />
@@ -139,9 +139,9 @@ export default function Header({ onMenuClick, className }: HeaderProps) {
                 <DropdownMenuItem className="flex flex-col items-start p-3">
                   <div className="flex w-full items-start justify-between">
                     <div className="space-y-1">
-                      <p className="text-sm font-medium">Novo usuário cadastrado</p>
+                      <p className="text-sm font-medium">Novo usuário registado</p>
                       <p className="text-xs text-muted-foreground">
-                        Beneficiária V0050 aguarda ativação
+                        Beneficiária V0050 aguarda activação
                       </p>
                       <p className="text-xs text-muted-foreground">Há 5 minutos</p>
                     </div>
@@ -223,4 +223,6 @@ export default function Header({ onMenuClick, className }: HeaderProps) {
     </header>
   );
 }
+
+
 

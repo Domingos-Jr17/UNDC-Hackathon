@@ -1,4 +1,4 @@
-import { Request, Response } from 'express';
+﻿import { Request, Response } from 'express';
 import { AuthenticatedRequest } from '../types';
 import { canAccessAnonymousCode, logger } from '../middleware/security';
 import CertificateModel from '../models/Certificate';
@@ -282,3 +282,5 @@ class CertificateController {
 }
 
 export default CertificateController;
+
+

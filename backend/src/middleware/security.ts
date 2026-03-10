@@ -70,64 +70,64 @@ export const authLimiter = createRateLimit(
 export const generalLimiter = createRateLimit(
   parseInt(process.env.RATE_LIMIT_WINDOW_MS ?? '900000'), // 15 minutes
   parseInt(process.env.RATE_LIMIT_MAX_REQUESTS ?? '100'), // 100 requests per 15 minutes
-  'Muitas requisiÃ§Ãµes. Tente novamente mais tarde.'
+  'Muitas requisições. Tente novamente mais tarde.'
 )
 
 export const ussdLimiter = createRateLimit(
   5 * 60 * 1000, // 5 minutes
   20, // 20 USSD requests per 5 minutes
-  'Muitas requisiÃ§Ãµes USSD. Tente novamente em 5 minutos.'
+  'Muitas requisições USSD. Tente novamente em 5 minutos.'
 )
 
 // Input validation rules
 export const validateLogin: ValidationChain[] = [
   body('code')
     .matches(/^V\d{4}$/i)
-    .withMessage('CÃ³digo de acesso deve estar no formato V#### (ex: V0042)')
+    .withMessage('Código de acesso deve estar no formato V#### (ex: V0042)')
     .isLength({ min: 5, max: 5 })
-    .withMessage('CÃ³digo deve ter exatamente 5 caracteres')
+    .withMessage('Código deve ter exatamente 5 caracteres')
 ]
 
 // Validation rules for staff email/password login
 export const validateStaffLogin: ValidationChain[] = [
   body('email')
     .isEmail()
-    .withMessage('Email invÃ¡lido')
+    .withMessage('Email inválido')
     .normalizeEmail()
     .isLength({ max: 255 })
     .withMessage('Email muito longo'),
   body('password')
     .isLength({ min: 6 })
-    .withMessage('Senha deve ter pelo menos 6 caracteres')
+    .withMessage('Palavra-passe deve ter pelo menos 6 caracteres')
     .isLength({ max: 128 })
-    .withMessage('Senha muito longa')
+    .withMessage('Palavra-passe demasiado longa')
 ]
 
 export const validateCertificateGeneration: ValidationChain[] = [
   body('anonymousCode')
     .matches(/^V\d{4}$/i)
-    .withMessage('CÃ³digo anÃ´nimo invÃ¡lido'),
+    .withMessage('Código anónimo inválido'),
   body('courseId')
     .isIn(['costura', 'culinaria', 'agricultura'])
-    .withMessage('ID de curso invÃ¡lido'),
+    .withMessage('ID de curso inválido'),
   body('score')
     .isInt({ min: 0, max: 100 })
-    .withMessage('PontuaÃ§Ã£o deve ser entre 0 e 100')
+    .withMessage('Pontuação deve ser entre 0 e 100')
 ]
 
 export const validateQuizSubmission: ValidationChain[] = [
   body('code')
     .matches(/^V\d{4}$/i)
-    .withMessage('CÃ³digo de acesso invÃ¡lido'),
+    .withMessage('Código de acesso inválido'),
   body('courseId')
     .isIn(['costura', 'culinaria', 'agricultura'])
-    .withMessage('ID de curso invÃ¡lido'),
+    .withMessage('ID de curso inválido'),
   body('answers')
     .isArray({ min: 1 })
     .withMessage('Respostas devem ser um array com pelo menos um elemento'),
   body('answers.*')
     .isInt({ min: 0 })
-    .withMessage('Cada resposta deve ser um nÃºmero inteiro')
+    .withMessage('Cada resposta deve ser um número inteiro')
 ]
 
 // Validation error handler
@@ -142,7 +142,7 @@ export const handleValidationErrors = (req: Request, res: Response, next: NextFu
     })
 
     res.status(400).json({
-      error: 'Dados invÃ¡lidos',
+      error: 'Dados inválidos',
       details: errors.array().map((err) => ({
         field: (err as { param?: string; path?: string }).param ?? (err as { param?: string; path?: string }).path,
         message: err.msg,
@@ -254,7 +254,7 @@ export const corsOptions = {
         currentPort,
         environment: process.env.NODE_ENV || 'development'
       })
-      callback(new Error('NÃ£o permitido por CORS'))
+      callback(new Error('Não permitido por CORS'))
     }
   },
   credentials: true,
@@ -270,7 +270,7 @@ export const authenticateToken = (req: AuthenticatedRequest, res: Response, next
 
   if (!token) {
     res.status(401).json({
-      error: 'Token de autenticaÃ§Ã£o nÃ£o fornecido'
+      error: 'Token de autenticação não fornecido'
     })
     return
   }
@@ -293,7 +293,7 @@ export const authenticateToken = (req: AuthenticatedRequest, res: Response, next
       })
 
       res.status(403).json({
-        error: 'Token invÃ¡lido ou expirado'
+        error: 'Token inválido ou expirado'
       })
       return
     }
@@ -308,7 +308,7 @@ export const requireRole = (allowedRoles: string[]) => {
   return (req: AuthenticatedRequest, res: Response, next: NextFunction): void => {
     if (!req.user) {
       res.status(401).json({
-        error: 'Token de autenticaÃ§Ã£o nÃ£o fornecido'
+        error: 'Token de autenticação não fornecido'
       })
       return
     }
@@ -323,7 +323,7 @@ export const requireRole = (allowedRoles: string[]) => {
       })
 
       res.status(403).json({
-        error: 'Acesso nÃ£o autorizado para esta funÃ§Ã£o'
+        error: 'Acesso não autorizado para esta função'
       })
       return
     }
@@ -452,7 +452,7 @@ export const notFoundHandler = (req: Request, res: Response): void => {
   })
 
   res.status(404).json({
-    error: 'Endpoint nÃ£o encontrado',
+    error: 'Endpoint não encontrado',
     path: req.originalUrl,
     method: req.method
   })
@@ -641,6 +641,8 @@ export const maskSensitiveData = (data: Record<string, unknown>): Record<string,
 
 // Export logger for use in other modules
 export { logger }
+
+
 
 
 

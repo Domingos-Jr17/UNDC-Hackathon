@@ -1,4 +1,4 @@
-import { Request, Response } from 'express'
+﻿import { Request, Response } from 'express'
 import prismaService from '../services/prisma'
 import { AuthenticatedRequest } from '../types'
 import { canAccessAnonymousCode, logger } from '../middleware/security'
@@ -237,4 +237,6 @@ class JobsController {
 }
 
 export default JobsController
+
+
 

@@ -1,10 +1,11 @@
 import React, { useEffect, useMemo, useState } from 'react'
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator, Alert, Linking } from 'react-native'
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator, Linking } from 'react-native'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import { RouteProp } from '@react-navigation/native'
 import { RootStackParamList } from '../types/navigation'
 import apiService, { CertificateRecord } from '../services/api'
 import sessionService from '../services/session'
+import { showAlert } from '../utils/alerts'
 
 type CertificateScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Certificate'>
 type CertificateScreenRouteProp = RouteProp<RootStackParamList, 'Certificate'>
@@ -31,7 +32,7 @@ export default function CertificateScreen({ route, navigation }: CertificateScre
         const data = await apiService.getUserCertificates(userCode)
         setCertificates(data)
       } catch (error) {
-        Alert.alert('Erro', (error as Error).message)
+        showAlert('Erro', (error as Error).message)
       } finally {
         setLoading(false)
       }
@@ -73,7 +74,7 @@ export default function CertificateScreen({ route, navigation }: CertificateScre
     try {
       await Linking.openURL(certificate.qrCode)
     } catch {
-      Alert.alert('Verificação', `Código: ${certificate.verificationCode}`)
+      showAlert('Verificação', `Código: ${certificate.verificationCode}`)
     }
   }
 

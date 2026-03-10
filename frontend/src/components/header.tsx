@@ -1,4 +1,4 @@
-import {Button} from "@/components/ui/button"
+﻿import {Button} from "@/components/ui/button"
 import { useNavigate } from 'react-router-dom';
 import { toast } from "sonner";
 import { useAuthContext } from '../contexts/AuthContext';
@@ -45,7 +45,7 @@ export const Header = () => {
                 onClick={handleActivateUser}
                 className="bg-white/10 hover:bg-white/20 text-white border-white/20"
             >
-                Ativar Novo Usuário
+                Activar Novo Usuário
             </Button>
 
             <Button
@@ -58,3 +58,5 @@ export const Header = () => {
         </div>
     </header>
   )}
+
+

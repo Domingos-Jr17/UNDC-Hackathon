@@ -165,10 +165,10 @@ const fetchWithBaseUrlFallback = async (path: string, init: RequestInit): Promis
   }
 
   const attempted = candidates.join(', ')
-  throw new Error(
-    `Nao foi possivel conectar ao backend (${attempted}). Inicie a API e confira EXPO_PUBLIC_API_BASE_URL. ` +
-    `Detalhe: ${lastNetworkError?.message ?? 'erro de rede'}`
-  )
+    throw new Error(
+      `Não foi possível conectar ao backend (${attempted}). Inicie a API e confira EXPO_PUBLIC_API_BASE_URL. ` +
+      `Detalhe: ${lastNetworkError?.message ?? 'erro de rede'}`
+    )
 }
 
 const parseJson = async <T>(response: Response): Promise<T> => {

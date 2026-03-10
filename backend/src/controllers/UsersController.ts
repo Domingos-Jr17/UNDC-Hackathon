@@ -1,4 +1,4 @@
-import { Request, Response } from 'express'
+﻿import { Request, Response } from 'express'
 import prismaService from '../services/prisma'
 import encryptionService from '../services/encryption'
 import { logger } from '../middleware/security'
@@ -233,7 +233,7 @@ class UsersController {
       if (!ngo || !ngo.is_active) {
         res.status(400).json({
           success: false,
-          error: 'ONG inválida para ativação'
+          error: 'ONG inválida para activação'
         })
         return
       }
@@ -290,7 +290,7 @@ class UsersController {
       })
     } catch (error) {
       logger.error('Error activating user', { error: (error as Error).message })
-      res.status(500).json({ error: 'Erro ao ativar usuário' })
+      res.status(500).json({ error: 'Erro ao activar usuário' })
     }
   }
 
@@ -329,7 +329,7 @@ class UsersController {
       })
     } catch (error) {
       logger.error('Error updating user activation', { error: (error as Error).message, id })
-      res.status(500).json({ error: 'Erro ao atualizar ativação do usuário' })
+      res.status(500).json({ error: 'Erro ao atualizar activação do usuário' })
     }
   }
 
@@ -426,3 +426,5 @@ class UsersController {
 }
 
 export default UsersController
+
+

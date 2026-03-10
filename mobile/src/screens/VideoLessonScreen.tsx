@@ -1,11 +1,12 @@
 ﻿import React, { useCallback, useEffect, useMemo, useState } from 'react'
-import { ActivityIndicator, Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import { VideoView, useVideoPlayer } from 'expo-video'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import { RouteProp } from '@react-navigation/native'
 import { RootStackParamList } from '../types/navigation'
 import apiService, { AggregatedProgress, CourseModule } from '../services/api'
 import sessionService from '../services/session'
+import { showAlert } from '../utils/alerts'
 
 type VideoLessonScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'VideoLesson'>
 type VideoLessonScreenRouteProp = RouteProp<RootStackParamList, 'VideoLesson'>
@@ -60,7 +61,7 @@ export default function VideoLessonScreen({ route, navigation }: VideoLessonScre
         progress
       })
     } catch (error) {
-      Alert.alert('Erro', (error as Error).message)
+      showAlert('Erro', (error as Error).message)
     } finally {
       setLoading(false)
     }
@@ -77,7 +78,7 @@ export default function VideoLessonScreen({ route, navigation }: VideoLessonScre
 
   const togglePlayPause = (): void => {
     if (!state.module?.videoUrl) {
-      Alert.alert('VÃ­deo indisponÃ­vel', 'Este mÃ³dulo ainda nÃ£o possui vÃ­deo publicado.')
+      showAlert('Vídeo indisponível', 'Este módulo ainda não possui vídeo publicado.')
       return
     }
 
@@ -91,13 +92,13 @@ export default function VideoLessonScreen({ route, navigation }: VideoLessonScre
 
   const handleDownload = (): void => {
     if (!state.module?.downloadable || !state.module?.videoUrl) {
-      Alert.alert('Offline indisponivel', 'Este conteudo nao possui pacote offline no momento.')
+      showAlert('Offline indisponível', 'Este conteúdo não possui pacote offline no momento.')
       return
     }
 
-    Alert.alert(
-      'Offline indisponÃ­vel',
-      'Pacote offline nÃ£o disponÃ­vel para este mÃ³dulo no backend atual.'
+    showAlert(
+      'Offline indisponível',
+      'Pacote offline não disponível para este módulo no backend atual.'
     )
   }
 
@@ -115,11 +116,11 @@ export default function VideoLessonScreen({ route, navigation }: VideoLessonScre
     try {
       setSubmitting(true)
       await apiService.updateProgress(state.userCode, courseId, [...completed], percentage)
-      Alert.alert('Concluido', 'Modulo marcado como concluido com sucesso.', [
+      showAlert('Concluído', 'Módulo marcado como concluído com sucesso.', [
         { text: 'OK', onPress: () => navigation.goBack() }
       ])
     } catch (error) {
-      Alert.alert('Erro', (error as Error).message)
+      showAlert('Erro', (error as Error).message)
     } finally {
       setSubmitting(false)
     }
@@ -136,7 +137,7 @@ export default function VideoLessonScreen({ route, navigation }: VideoLessonScre
   if (!state.module) {
     return (
       <View style={styles.loaderContainer}>
-        <Text style={styles.errorText}>Modulo nao encontrado.</Text>
+        <Text style={styles.errorText}>Módulo não encontrado.</Text>
       </View>
     )
   }
@@ -149,7 +150,7 @@ export default function VideoLessonScreen({ route, navigation }: VideoLessonScre
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <Text style={styles.backButton}>Voltar</Text>
         </TouchableOpacity>
-        <Text style={styles.title}>Modulo {moduleId}</Text>
+        <Text style={styles.title}>Módulo {moduleId}</Text>
       </View>
 
       <View style={styles.videoWrapper}>
@@ -164,15 +165,15 @@ export default function VideoLessonScreen({ route, navigation }: VideoLessonScre
           />
         ) : (
           <View style={styles.videoUnavailable}>
-            <Text style={styles.videoUnavailableText}>VÃ­deo ainda nÃ£o publicado para este mÃ³dulo.</Text>
+            <Text style={styles.videoUnavailableText}>Vídeo ainda não publicado para este módulo.</Text>
           </View>
         )}
       </View>
 
       <View style={styles.content}>
         <Text style={styles.moduleTitle}>{state.module.title}</Text>
-        <Text style={styles.moduleMeta}>Duracao: {state.module.duration}</Text>
-        <Text style={styles.moduleDescription}>{state.module.description ?? 'Sem descricao adicional.'}</Text>
+        <Text style={styles.moduleMeta}>Duração: {state.module.duration}</Text>
+        <Text style={styles.moduleDescription}>{state.module.description ?? 'Sem descrição adicional.'}</Text>
 
         <View style={styles.actionsRow}>
           <TouchableOpacity style={styles.secondaryButton} onPress={togglePlayPause}>
@@ -191,7 +192,7 @@ export default function VideoLessonScreen({ route, navigation }: VideoLessonScre
           disabled={submitting || isCompleted}
         >
           <Text style={styles.primaryButtonText}>
-            {isCompleted ? 'Modulo ja concluido' : submitting ? 'Salvando...' : 'Marcar como concluido'}
+            {isCompleted ? 'Módulo já concluído' : submitting ? 'A guardar...' : 'Marcar como concluído'}
           </Text>
         </TouchableOpacity>
 
@@ -199,7 +200,7 @@ export default function VideoLessonScreen({ route, navigation }: VideoLessonScre
           style={styles.quizButton}
           onPress={() => navigation.navigate('Quiz', { courseId, moduleId: String(state.module?.id ?? moduleId) })}
         >
-          <Text style={styles.quizButtonText}>Fazer Quiz deste mÃ³dulo</Text>
+          <Text style={styles.quizButtonText}>Fazer quiz deste módulo</Text>
         </TouchableOpacity>
       </View>
     </ScrollView>

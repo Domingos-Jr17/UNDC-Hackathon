@@ -1,10 +1,11 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react'
-import { ActivityIndicator, Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+﻿import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import { RouteProp } from '@react-navigation/native'
 import { RootStackParamList } from '../types/navigation'
 import apiService, { AggregatedProgress, CourseItem, CourseModule } from '../services/api'
 import sessionService from '../services/session'
+import { showAlert } from '../utils/alerts'
 
 type CourseDetailScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'CourseDetail'>
 type CourseDetailScreenRouteProp = RouteProp<RootStackParamList, 'CourseDetail'>
@@ -48,7 +49,7 @@ export default function CourseDetailScreen({ route, navigation }: CourseDetailSc
       const course = courses.find(item => item.id === courseId) ?? null
       setState({ course, modules, progress })
     } catch (error) {
-      Alert.alert('Erro', (error as Error).message)
+      showAlert('Erro', (error as Error).message)
     } finally {
       setLoading(false)
     }
@@ -89,7 +90,7 @@ export default function CourseDetailScreen({ route, navigation }: CourseDetailSc
   if (!state.course) {
     return (
       <View style={styles.loaderContainer}>
-        <Text style={styles.errorText}>Curso nao encontrado.</Text>
+        <Text style={styles.errorText}>Curso não encontrado.</Text>
       </View>
     )
   }
@@ -104,7 +105,7 @@ export default function CourseDetailScreen({ route, navigation }: CourseDetailSc
       </View>
 
       <View style={styles.summaryCard}>
-        <Text style={styles.summaryInstructor}>{state.course.instructor ?? 'Equipe Tecnica WIRA'}</Text>
+        <Text style={styles.summaryInstructor}>{state.course.instructor ?? 'Equipa Tecnica WIRA'}</Text>
         <Text style={styles.summaryMeta}>
           {state.course.duration_hours}h • {state.course.modules_count} módulos • {state.course.level}
         </Text>
@@ -124,9 +125,9 @@ export default function CourseDetailScreen({ route, navigation }: CourseDetailSc
           return (
             <View key={module.id} style={styles.moduleCard}>
               <View style={styles.moduleHeader}>
-                <Text style={styles.moduleTitle}>Modulo {module.id}: {module.title}</Text>
+                <Text style={styles.moduleTitle}>Módulo {module.id}: {module.title}</Text>
                 <Text style={[styles.badge, done ? styles.badgeDone : styles.badgePending]}>
-                  {done ? 'Concluido' : 'Pendente'}
+                  {done ? 'Concluído' : 'Pendente'}
                 </Text>
               </View>
               <Text style={styles.moduleDescription}>{module.description ?? 'Sem descricao detalhada.'}</Text>
@@ -310,3 +311,4 @@ const styles = StyleSheet.create({
     paddingTop: 8
   }
 })
+

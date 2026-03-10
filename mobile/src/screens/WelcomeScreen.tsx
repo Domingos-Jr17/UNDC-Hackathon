@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { View, Text, TouchableOpacity, Image, StyleSheet } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../types/navigation';
@@ -15,7 +15,7 @@ export default function WelcomeScreen({ navigation }: WelcomeScreenProps) {
     };
 
     const handleGetCode = () => {
-        // Simular registro (na real é via ONG)
+        // Simular registo (na real é via ONG)
         alert('Para obter código, contacte sua ONG de apoio');
     };
 

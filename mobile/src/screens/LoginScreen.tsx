@@ -1,9 +1,10 @@
 import React, { useState } from 'react'
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator } from 'react-native'
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import { RootStackParamList } from '../types/navigation'
 import apiService from '../services/api'
 import sessionService from '../services/session'
+import { showAlert } from '../utils/alerts'
 
 type LoginScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Login'>
 
@@ -18,7 +19,7 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
   const handleLogin = async (): Promise<void> => {
     const normalizedCode = accessCode.trim().toUpperCase()
     if (!normalizedCode) {
-      Alert.alert('Erro', 'Por favor, insira seu codigo de acesso')
+      showAlert('Erro', 'Por favor, insira o seu código de acesso')
       return
     }
 
@@ -28,7 +29,7 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
       await sessionService.setSession(response.token, response.user.anonymousCode)
       navigation.navigate('Home')
     } catch (error) {
-      Alert.alert('Falha no Login', (error as Error).message)
+      showAlert('Falha no Login', (error as Error).message)
     } finally {
       setIsSubmitting(false)
     }
@@ -38,7 +39,7 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
     <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>Acesso WIRA</Text>
-        <Text style={styles.subtitle}>Insira seu codigo anonimo de acesso</Text>
+        <Text style={styles.subtitle}>Insira o seu código anónimo de acesso</Text>
       </View>
 
       <View style={styles.form}>
@@ -64,11 +65,11 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
           ) : (
             <Text style={styles.loginButtonText}>Entrar</Text>
           )}
-        </TouchableOpacity>
+      </TouchableOpacity>
 
-        <Text style={styles.helperText}>
-          Use o codigo anonimo fornecido pela ONG parceira no formato V####.
-        </Text>
+      <Text style={styles.helperText}>
+        Use o código anónimo fornecido pela ONG parceira no formato V####.
+      </Text>
       </View>
 
       <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>

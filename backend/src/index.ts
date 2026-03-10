@@ -1,4 +1,4 @@
-import 'dotenv/config' // Load environment variables first
+﻿import 'dotenv/config' // Load environment variables first
 
 // Development defaults to avoid local startup failure when .env is missing.
 if ((process.env.NODE_ENV ?? 'development') === 'development') {
@@ -176,10 +176,10 @@ app.get('/api', (_req: express.Request, res: express.Response): void => {
   res.json({
     name: 'WIRA Platform API',
     version: '3.0.0',
-    description: 'Backend API para plataforma WIRA de capacitação e reintegração econômica',
+    description: 'Backend API para plataforma WIRA de capacitação e reintegração económica',
     endpoints: {
       auth: {
-        'POST /api/auth/login': 'Login com código anônimo',
+        'POST /api/auth/login': 'Login com código anónimo',
         'POST /api/auth/validate': 'Validar token JWT',
         'POST /api/auth/refresh': 'Atualizar token',
         'DELETE /api/auth/logout': 'Logout',
@@ -217,24 +217,24 @@ app.get('/api', (_req: express.Request, res: express.Response): void => {
       users: {
         'GET /api/users': 'Listar beneficiárias',
         'GET /api/users/:id': 'Detalhar beneficiária',
-        'POST /api/users/generate-code': 'Gerar código anônimo',
-        'POST /api/users/activate': 'Ativar beneficiária',
-        'PATCH /api/users/:id/activation': 'Ativar/desativar beneficiária'
+        'POST /api/users/generate-code': 'Gerar código anónimo',
+        'POST /api/users/activate': 'Activar beneficiária',
+        'PATCH /api/users/:id/activation': 'Activar/desactivar beneficiária'
       },
       ngos: {
         'GET /api/ngos': 'Listar ONGs',
         'GET /api/ngos/:id': 'Obter ONG por ID',
         'POST /api/ngos': 'Criar ONG',
         'PUT /api/ngos/:id': 'Atualizar ONG',
-        'PATCH /api/ngos/:id/deactivate': 'Desativar ONG',
+        'PATCH /api/ngos/:id/deactivate': 'Desactivar ONG',
         'DELETE /api/ngos/:id': 'Remover ONG'
       },
       'audit-logs': {
-        'GET /api/audit-logs': 'Listar registros de auditoria',
-        'GET /api/audit-logs/user/:userCode': 'Obter registros por usuário',
-        'GET /api/audit-logs/action/:action': 'Obter registros por ação',
-        'GET /api/audit-logs/table/:tableName': 'Obter registros por tabela',
-        'POST /api/audit-logs': 'Criar registro de auditoria',
+        'GET /api/audit-logs': 'Listar registos de auditoria',
+        'GET /api/audit-logs/user/:userCode': 'Obter registos por usuário',
+        'GET /api/audit-logs/action/:action': 'Obter registos por ação',
+        'GET /api/audit-logs/table/:tableName': 'Obter registos por tabela',
+        'POST /api/audit-logs': 'Criar registo de auditoria',
         'GET /api/audit-logs/stats': 'Obter estatísticas de auditoria'
       },
       ussd: {
@@ -444,3 +444,6 @@ if (require.main === module) {
 
 export default app
 export { startServer }
+
+
+

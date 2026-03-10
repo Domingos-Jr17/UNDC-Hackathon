@@ -1,9 +1,10 @@
 import React, { useCallback, useEffect, useState } from 'react'
-import { ActivityIndicator, Alert, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import { ActivityIndicator, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import { RootStackParamList } from '../types/navigation'
 import apiService, { JobRecord } from '../services/api'
 import sessionService from '../services/session'
+import { showAlert } from '../utils/alerts'
 
 type JobsScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Jobs'>
 
@@ -47,7 +48,7 @@ export default function JobsScreen({ navigation }: JobsScreenProps) {
     try {
       const userCode = await sessionService.getUserCode()
       if (!userCode) {
-        Alert.alert('Sessao expirada', 'Faca login novamente.')
+        showAlert('Sessao expirada', 'Faca login novamente.')
         navigation.navigate('Login')
         return
       }
@@ -74,7 +75,7 @@ export default function JobsScreen({ navigation }: JobsScreenProps) {
         ...prev,
         jobs: [],
         source: 'all',
-        error: normalizeErrorMessage(error, 'Nao foi possivel carregar vagas agora.')
+        error: normalizeErrorMessage(error, 'Não foi possível carregar vagas agora.')
       }))
     } finally {
       setLoading(false)
@@ -94,7 +95,7 @@ export default function JobsScreen({ navigation }: JobsScreenProps) {
   const handleApply = useCallback(
     async (jobId: string): Promise<void> => {
       if (!state.userCode) {
-        Alert.alert('Sessao expirada', 'Faca login novamente.')
+        showAlert('Sessao expirada', 'Faca login novamente.')
         navigation.navigate('Login')
         return
       }
@@ -102,11 +103,11 @@ export default function JobsScreen({ navigation }: JobsScreenProps) {
       setApplyingJobId(jobId)
       try {
         await apiService.applyToJob(jobId, state.userCode)
-        Alert.alert('Candidatura enviada', 'Sua candidatura foi registrada com sucesso.')
+        showAlert('Candidatura enviada', 'Sua candidatura foi registrada com sucesso.')
       } catch (error) {
-        Alert.alert(
+        showAlert(
           'Erro ao candidatar',
-          normalizeErrorMessage(error, 'Nao foi possivel enviar a candidatura.')
+          normalizeErrorMessage(error, 'Não foi possível enviar a candidatura.')
         )
       } finally {
         setApplyingJobId(null)
@@ -157,7 +158,7 @@ export default function JobsScreen({ navigation }: JobsScreenProps) {
             return (
               <View key={job.id} style={styles.jobCard}>
                 <Text style={styles.jobTitle}>{job.title}</Text>
-                <Text style={styles.jobCompany}>{job.employer?.name ?? 'Empresa nao informada'}</Text>
+                <Text style={styles.jobCompany}>{job.employer?.name ?? 'Empresa não informada'}</Text>
                 <Text style={styles.jobMeta}>Local: {job.location}</Text>
                 <Text style={styles.jobMeta}>Contrato: {job.contract_type}</Text>
 

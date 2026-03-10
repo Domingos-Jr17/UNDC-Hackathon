@@ -1,4 +1,4 @@
-#!/usr/bin/env node
+﻿#!/usr/bin/env node
 import { PrismaClient } from '@prisma/client'
 import bcrypt from 'bcryptjs'
 import winston from 'winston'
@@ -44,7 +44,7 @@ async function seedBaseData(): Promise<void> {
       {
         id: 'ngo-001',
         name: 'ONG Horizonte Seguro',
-        contact_person: 'Equipe Técnica A',
+        contact_person: 'Equipa Técnica A',
         phone: '+258820000001',
         email: 'contato@horizonteseguro.org',
         address: 'Maputo'
@@ -52,7 +52,7 @@ async function seedBaseData(): Promise<void> {
       {
         id: 'ngo-002',
         name: 'ONG Recomeço',
-        contact_person: 'Equipe Técnica B',
+        contact_person: 'Equipa Técnica B',
         phone: '+258820000002',
         email: 'contato@recomeco.org',
         address: 'Beira'
@@ -436,3 +436,4 @@ if (require.main === module) {
 }
 
 export { main as seedData }
+

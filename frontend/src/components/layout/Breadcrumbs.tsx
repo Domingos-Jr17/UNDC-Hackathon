@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { ChevronRight, Home } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -17,10 +17,10 @@ interface BreadcrumbsProps {
 
 const routeMap: Record<string, string> = {
   '/dashboard': 'Dashboard',
-  '/active': 'Ativar Utilizadores',
+  '/active': 'Activar Usuários',
   '/monitor': 'Monitorar Progresso',
-  '/users': 'Utilizadores',
-  '/users/[id]': 'Detalhes do Utilizador',
+  '/users': 'Usuários',
+  '/users/[id]': 'Detalhes do Usuário',
   '/courses': 'Cursos',
   '/courses/create': 'Criar Curso',
   '/courses/[id]': 'Detalhes do Curso',
@@ -129,3 +129,4 @@ export default function Breadcrumbs({
     </nav>
   );
 }
+

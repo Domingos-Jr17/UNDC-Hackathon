@@ -1,10 +1,11 @@
 import React, { useCallback, useEffect, useState } from 'react'
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator, Alert } from 'react-native'
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator } from 'react-native'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import { useFocusEffect } from '@react-navigation/native'
 import { RootStackParamList } from '../types/navigation'
 import apiService, { AggregatedProgress, CertificateRecord, ProgressCourse } from '../services/api'
 import sessionService from '../services/session'
+import { showAlert } from '../utils/alerts'
 
 type HomeScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Home'>
 
@@ -33,7 +34,7 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
     try {
       const userCode = await sessionService.getUserCode()
       if (!userCode) {
-        Alert.alert('Sessão expirada', 'Faça login novamente.')
+        showAlert('Sessão expirada', 'Faça login novamente.')
         navigation.navigate('Login')
         return
       }
@@ -49,7 +50,7 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
         certificates
       })
     } catch (error) {
-      Alert.alert('Erro', (error as Error).message)
+      showAlert('Erro', (error as Error).message)
     } finally {
       setLoading(false)
     }

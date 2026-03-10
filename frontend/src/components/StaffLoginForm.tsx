@@ -1,4 +1,4 @@
-import { useNavigate, useLocation } from 'react-router-dom';
+﻿import { useNavigate, useLocation } from 'react-router-dom';
 import { SubmitHandler, useForm } from "react-hook-form";
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Button } from "@/components/ui/button";
@@ -18,10 +18,10 @@ import { z } from 'zod';
 import { announceToScreenReader } from '../lib/accessibility';
 
 // Staff login schema
-const staffLoginSchema = z.object({
-  email: z.string().email('Email inválido'),
-  password: z.string().min(6, 'Senha deve ter pelo menos 6 caracteres'),
-});
+  const staffLoginSchema = z.object({
+    email: z.string().email('Email inválido'),
+    password: z.string().min(6, 'Palavra-passe deve ter pelo menos 6 caracteres'),
+  });
 
 // Victim login schema
 const victimLoginSchema = z.object({
@@ -91,7 +91,7 @@ export default function StaffLogin() {
             WIRA
           </CardTitle>
           <CardDescription>
-            Portal da Equipe
+            Portal da Equipa
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -117,7 +117,7 @@ export default function StaffLogin() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="password">Senha</Label>
+                    <Label htmlFor="password">Palavra-passe</Label>
                   <Input
                     id="password"
                     type="password"
@@ -166,7 +166,7 @@ export default function StaffLogin() {
                     </p>
                   )}
                   <p className="text-xs text-muted-foreground mt-2">
-                    Use o código anônimo informado pela equipe da ONG.
+                    Use o código anónimo informado pela equipa da ONG.
                   </p>
                 </div>
 
@@ -183,9 +183,10 @@ export default function StaffLogin() {
         </CardContent>
         <CardFooter className="text-center">
           <p className="text-sm text-muted-foreground w-full">
-            Use o seu email e senha para aceder a plataforma
+              Use o seu email e palavra-passe para aceder à plataforma
           </p>
         </CardFooter>
       </Card>
   );
 }
+

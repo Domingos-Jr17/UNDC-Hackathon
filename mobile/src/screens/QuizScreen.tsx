@@ -1,10 +1,11 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
-import { ActivityIndicator, Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import { ActivityIndicator, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import { RouteProp } from '@react-navigation/native'
 import { RootStackParamList } from '../types/navigation'
 import apiService, { QuizQuestion } from '../services/api'
 import sessionService from '../services/session'
+import { showAlert } from '../utils/alerts'
 
 type QuizScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Quiz'>
 type QuizScreenRouteProp = RouteProp<RootStackParamList, 'Quiz'>
@@ -35,6 +36,7 @@ export default function QuizScreen({ route, navigation }: QuizScreenProps) {
   const [answers, setAnswers] = useState<number[]>([])
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
+  const [hasSubmitted, setHasSubmitted] = useState(false)
 
   const loadQuiz = useCallback(async (): Promise<void> => {
     try {
@@ -49,7 +51,7 @@ export default function QuizScreen({ route, navigation }: QuizScreenProps) {
       setQuestions(quiz)
       setAnswers(Array(quiz.length).fill(-1))
     } catch (error) {
-      Alert.alert('Erro', (error as Error).message)
+      showAlert('Erro', (error as Error).message)
     } finally {
       setLoading(false)
     }
@@ -89,8 +91,12 @@ export default function QuizScreen({ route, navigation }: QuizScreenProps) {
   }
 
   const handleSubmit = async (): Promise<void> => {
+    if (submitting || hasSubmitted) {
+      return
+    }
+
     if (!canSubmit) {
-      Alert.alert('Quiz incompleto', 'Responda todas as perguntas antes de finalizar.')
+      showAlert('Quiz incompleto', 'Responda todas as perguntas antes de finalizar.')
       return
     }
 
@@ -104,9 +110,15 @@ export default function QuizScreen({ route, navigation }: QuizScreenProps) {
     try {
       setSubmitting(true)
       await persistProgress(score)
+      setHasSubmitted(true)
 
       if (score >= PASSING_SCORE) {
-        Alert.alert(
+        if (Platform.OS === 'web') {
+          navigation.navigate('Certificate', { courseId, score })
+          return
+        }
+
+        showAlert(
           'Aprovada',
           `Voce acertou ${correct} de ${questions.length} (${score}%). Certificado gerado.`,
           [
@@ -121,14 +133,20 @@ export default function QuizScreen({ route, navigation }: QuizScreenProps) {
           ]
         )
       } else {
-        Alert.alert(
+        if (Platform.OS === 'web') {
+          navigation.goBack()
+          return
+        }
+
+        showAlert(
           'Continue estudando',
           `Voce acertou ${correct} de ${questions.length} (${score}%). A nota minima e ${PASSING_SCORE}%.`,
           [{ text: 'OK', onPress: () => navigation.goBack() }]
         )
       }
     } catch (error) {
-      Alert.alert('Erro ao finalizar quiz', (error as Error).message)
+      setHasSubmitted(false)
+      showAlert('Erro ao finalizar quiz', (error as Error).message)
     } finally {
       setSubmitting(false)
     }
@@ -166,7 +184,7 @@ export default function QuizScreen({ route, navigation }: QuizScreenProps) {
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <Text style={styles.backButton}>Voltar</Text>
         </TouchableOpacity>
-        <Text style={styles.title}>Quiz • Modulo {moduleId}</Text>
+        <Text style={styles.title}>Quiz • Módulo {moduleId}</Text>
       </View>
 
       <View style={styles.content}>
@@ -212,11 +230,11 @@ export default function QuizScreen({ route, navigation }: QuizScreenProps) {
             </TouchableOpacity>
           ) : (
             <TouchableOpacity
-              style={[styles.primaryButton, (submitting || !canSubmit) && styles.disabledButton]}
+              style={[styles.primaryButton, (submitting || !canSubmit || hasSubmitted) && styles.disabledButton]}
               onPress={() => {
                 void handleSubmit()
               }}
-              disabled={submitting || !canSubmit}
+              disabled={submitting || !canSubmit || hasSubmitted}
             >
               <Text style={styles.primaryButtonText}>{submitting ? 'Enviando...' : 'Finalizar Quiz'}</Text>
             </TouchableOpacity>

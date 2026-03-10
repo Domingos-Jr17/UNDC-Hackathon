@@ -1,4 +1,4 @@
-import { Request, Response } from 'express';
+﻿import { Request, Response } from 'express';
 import { logger } from '../middleware/security';
 import AuditLogModel from '../models/AuditLog';
 
@@ -35,7 +35,7 @@ class AuditLogController {
     } catch (error) {
       logger.error('Error fetching audit logs', { error: (error as Error).message });
       res.status(500).json({
-        error: 'Erro ao buscar registros de auditoria'
+        error: 'Erro ao buscar registos de auditoria'
       });
     }
   }
@@ -57,7 +57,7 @@ class AuditLogController {
     } catch (error) {
       logger.error('Error fetching user audit logs', { error: (error as Error).message, userCode });
       res.status(500).json({
-        error: 'Erro ao buscar registros de auditoria do usuário'
+        error: 'Erro ao buscar registos de auditoria do usuário'
       });
     }
   }
@@ -79,7 +79,7 @@ class AuditLogController {
     } catch (error) {
       logger.error('Error fetching action audit logs', { error: (error as Error).message, action });
       res.status(500).json({
-        error: 'Erro ao buscar registros de auditoria da ação'
+        error: 'Erro ao buscar registos de auditoria da ação'
       });
     }
   }
@@ -101,7 +101,7 @@ class AuditLogController {
     } catch (error) {
       logger.error('Error fetching table audit logs', { error: (error as Error).message, tableName });
       res.status(500).json({
-        error: 'Erro ao buscar registros de auditoria da tabela'
+        error: 'Erro ao buscar registos de auditoria da tabela'
       });
     }
   }
@@ -114,12 +114,12 @@ class AuditLogController {
       res.status(201).json({
         success: true,
         auditLog,
-        message: 'Registro de auditoria criado com sucesso'
+        message: 'Registo de auditoria criado com sucesso'
       });
     } catch (error) {
       logger.error('Error creating audit log', { error: (error as Error).message });
       res.status(500).json({
-        error: 'Erro ao criar registro de auditoria'
+        error: 'Erro ao criar registo de auditoria'
       });
     }
   }
@@ -145,3 +145,6 @@ class AuditLogController {
 }
 
 export default AuditLogController;
+
+
+

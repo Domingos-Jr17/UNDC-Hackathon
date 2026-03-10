@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+﻿import { useMemo } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -84,7 +84,7 @@ export default function CourseDetail() {
               <h3 className="font-semibold mb-2 flex items-center gap-2"><Award className="h-4 w-4" /> Competências</h3>
               <div className="flex flex-wrap gap-2">
                 {skills.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">Nenhuma competência cadastrada.</p>
+                  <p className="text-sm text-muted-foreground">Nenhuma competência registada.</p>
                 ) : (
                   skills.map(skill => (
                     <Badge key={skill} variant="secondary">{skill}</Badge>
@@ -98,3 +98,4 @@ export default function CourseDetail() {
     </Layout>
   )
 }
+

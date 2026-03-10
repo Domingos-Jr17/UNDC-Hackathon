@@ -47,7 +47,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
         <div className="text-center">
           <TypographyH2>Acesso Não Autorizado</TypographyH2>
           <p className="text-muted-foreground mt-2">
-            Você não tem permissão para acessar esta área.
+            Não tem permissão para aceder a esta área.
           </p>
         </div>
       </div>

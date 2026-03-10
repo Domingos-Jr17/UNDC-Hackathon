@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client';
+﻿import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
@@ -18,7 +18,7 @@ const STAFF_ACCOUNTS = [
     email: 'staff001@ong-001.org',
     password: 'staff123',
     role: 'STAFF',
-    real_name: 'Equipe A',
+    real_name: 'Equipa A',
     ngo_id: 'ONG-001',
     phone: '+25882123456780'
   },
@@ -27,7 +27,7 @@ const STAFF_ACCOUNTS = [
     email: 'staff002@ong-002.org',
     password: 'joao123',
     role: 'STAFF',
-    real_name: 'Equipe B',
+    real_name: 'Equipa B',
     ngo_id: 'ONG-002',
     phone: '+25882123456781'
   },
@@ -36,7 +36,7 @@ const STAFF_ACCOUNTS = [
     email: 'staff003@ong-001.org',
     password: 'ana123',
     role: 'STAFF',
-    real_name: 'Equipe C',
+    real_name: 'Equipa C',
     ngo_id: 'ONG-001',
     phone: '+25882123456782'
   }
@@ -46,7 +46,7 @@ const NGOS = [
   {
     id: 'ONG-001',
     name: 'Centro de Acolhimento Maputo',
-    contact_person: 'Contato A',
+    contact_person: 'Contacto A',
     phone: '+25882123456789',
     email: 'contact@ong-001.org',
     address: 'Av. Eduardo Mondlane 1234, Maputo',
@@ -55,7 +55,7 @@ const NGOS = [
   {
     id: 'ONG-002',
     name: 'Projeto Esperança',
-    contact_person: 'Contato B',
+    contact_person: 'Contacto B',
     phone: '+25882123456790',
     email: 'contato@projeto-esperanca.org',
     address: 'Rua da Esperança 456, Beira',
@@ -154,3 +154,4 @@ if (require.main === module) {
 }
 
 export default seedStaffAccounts;
+

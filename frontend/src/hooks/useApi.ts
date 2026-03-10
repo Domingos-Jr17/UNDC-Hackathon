@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+﻿import { useState, useEffect, useCallback } from 'react'
 import { apiService, ApiError, User, DashboardStats, Activity, Course } from '../services/api'
 import { toast } from 'sonner'
 
@@ -91,7 +91,8 @@ export function useAuth() {
   const login = useCallback(async (code: string): Promise<boolean> => {
     try {
       setLoading(true)
-      const payload = await apiService.authenticateUser(code)
+      const normalizedCode = code.trim().toUpperCase()
+      const payload = await apiService.authenticateUser(normalizedCode)
       const mapped = toFrontendUser(payload.user)
       setUser(mapped)
       setIsAuthenticated(true)
@@ -117,7 +118,7 @@ export function useAuth() {
       toast.success(`Bem-vinda/o ${payload.user.anonymousCode}`)
       return true
     } catch (error) {
-      toast.error(error instanceof ApiError ? error.message : 'Falha ao autenticar equipe')
+      toast.error(error instanceof ApiError ? error.message : 'Falha ao autenticar equipa')
       return false
     } finally {
       setLoading(false)
@@ -178,10 +179,10 @@ export function useUserActivation() {
     setLoading(true)
     try {
       const user = await apiService.activateUser(userData)
-      toast.success('Beneficiária ativada com sucesso')
+      toast.success('Beneficiária activada com sucesso')
       return user
     } catch (error) {
-      toast.error(error instanceof ApiError ? error.message : 'Falha ao ativar beneficiaria')
+      toast.error(error instanceof ApiError ? error.message : 'Falha ao activar beneficiaria')
       throw error
     } finally {
       setLoading(false)
@@ -195,7 +196,7 @@ export function useUserActivation() {
       toast.success('Código gerado com sucesso')
       return code
     } catch (error) {
-      toast.error(error instanceof ApiError ? error.message : 'Falha ao gerar codigo')
+      toast.error(error instanceof ApiError ? error.message : 'Falha ao gerar código')
       throw error
     } finally {
       setLoading(false)
@@ -246,3 +247,5 @@ export function useApiHealth() {
 
   return { isHealthy, lastCheck, checkHealth }
 }
+
+

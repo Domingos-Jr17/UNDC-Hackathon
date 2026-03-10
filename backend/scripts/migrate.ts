@@ -1,4 +1,4 @@
-#!/usr/bin/env node
+﻿#!/usr/bin/env node
 import { PrismaClient } from '@prisma/client'
 import bcrypt from 'bcryptjs'
 import winston from 'winston'
@@ -70,7 +70,7 @@ async function initializeDefaultData(prisma: PrismaClient) {
       {
         id: 'ngo-001',
         name: 'ONG Horizonte Seguro',
-        contact_person: 'Equipe Técnica A',
+        contact_person: 'Equipa Técnica A',
         phone: '+258820000001',
         email: 'contato@horizonteseguro.org',
         address: 'Maputo'
@@ -78,7 +78,7 @@ async function initializeDefaultData(prisma: PrismaClient) {
       {
         id: 'ngo-002',
         name: 'ONG Recomeço',
-        contact_person: 'Equipe Técnica B',
+        contact_person: 'Equipa Técnica B',
         phone: '+258820000002',
         email: 'contato@recomeco.org',
         address: 'Beira'
@@ -186,10 +186,10 @@ async function initializeDefaultData(prisma: PrismaClient) {
       {
         course_id: 'culinaria',
         position: 1,
-        question_text: 'Qual pratica evita contaminacao cruzada?',
-        options_json: JSON.stringify(['Mesma tabua para tudo', 'Separar utensilios por alimento', 'Nao lavar as maos', 'Misturar cru com cozido']),
+        question_text: 'Qual prática evita contaminação cruzada?',
+        options_json: JSON.stringify(['Mesma tábua para tudo', 'Separar utensílios por alimento', 'Não lavar as mãos', 'Misturar cru com cozido']),
         correct_answer: 2,
-        explanation: 'Separar utensilios para alimentos crus e cozidos reduz risco de contaminacao.'
+        explanation: 'Separar utensílios para alimentos crus e cozidos reduz risco de contaminação.'
       },
       {
         course_id: 'agricultura',
@@ -286,3 +286,4 @@ if (require.main === module) {
 }
 
 export { runMigrations, initializeDefaultData }
+

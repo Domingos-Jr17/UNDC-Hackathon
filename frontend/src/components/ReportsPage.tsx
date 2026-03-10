@@ -1,4 +1,4 @@
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+﻿import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import MetricCard from '@/components/ui/MetricCard'
 import { LoadingOverlay } from '@/components/ui/loading-overlay'
@@ -81,7 +81,7 @@ export default function ReportsPage() {
             </CardHeader>
             <CardContent>
               <p className="text-sm text-muted-foreground mb-4">
-                Exporta dados agregados de utilizadoras e progresso em formato CSV.
+                Exporta dados agregados de usuárias e progresso em formato CSV.
               </p>
               <Button className="w-full" onClick={exportUsersCsv}>
                 <Download className="mr-2 h-4 w-4" />
@@ -109,3 +109,4 @@ export default function ReportsPage() {
     </Layout>
   )
 }
+

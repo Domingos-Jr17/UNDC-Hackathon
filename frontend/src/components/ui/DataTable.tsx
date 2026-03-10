@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+﻿import React, { useState, useMemo } from 'react';
 import {
   Table,
   TableBody,
@@ -66,7 +66,7 @@ function DataTableComponent<T extends Record<string, any>>({
   pagination = true,
   pageSize = 10,
   onRowClick,
-  emptyMessage = "Nenhum registro encontrado",
+  emptyMessage = "Nenhum registo encontrado",
   className,
   actions
 }: DataTableProps<T>) {
@@ -346,7 +346,7 @@ function DataTableComponent<T extends Record<string, any>>({
           <div className="text-sm text-muted-foreground">
             Mostrando {(currentPage - 1) * pageSize + 1} a{' '}
             {Math.min(currentPage * pageSize, filteredAndSortedData.length)} de{' '}
-            {filteredAndSortedData.length} registros
+            {filteredAndSortedData.length} registos
           </div>
           <div className="flex items-center space-x-2">
             <Button

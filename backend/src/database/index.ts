@@ -1,4 +1,4 @@
-import sqlite3 from 'sqlite3'
+﻿import sqlite3 from 'sqlite3'
 import path from 'path'
 import fs from 'fs'
 import winston from 'winston'
@@ -385,7 +385,7 @@ function insertSampleData(): void {
     {
       id: 'ong-002',
       name: 'Projeto Esperança',
-      contact_person: 'Contato C',
+      contact_person: 'Contacto C',
       phone: '+258 84 987 6543',
       email: 'joao@projetoesperanca.org',
       address: 'Rua da Esperança, Matola',
@@ -572,4 +572,5 @@ export {
 }
 
 export default db
+
 

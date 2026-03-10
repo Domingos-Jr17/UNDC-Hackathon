@@ -1,9 +1,10 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react'
-import { ActivityIndicator, Alert, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+﻿import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import { ActivityIndicator, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import { RootStackParamList } from '../types/navigation'
 import apiService, { AggregatedProgress, CourseItem } from '../services/api'
 import sessionService from '../services/session'
+import { showAlert } from '../utils/alerts'
 
 type CourseLibraryScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'CourseLibrary'>
 
@@ -38,7 +39,7 @@ export default function CourseLibraryScreen({ navigation }: CourseLibraryScreenP
       setCourses(coursesResult)
       setProgress(progressResult)
     } catch (error) {
-      Alert.alert('Erro', (error as Error).message)
+      showAlert('Erro', (error as Error).message)
     } finally {
       setLoading(false)
       setRefreshing(false)
@@ -94,7 +95,7 @@ export default function CourseLibraryScreen({ navigation }: CourseLibraryScreenP
             onPress={() => navigation.navigate('CourseDetail', { courseId: course.id })}
           >
             <Text style={styles.title}>{course.title}</Text>
-            <Text style={styles.subtitle}>{course.instructor ?? 'Equipe Tecnica WIRA'}</Text>
+            <Text style={styles.subtitle}>{course.instructor ?? 'Equipa Tecnica WIRA'}</Text>
             <Text style={styles.meta}>
               Nivel: {course.level} • Modulos: {course.modules_count} • Duracao: {course.duration_hours}h
             </Text>
@@ -188,3 +189,4 @@ const styles = StyleSheet.create({
     fontWeight: '600'
   }
 })
+

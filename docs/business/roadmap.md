@@ -1,4 +1,4 @@
-# 🚀 ROADMAP ESTRATÉGICO - WIRA PLATFORM
+﻿# 🚀 ROADMAP ESTRATÉGICO - WIRA PLATFORM
 
 **Período:** Novembro 2025 - Novembro 2026
 **Versão:** 1.0
@@ -12,7 +12,7 @@
 Este roadmap estratégico apresenta um plano de 12 meses para transformar a WIRA Platform de protótipo de hackathon para uma plataforma production-ready capaz de impactar positivamente 10,000+ sobreviventes de tráfico de pessoas em Moçambique.
 
 ### 🎯 Visão Estratégica
-Tornar a WIRA a principal plataforma de reintegração econômica de sobreviventes de tráfico de pessoas na África Austral, combinando tecnologia, empatia e sustentabilidade.
+Tornar a WIRA a principal plataforma de reintegração económica de sobreviventes de tráfico de pessoas na África Austral, combinando tecnologia, empatia e sustentabilidade.
 
 ### 🎪 Missão Imediata
 Estabilizar a infraestrutura crítica, corrigir vulnerabilidades de segurança e implementar funcionalidades essenciais para deploy seguro em ambiente de produção.
@@ -65,7 +65,7 @@ Transformar o protótipo em uma aplicação production-ready segura e estável.
 ### 📅 Cronograma Detalhado
 
 #### MÊS 1: SEGURANÇA E INFRAESTRUTURA CRÍTICA
-**Investimento:** $40,000 | **Equipe:** 3 desenvolvedores + 1 DevOps
+**Investimento:** $40,000 | **Equipa:** 3 desenvolvedores + 1 DevOps
 
 **Semana 1-2: Segurança Crítica**
 ```bash
@@ -91,7 +91,7 @@ Transformar o protótipo em uma aplicação production-ready segura e estável.
 ```
 
 #### MÊS 2: INTEGRAÇÃO API E FUNCIONALIDADES
-**Investimento:** $35,000 | **Equipe:** 2 desenvolvedores mobile + 1 backend
+**Investimento:** $35,000 | **Equipa:** 2 desenvolvedores mobile + 1 backend
 
 **Mobile App Integration**
 ```typescript
@@ -124,7 +124,7 @@ POST /api/certificates/verify  🔄 Em desenvolvimento
 ```
 
 #### MÊS 3: MONITORAMENTO E OPERAÇÕES
-**Investimento:** $25,000 | **Equipe:** 1 DevOps + 1 backend
+**Investimento:** $25,000 | **Equipa:** 1 DevOps + 1 backend
 
 **Infrastructure Monitoring**
 ```yaml
@@ -182,7 +182,7 @@ Construir robustez, completar funcionalidades e preparar para escala.
 ### 📅 Cronograma Detalhado
 
 #### MESES 4-5: QUALIDADE DE CÓDIGO E TESTES
-**Investimento:** $50,000 | **Equipe:** 3 desenvolvedores + 1 QA
+**Investimento:** $50,000 | **Equipa:** 3 desenvolvedores + 1 QA
 
 **Testing Strategy**
 ```typescript
@@ -228,7 +228,7 @@ stages:
 ```
 
 #### MESES 6-7: PERFORMANCE E OTIMIZAÇÃO
-**Investimento:** $40,000 | **Equipe:** 2 backend + 1 DevOps
+**Investimento:** $40,000 | **Equipa:** 2 backend + 1 DevOps
 
 **Performance Optimizations**
 ```typescript
@@ -283,7 +283,7 @@ export let options = {
 ```
 
 #### MESES 8-9: UX AVANÇADA E ACESSIBILIDADE
-**Investimento:** $35,000 | **Equipe:** 2 frontend + 1 UX designer
+**Investimento:** $35,000 | **Equipa:** 2 frontend + 1 UX designer
 
 **Trauma-Informed UX Improvements**
 ```typescript
@@ -364,7 +364,7 @@ Escalar para 10,000+ usuárias, inovar com IA/ML e estabelecer modelo de negóci
 ### 📅 Cronograma Detalhado
 
 #### MESES 10-11: INOVAÇÃO E DIFERENCIAIS
-**Investimento:** $60,000 | **Equipe:** 3 desenvolvedores + 1 data scientist
+**Investimento:** $60,000 | **Equipa:** 3 desenvolvedores + 1 data scientist
 
 **AI/ML Integration**
 ```python
@@ -473,7 +473,7 @@ class WhatsAppIntegration {
 ```
 
 #### MÊS 12: MODELO DE NEGÓCIOS E EXPANSÃO
-**Investimento:** $40,000 | **Equipe:** 1 business development + 1 operations
+**Investimento:** $40,000 | **Equipa:** 1 business development + 1 operations
 
 **Sustainability Model**
 ```typescript
@@ -558,7 +558,7 @@ interface RevenueStreams {
 ### 📊 Análise de Custos
 
 #### Custos de Desenvolvimento (12 meses)
-| Fase | Duração | Equipe | Custos Pessoal | Infraestrutura | Total |
+| Fase | Duração | Equipa | Custos Pessoal | Infraestrutura | Total |
 |------|---------|--------|----------------|----------------|-------|
 | **Fase 1** | 3 meses | 5 pessoas | $75,000 | $25,000 | **$100,000** |
 | **Fase 2** | 6 meses | 5 pessoas | $180,000 | $30,000 | **$210,000** |
@@ -569,7 +569,7 @@ interface RevenueStreams {
 | Componente | Custo Anual | Observações |
 |------------|-------------|-------------|
 | **Infraestrutura Cloud** | $120,000 | AWS/Azure enterprise |
-| **Equipe Operacional** | $240,000 | 4 pessoas full-time |
+| **Equipa Operacional** | $240,000 | 4 pessoas full-time |
 | **Segurança & Compliance** | $60,000 | Auditorias, certificações |
 | **Suporte ao Usuário** | $80,000 | 24/7 para usuárias vulneráveis |
 | **Marketing & Parcerias** | $50,000 | Expansão e aquisição |
@@ -614,7 +614,7 @@ interface RevenueStreams {
 | Métrica | Baseline | Target 2026 | Target 2028 | Impact |
 |---------|----------|-------------|-------------|---------|
 | **Sobreviventes Reintegradas** | 0 | 5,000 | 30,000 | Vidas transformadas |
-| **Taxa de Empregabilidade** | N/A | 70%+ | 80%+ | Independência econômica |
+| **Taxa de Empregabilidade** | N/A | 70%+ | 80%+ | Independência económica |
 | **Taxa de Re-traficking** | 40%+ | <10% | <5% | Prevenção |
 | **Renda Média Pós-Programa** | $0 | $150/mês | $250/mês | Qualidade de vida |
 | **Satisfação com Programa** | N/A | 85%+ | 90%+ | Eficácia |
@@ -709,7 +709,7 @@ Baixo                 | Risco 9 | Risco 8 | Risco 7 |
 - ✅ Auto-scaling configurado
 - ✅ Contratos com provedores cloud
 - ✅ Processos de onboarding acelerados
-- ✅ Equipe de suporte expansível
+- ✅ Equipa de suporte expansível
 
 **Scenario B: Adoção Lenta (<50% projections)**
 - ✅ Pivot para nichos específicos
@@ -719,7 +719,7 @@ Baixo                 | Risco 9 | Risco 8 | Risco 7 |
 
 **Scenario C: Crise de Segurança**
 - ✅ Planos de comunicação
-- ✅ Equipe de resposta a incidentes
+- ✅ Equipa de resposta a incidentes
 - ✅ Seguros cibernéticos
 - ✅ Planos de compensação para usuárias
 
@@ -727,7 +727,7 @@ Baixo                 | Risco 9 | Risco 8 | Risco 7 |
 
 ## 👥 GOVERNANÇA E ESTRUTURA ORGANIZACIONAL
 
-### 🏗️ Estrutura da Equipe
+### 🏗️ Estrutura da Equipa
 
 #### Dream Team (12 meses)
 ```
@@ -742,7 +742,7 @@ Baixo                 | Risco 9 | Risco 8 | Risco 7 |
 │                                                                 │
 │  CTO (Chief Technology Officer)                                 │
 │  ├── Arquitetura técnica                                        │
-│  ├── Gestão de equipe técnica                                   │
+│  ├── Gestão de equipa técnica                                   │
 │  └ Segurança e compliance                                       │
 │                                                                 │
 │  COO (Chief Operating Officer)                                  │
@@ -945,7 +945,7 @@ Este plano estratégico de 12 meses representa uma transformação completa da W
 #### 🚀 Imediato (Próximos 30 dias)
 
 1. **Aprovar Investimento Semente**: $500K para cobrir primeira fase
-2. **Montar Equipe Essencial**: Contratar CTO, 2 desenvolvedores senior, 1 DevOps
+2. **Montar Equipa Essencial**: Contratar CTO, 2 desenvolvedores senior, 1 DevOps
 3. **Iniciar Migração de Banco de Dados**: PostgreSQL production-ready
 4. **Implementar Secrets Management**: Remover todas as vulnerabilidades críticas
 
@@ -961,7 +961,7 @@ Este plano estratégico de 12 meses representa uma transformação completa da W
 1. **Escala para 5,000 Usuárias**: Expansão nacional em Moçambique
 2. **Lançar Features de IA**: Sistema de matching de empregos
 3. **Estabelecer Modelo de Receita**: Contratos governamentais
-4. **Preparar Expansão Regional**: Planejamento para SADC
+4. **Preparar Expansão Regional**: Planeamento para SADC
 
 ### 🌟 Impacto Potencial
 
@@ -970,14 +970,14 @@ Com execução bem-sucedida deste roadmap:
 - **10,000+ sobreviventes** reintegradas economicamente até 2026
 - **30,000+ sobreviventes** impactadas até 2028
 - **Taxa de re-traficking** reduzida de 40% para <5%
-- **Independência econômica** para milhares de famílias
+- **Independência económica** para milhares de famílias
 - **Modelo replicável** para outros países da região
 
 ### 🏆 Próximos Passos
 
 1. **Apresentação do Roadmap** para stakeholders e investidores
 2. **Aprovação do Orçamento** e linha de financiamento
-3. **Contratação da Equipe** técnica essencial
+3. **Contratação da Equipa** técnica essencial
 4. **Kick-off do Projeto** com alinhamento completo
 5. **Execução da Fase 1** com monitoramento rigoroso
 
@@ -986,6 +986,7 @@ Com execução bem-sucedida deste roadmap:
 **Documento Estratégico Confidencial**
 **Versão Final - Aprovado para Execução**
 **Próxima Revisão:** 30 dias após início da implementação
-**Contato Estratégico:** [CEO/CTO WIRA Platform]
+**Contacto Estratégico:** [CEO/CTO WIRA Platform]
 
 *Juntos, podemos transformar vidas e criar um futuro melhor para sobreviventes de tráfico de pessoas em Moçambique e além.* 🌟
+

@@ -312,7 +312,7 @@ class ApiService {
       method: 'POST',
       body: {
         phoneNumber,
-        message: `Seu codigo de acesso WIRA: ${code}`
+        message: `O seu código de acesso WIRA: ${code}`
       }
     })
     return payload.sms

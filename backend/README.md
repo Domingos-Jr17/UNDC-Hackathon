@@ -1,6 +1,6 @@
-# WIRA Platform Backend
+﻿# WIRA Platform Backend
 
-🚀 **Backend API TypeScript** para plataforma WIRA de capacitação e reintegração econômica de vítimas de tráfico de pessoas em Moçambique.
+🚀 **Backend API TypeScript** para plataforma WIRA de capacitação e reintegração económica de vítimas de tráfico de pessoas em Moçambique.
 
 ## 📋 Visão Geral
 
@@ -91,7 +91,7 @@ tail -f logs/app.log
 ## 📡 API Endpoints
 
 ### Autenticação
-- `POST /api/auth/login` - Login com código anônimo
+- `POST /api/auth/login` - Login com código anónimo
 - `POST /api/auth/validate` - Validar token JWT
 - `POST /api/auth/refresh` - Atualizar token
 - `DELETE /api/auth/logout` - Logout
@@ -432,7 +432,7 @@ npm run lint:fix
 
 ### Debug Mode
 ```bash
-# Ativar debug completo
+# Activar debug completo
 DEBUG=wira:* npm run dev
 
 # Verbose logging
@@ -470,3 +470,4 @@ MIT License - Ver arquivo LICENSE para detalhes.
 **WIRA Platform Backend** - API TypeScript segura, performática e escalável para capacitação profissional de vítimas de tráfico humano em Moçambique.
 
 *Desenvolvido com ❤️ e TypeScript para impacto social global.*
+

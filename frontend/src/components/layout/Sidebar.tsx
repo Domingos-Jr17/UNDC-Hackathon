@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard,
@@ -35,10 +35,10 @@ const sidebarItems: SidebarItem[] = [
   },
   {
     id: 'active',
-    label: 'Ativar Utilizadores',
+    label: 'Activar Usuários',
     icon: UserCheck,
     path: '/active',
-    description: 'Ativação de novos utilizadores'
+    description: 'Activação de novos usuários'
   },
   // {
   //   id: 'monitor',
@@ -53,7 +53,7 @@ const sidebarItems: SidebarItem[] = [
     icon: Users,
     path: '/users',
     badge: 42,
-    description: 'Gestão de utilizadores'
+    description: 'Gestão de usuários'
   },
   {
     id: 'courses',
@@ -207,3 +207,4 @@ export default function Sidebar({ className }: SidebarProps) {
     </>
   );
 }
+

@@ -9,6 +9,7 @@
 let cachedPort: number | null = null;
 let cacheExpiry: number = 0;
 const CACHE_DURATION = 60000; // 1 minuto de cache
+let inFlightDetection: Promise<number> | null = null;
 
 /**
  * Detecta em qual porta o backend está rodando
@@ -23,42 +24,54 @@ export async function detectBackendPort(): Promise<number> {
     return cachedPort;
   }
 
+  if (inFlightDetection) {
+    return inFlightDetection;
+  }
+
   // Lista de portas para testar em ordem de preferência
   const possiblePorts = [3000, 3001, 3002, 3003, 3004, 3005];
 
   console.log('🔍 Detectando porta do backend WIRA...');
 
-  for (const port of possiblePorts) {
-    try {
-      const response = await fetch(`http://localhost:${port}/health`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        signal: AbortSignal.timeout(2000), // Timeout de 2 segundos
-      });
+  inFlightDetection = (async () => {
+    for (const port of possiblePorts) {
+      try {
+        const response = await fetch(`http://localhost:${port}/health`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          signal: AbortSignal.timeout(2000), // Timeout de 2 segundos
+        });
 
-      if (response.ok) {
-        console.log(`✅ Backend detectado na porta ${port}`);
-        cachedPort = port;
-        cacheExpiry = now + CACHE_DURATION;
-        return port;
+        if (response.ok) {
+          console.log(`✅ Backend detectado na porta ${port}`);
+          cachedPort = port;
+          cacheExpiry = now + CACHE_DURATION;
+          return port;
+        }
+      } catch (error) {
+        // Porta não disponível, tentar próxima
+        console.log(`❌ Porta ${port} não disponível, tentando próxima...`);
       }
-    } catch (error) {
-      // Porta não disponível, tentar próxima
-      console.log(`❌ Porta ${port} não disponível, tentando próxima...`);
     }
-  }
 
-  throw new Error('Não foi possível detectar o backend WIRA em nenhuma porta (3000-3005)');
+    throw new Error('Não foi possível detectar o backend WIRA em nenhuma porta (3000-3005)');
+  })();
+
+  try {
+    return await inFlightDetection;
+  } finally {
+    inFlightDetection = null;
+  }
 }
 
 /**
- * Força a nova detecção de porta (limpa cache)
+ * Força a nova deteção de porta (limpa cache)
  * @returns Promise<number> Porta detectada
  */
 export async function forceRedetectBackendPort(): Promise<number> {
-  console.log('🔄 Forçando nova detecção de porta do backend...');
+  console.log('🔄 Forçando nova deteção de porta do backend...');
   cachedPort = null;
   cacheExpiry = 0;
   return detectBackendPort();
@@ -94,7 +107,7 @@ export async function getApiBaseUrl(): Promise<string> {
     return `http://localhost:${port}`;
   } catch (error) {
     console.error('❌ Erro ao detectar porta do backend:', error);
-    // Fallback para porta 3000 se detecção falhar
+    // Fallback para porta 3000 se deteção falhar
     return 'http://localhost:3000';
   }
 }

@@ -1,4 +1,4 @@
-# 🛠️ BACKLOG TÉCNICO - WIRA HÍBRIDO CORRIGIDO
+﻿# 🛠️ BACKLOG TÉCNICO - WIRA HÍBRIDO CORRIGIDO
 
 ## Foco: Capacitação Digital | 28-30 Outubro 2025 | 3 dias = 30h úteis
 
@@ -153,7 +153,7 @@ export default function WelcomeScreen({ navigation }) {
         <TouchableOpacity
           className="bg-blue-700 py-4 px-8 rounded-lg border-2 border-white"
           onPress={() => {
-            // Simular registro (na real é via ONG)
+            // Simular registo (na real é via ONG)
             alert('Para obter código, contacte sua ONG de apoio');
           }}
         >
@@ -1490,7 +1490,7 @@ export default function Dashboard() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <div className="bg-white rounded-lg shadow p-6">
             <div className="text-blue-600 mb-2">👥</div>
-            <h3 className="text-gray-600 text-sm font-medium">Sobreviventes Cadastradas</h3>
+            <h3 className="text-gray-600 text-sm font-medium">Sobreviventes Registadas</h3>
             <p className="text-3xl font-bold text-gray-900">{stats.totalVictims}</p>
           </div>
 
@@ -2200,3 +2200,5 @@ a estratégia WIRA HÍBRIDO:
 **Status:** ✅ Alinhado com WIRA Híbrido  
 **Foco:** 📚 Capacitação > 💼 Empregabilidade  
 **Estratégia:** Fase 1 perfeita, Fase 2 planejada
+
+

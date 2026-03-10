@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+﻿import { useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -120,7 +120,7 @@ export default function UsersPage() {
             </Button>
             <Button size="sm" onClick={() => navigate('/active')}>
               <UserPlus className="mr-2 h-4 w-4" />
-              Ativar Nova
+              Activar Nova
             </Button>
           </div>
         </CardHeader>
@@ -147,3 +147,4 @@ export default function UsersPage() {
     </Layout>
   )
 }
+

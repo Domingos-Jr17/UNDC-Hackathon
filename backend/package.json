@@ -1,7 +1,7 @@
-{
+﻿{
     "name": "wira-backend",
     "version": "1.0.0",
-    "description": "Backend API para plataforma WIRA de capacitação e reintegração econômica",
+    "description": "Backend API para plataforma WIRA de capacitação e reintegração económica",
     "main": "src/index.ts",
     "scripts": {
         "start": "node dist/index.js",
@@ -125,3 +125,4 @@
         "node": ">=14.0.0"
     }
 }
+

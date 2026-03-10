@@ -1,4 +1,4 @@
-import { Request, Response } from 'express';
+﻿import { Request, Response } from 'express';
 import { logger } from '../middleware/security';
 import NGOModel from '../models/NGO';
 
@@ -130,12 +130,12 @@ class NGOController {
 
       res.json({
         success: true,
-        message: 'ONG desativada com sucesso'
+        message: 'ONG desactivada com sucesso'
       });
     } catch (error) {
       logger.error('Error deactivating NGO', { error: (error as Error).message, id });
       res.status(500).json({
-        error: 'Erro ao desativar ONG'
+        error: 'Erro ao desactivar ONG'
       });
     }
   }
@@ -164,3 +164,4 @@ class NGOController {
 }
 
 export default NGOController;
+

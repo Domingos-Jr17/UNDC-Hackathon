@@ -78,8 +78,8 @@ export default function ActivateUser() {
 
     return (
         <Layout
-            title="Ativar Novo Usuário"
-            subtitle="Gere códigos de acesso anônimos para novas sobreviventes"
+            title="Activar Novo Usuário"
+            subtitle="Gere códigos de acesso anónimos para novas sobreviventes"
         >
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* User Information Card */}
@@ -204,7 +204,7 @@ export default function ActivateUser() {
                                             {generatedCode}
                                         </div>
                                         <TypographySmall className="text-muted-foreground">
-                                            Guarde este código para o usuário acessar o aplicativo WIRA
+                                            Guarde este código para o usuário aceder à aplicação WIRA
                                         </TypographySmall>
                                     </div>
                                 </div>
@@ -236,7 +236,7 @@ export default function ActivateUser() {
                                 Proteção de Identidade
                             </TypographyMuted>
                             <TypographyMuted className="text-sm">
-                                O usuário receberá um código anônimo para acessar o aplicativo WIRA.
+                                O usuário receberá um código anónimo para aceder à aplicação WIRA.
                                 Seu nome real e informações pessoais nunca serão expostos no sistema,
                                 garantindo total privacidade e segurança para a sobrevivente.
                             </TypographyMuted>
@@ -247,3 +247,5 @@ export default function ActivateUser() {
         </Layout>
     );
 }
+
+

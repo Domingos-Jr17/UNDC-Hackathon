@@ -1,4 +1,4 @@
-import React, { Component, ErrorInfo, ReactNode } from 'react';
+﻿import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { TypographyH2, TypographyP, TypographyMuted } from '@/components/ui/typography';
@@ -60,7 +60,7 @@ export class ErrorBoundary extends Component<Props, State> {
               </div>
               <CardTitle className="text-destructive">Ops! Algo deu errado</CardTitle>
               <CardDescription>
-                Ocorreu um erro inesperado. Tente recarregar a página ou entre em contato com o suporte.
+                Ocorreu um erro inesperado. Tente recarregar a página ou entre em contacto com o suporte.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">

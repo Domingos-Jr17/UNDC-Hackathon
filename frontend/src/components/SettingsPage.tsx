@@ -1,4 +1,4 @@
-import { useState } from 'react';
+﻿import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -54,11 +54,11 @@ export default function SettingsPage() {
   const handleSecuritySubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (securityData.newPassword !== securityData.confirmNewPassword) {
-      alert('As senhas novas não coincidem');
+      alert('As novas palavras-passe não coincidem');
       return;
     }
-    console.log('Senha atualizada:', securityData);
-    // Aqui normalmente faríamos uma chamada à API para atualizar a senha
+    console.log('Palavra-passe atualizada:', securityData);
+    // Aqui normalmente faríamos uma chamada à API para atualizar a palavra-passe
   };
 
   return (
@@ -169,7 +169,7 @@ export default function SettingsPage() {
                 <form onSubmit={handleSecuritySubmit} className="space-y-6">
                   <div className="space-y-4">
                     <div className="space-y-2">
-                      <Label htmlFor="currentPassword">Senha Atual</Label>
+                      <Label htmlFor="currentPassword">Palavra-passe atual</Label>
                       <Input
                         id="currentPassword"
                         name="currentPassword"
@@ -180,7 +180,7 @@ export default function SettingsPage() {
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="newPassword">Nova Senha</Label>
+                      <Label htmlFor="newPassword">Nova palavra-passe</Label>
                       <Input
                         id="newPassword"
                         name="newPassword"
@@ -191,7 +191,7 @@ export default function SettingsPage() {
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="confirmNewPassword">Confirmar Nova Senha</Label>
+                      <Label htmlFor="confirmNewPassword">Confirmar nova palavra-passe</Label>
                       <Input
                         id="confirmNewPassword"
                         name="confirmNewPassword"
@@ -204,7 +204,7 @@ export default function SettingsPage() {
 
                   <Button type="submit" className="hover:shadow-md transition-shadow duration-200">
                     <Key className="mr-2 h-4 w-4" />
-                    Atualizar Senha
+                    Atualizar palavra-passe
                   </Button>
                 </form>
               </CardContent>
@@ -225,7 +225,7 @@ export default function SettingsPage() {
                   </div>
                   <div className="flex items-center justify-between py-2 border-b border-border/50 last:border-0">
                     <div>
-                      <p className="font-medium">Alteração de senha</p>
+                      <p className="font-medium">Alteração de palavra-passe</p>
                       <p className="text-sm text-muted-foreground">15/10/2025 às 14:20</p>
                     </div>
                     <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">Segurança</span>
@@ -248,7 +248,7 @@ export default function SettingsPage() {
                       <Label className="font-normal">Notificações por Email</Label>
                       <p className="text-sm text-muted-foreground">Receber atualizações de cursos e progresso</p>
                     </div>
-                    <Button variant="outline" size="sm" className="hover:bg-accent hover:text-accent-foreground">Ativado</Button>
+                    <Button variant="outline" size="sm" className="hover:bg-accent hover:text-accent-foreground">Activado</Button>
                   </div>
 
                   <div className="flex items-center justify-between">
@@ -256,7 +256,7 @@ export default function SettingsPage() {
                       <Label className="font-normal">Notificações Push</Label>
                       <p className="text-sm text-muted-foreground">Receber notificações no navegador</p>
                     </div>
-                    <Button variant="outline" size="sm" className="hover:bg-accent hover:text-accent-foreground">Ativado</Button>
+                    <Button variant="outline" size="sm" className="hover:bg-accent hover:text-accent-foreground">Activado</Button>
                   </div>
                   
                   <div className="flex items-center justify-between">
@@ -264,7 +264,7 @@ export default function SettingsPage() {
                       <Label className="font-normal">SMS de Lembretes</Label>
                       <p className="text-sm text-muted-foreground">Receber lembretes por SMS</p>
                     </div>
-                    <Button variant="outline" size="sm" className="hover:bg-accent hover:text-accent-foreground">Desativado</Button>
+                    <Button variant="outline" size="sm" className="hover:bg-accent hover:text-accent-foreground">Desactivado</Button>
                   </div>
                   
                   <div className="flex items-center justify-between">
@@ -272,7 +272,7 @@ export default function SettingsPage() {
                       <Label className="font-normal">Notificações de Segurança</Label>
                       <p className="text-sm text-muted-foreground">Alertas de login e atividades suspeitas</p>
                     </div>
-                    <Button variant="outline" size="sm">Ativado</Button>
+                    <Button variant="outline" size="sm">Activado</Button>
                   </div>
                 </div>
               </CardContent>
@@ -289,7 +289,7 @@ export default function SettingsPage() {
                       <Label className="font-normal">Conclusão de Módulo</Label>
                       <p className="text-sm text-muted-foreground">Quando você completa um módulo</p>
                     </div>
-                    <Button variant="outline" size="sm" className="hover:bg-accent hover:text-accent-foreground">Ativado</Button>
+                    <Button variant="outline" size="sm" className="hover:bg-accent hover:text-accent-foreground">Activado</Button>
                   </div>
 
                   <div className="flex items-center justify-between">
@@ -297,7 +297,7 @@ export default function SettingsPage() {
                       <Label className="font-normal">Novos Cursos</Label>
                       <p className="text-sm text-muted-foreground">Quando novos cursos são adicionados</p>
                     </div>
-                    <Button variant="outline" size="sm" className="hover:bg-accent hover:text-accent-foreground">Ativado</Button>
+                    <Button variant="outline" size="sm" className="hover:bg-accent hover:text-accent-foreground">Activado</Button>
                   </div>
 
                   <div className="flex items-center justify-between">
@@ -305,7 +305,7 @@ export default function SettingsPage() {
                       <Label className="font-normal">Certificados</Label>
                       <p className="text-sm text-muted-foreground">Quando você ganha um certificado</p>
                     </div>
-                    <Button variant="outline" size="sm" className="hover:bg-accent hover:text-accent-foreground">Ativado</Button>
+                    <Button variant="outline" size="sm" className="hover:bg-accent hover:text-accent-foreground">Activado</Button>
                   </div>
                 </div>
               </CardContent>
@@ -316,3 +316,4 @@ export default function SettingsPage() {
     </Layout>
   );
 }
+

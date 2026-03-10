@@ -125,7 +125,7 @@ class AuthController {
           ip: req.ip
         });
         res.status(401).json({
-          error: 'Email ou senha inválidos'
+          error: 'Email ou palavra-passe inválidos'
         });
         return;
       }

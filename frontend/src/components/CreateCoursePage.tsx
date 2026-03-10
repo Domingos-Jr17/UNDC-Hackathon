@@ -1,4 +1,4 @@
-import { FormEvent, useState } from 'react'
+﻿import { FormEvent, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -37,7 +37,7 @@ const normalizeApiError = (error: unknown): string => {
   if (error instanceof Error) {
     return error.message
   }
-  return 'Nao foi possivel criar o curso.'
+  return 'Não foi possível criar o curso.'
 }
 
 export default function CreateCoursePage() {
@@ -137,7 +137,7 @@ export default function CreateCoursePage() {
                 <Label htmlFor="instructor">Instrutor(a)</Label>
                 <Input
                   id="instructor"
-                  placeholder="Equipe WIRA"
+                  placeholder="Equipa WIRA"
                   value={form.instructor}
                   onChange={event => setField('instructor', event.target.value)}
                 />
@@ -208,3 +208,4 @@ export default function CreateCoursePage() {
     </Layout>
   )
 }
+
