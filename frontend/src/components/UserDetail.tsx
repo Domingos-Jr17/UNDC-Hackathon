@@ -55,7 +55,7 @@ export default function UserDetail() {
             <p className="text-muted-foreground mt-2">{error ?? 'Não foi possível carregar os dados solicitados.'}</p>
             <Button className="mt-4" onClick={() => navigate('/users')}>
               <ArrowLeft className="mr-2 h-4 w-4" />
-              Voltar para Usuários
+              Voltar para beneficiárias
             </Button>
           </CardContent>
         </Card>
@@ -69,7 +69,7 @@ export default function UserDetail() {
         <div className="flex items-center justify-between">
           <Button variant="outline" onClick={() => navigate('/users')}>
             <ArrowLeft className="mr-2 h-4 w-4" />
-            Voltar para Usuários
+            Voltar para beneficiárias
           </Button>
           <Button onClick={() => navigate('/reports')}>Abrir Relatórios</Button>
         </div>

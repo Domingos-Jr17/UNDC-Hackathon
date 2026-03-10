@@ -15,7 +15,6 @@ import {
   Clock3,
   FileText,
   GraduationCap,
-  TrendingUp,
   UserPlus,
   Users,
 } from 'lucide-react'
@@ -96,12 +95,6 @@ function DashboardComponent() {
       description: 'Abra a lista completa e priorize casos com risco de abandono.',
       icon: Users,
       onClick: () => navigate('/users')
-    },
-    {
-      title: 'Exportar relatórios',
-      description: 'Partilhe indicadores atualizados com parceiros institucionais.',
-      icon: FileText,
-      onClick: () => navigate('/reports')
     }
   ]
 
@@ -239,10 +232,23 @@ function DashboardComponent() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
+            <div className="flex items-center justify-between gap-3 rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-700">
+              <div>
+                <p className="font-medium text-slate-950">Fecho rápido</p>
+                <p className="text-muted-foreground">
+                  {derived.activationRate}% da base está ativa. Use relatórios quando precisar de partilha externa.
+                </p>
+              </div>
+              <Button variant="outline" className="shrink-0" onClick={() => navigate('/reports')}>
+                <FileText className="mr-2 h-4 w-4" />
+                Abrir relatórios
+              </Button>
+            </div>
+
             {recentActivity.length === 0 ? (
               <p className="text-sm text-muted-foreground">Ainda não há atividade recente para apresentar.</p>
             ) : (
-              recentActivity.slice(0, 6).map(item => (
+              recentActivity.slice(0, 4).map(item => (
                 <div key={item.id} className="rounded-2xl border border-slate-200 px-4 py-3">
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <div>
@@ -263,7 +269,7 @@ function DashboardComponent() {
         </Card>
       </section>
 
-      <section className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
+      <section>
         <Card className="rounded-[32px] border-white/70 bg-white shadow-sm">
           <CardHeader>
             <CardTitle className="text-slate-950">Beneficiárias para acompanhamento imediato</CardTitle>
@@ -276,35 +282,6 @@ function DashboardComponent() {
                 <PriorityUserRow key={user.id} user={user} onOpen={() => navigate(`/users/${user.id}`)} />
               ))
             )}
-          </CardContent>
-        </Card>
-
-        <Card className="rounded-[32px] border-white/70 bg-white shadow-sm">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-slate-950">
-              <TrendingUp className="h-5 w-5 text-primary" />
-              Leitura rápida da operação
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4 text-sm text-slate-700">
-            <div className="rounded-2xl bg-slate-50 p-4">
-              <p className="font-medium text-slate-950">Ativação da base</p>
-              <p className="mt-1 leading-6">
-                {derived.activationRate}% das beneficiárias registadas estão ativas no momento.
-              </p>
-            </div>
-            <div className="rounded-2xl bg-slate-50 p-4">
-              <p className="font-medium text-slate-950">Concluintes certificadas</p>
-              <p className="mt-1 leading-6">
-                {stats.certificatesIssued} certificados já foram emitidos, indicando percursos concluídos e prontos para reporte externo.
-              </p>
-            </div>
-            <div className="rounded-2xl bg-slate-50 p-4">
-              <p className="font-medium text-slate-950">Foco recomendado</p>
-              <p className="mt-1 leading-6">
-                Priorize reativação de contas inativas e contacto com quem está sem progresso ou sem atividade recente.
-              </p>
-            </div>
           </CardContent>
         </Card>
       </section>

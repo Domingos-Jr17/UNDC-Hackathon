@@ -3,7 +3,6 @@ import { Toaster } from "sonner";
 
 import Dashboard from './components/Dashboard.tsx';
 import ActivateUser from './components/ActivateUser.tsx';
-import MonitorProgress from './components/MonitorProgress.tsx';
 import StaffLoginPage from './components/StaffLoginPage.tsx';
 import UsersPage from './components/UsersPage.tsx';
 import ReportsPage from './components/ReportsPage.tsx';
@@ -25,7 +24,7 @@ function App() {
         <Router>
           <div className="min-h-screen bg-background">
             <Toaster position="top-right" />
-            <div className="fixed top-4 right-4 z-50">
+            <div className="pointer-events-none fixed bottom-4 right-4 z-50">
               <ApiStatusIndicator />
             </div>
             <Routes>
@@ -42,13 +41,6 @@ function App() {
               <ProtectedRoute>
                 <ErrorBoundary>
                   <ActivateUser />
-                </ErrorBoundary>
-              </ProtectedRoute>
-            } />
-            <Route path="/monitor" element={
-              <ProtectedRoute>
-                <ErrorBoundary>
-                  <MonitorProgress />
                 </ErrorBoundary>
               </ProtectedRoute>
             } />

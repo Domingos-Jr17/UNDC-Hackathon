@@ -1,319 +1,378 @@
-﻿import { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import Layout from './layout/Layout';
-import { User, Shield, Bell, Key, Save, Upload, Camera } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
+import { toast } from 'sonner'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Badge } from '@/components/ui/badge'
+import Layout from './layout/Layout'
+import { Bell, KeyRound, LogOut, RefreshCcw, Save, ShieldCheck, User } from 'lucide-react'
+import { useAuthContext } from '@/contexts/AuthContext'
+import { useApiHealth } from '@/hooks/useApi'
 
 interface ProfileFormData {
-  name: string;
-  email: string;
-  phone: string;
-  location: string;
+  displayName: string
+  contactEmail: string
+  phone: string
+  location: string
 }
 
-interface SecurityFormData {
-  currentPassword: string;
-  newPassword: string;
-  confirmNewPassword: string;
+interface NotificationSettings {
+  emailUpdates: boolean
+  securityAlerts: boolean
+  weeklyDigest: boolean
+  reportReady: boolean
 }
+
+interface SettingsAuditItem {
+  id: string
+  label: string
+  detail: string
+  timestamp: string
+}
+
+interface StoredPortalSettings {
+  profile: ProfileFormData
+  notifications: NotificationSettings
+  audit: SettingsAuditItem[]
+}
+
+const buildStorageKey = (staffCode: string) => `wira_staff_preferences_${staffCode}`
+
+const formatDateTime = (value: string): string =>
+  new Date(value).toLocaleString('pt-PT', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  })
+
+const createInitialSettings = (staffCode: string, ngoId?: string): StoredPortalSettings => ({
+  profile: {
+    displayName: staffCode,
+    contactEmail: '',
+    phone: '',
+    location: ngoId ?? ''
+  },
+  notifications: {
+    emailUpdates: true,
+    securityAlerts: true,
+    weeklyDigest: false,
+    reportReady: true
+  },
+  audit: [
+    {
+      id: 'initial-session',
+      label: 'Sessão reconhecida',
+      detail: 'Preferências carregadas para este dispositivo.',
+      timestamp: new Date().toISOString()
+    }
+  ]
+})
 
 export default function SettingsPage() {
-  const [activeTab, setActiveTab] = useState('profile');
+  const location = useLocation()
+  const navigate = useNavigate()
+  const { user, logout } = useAuthContext()
+  const { isHealthy, lastCheck, checkHealth } = useApiHealth()
+
+  const initialTab = location.pathname === '/settings/profile' ? 'profile' : 'access'
+  const [activeTab, setActiveTab] = useState(initialTab)
   const [profileData, setProfileData] = useState<ProfileFormData>({
-    name: 'Admin Staff',
-    email: 'admin@wira.org',
-    phone: '+258 84 123 4567',
-    location: 'Maputo, Moçambique'
-  });
-  
-  const [securityData, setSecurityData] = useState<SecurityFormData>({
-    currentPassword: '',
-    newPassword: '',
-    confirmNewPassword: ''
-  });
+    displayName: '',
+    contactEmail: '',
+    phone: '',
+    location: ''
+  })
+  const [notifications, setNotifications] = useState<NotificationSettings>({
+    emailUpdates: true,
+    securityAlerts: true,
+    weeklyDigest: false,
+    reportReady: true
+  })
+  const [auditTrail, setAuditTrail] = useState<SettingsAuditItem[]>([])
 
-  const handleProfileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setProfileData(prev => ({ ...prev, [name]: value }));
-  };
+  const storageKey = useMemo(() => buildStorageKey(user?.anonymousCode ?? 'staff'), [user?.anonymousCode])
 
-  const handleSecurityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setSecurityData(prev => ({ ...prev, [name]: value }));
-  };
+  useEffect(() => {
+    const fallback = createInitialSettings(user?.anonymousCode ?? 'STAFF', user?.ngoId)
+    const stored = localStorage.getItem(storageKey)
 
-  const handleProfileSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    console.log('Perfil atualizado:', profileData);
-    // Aqui normalmente faríamos uma chamada à API para atualizar o perfil
-  };
-
-  const handleSecuritySubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (securityData.newPassword !== securityData.confirmNewPassword) {
-      alert('As novas palavras-passe não coincidem');
-      return;
+    if (!stored) {
+      setProfileData(fallback.profile)
+      setNotifications(fallback.notifications)
+      setAuditTrail(fallback.audit)
+      return
     }
-    console.log('Palavra-passe atualizada:', securityData);
-    // Aqui normalmente faríamos uma chamada à API para atualizar a palavra-passe
-  };
+
+    try {
+      const parsed = JSON.parse(stored) as StoredPortalSettings
+      setProfileData(parsed.profile)
+      setNotifications(parsed.notifications)
+      setAuditTrail(parsed.audit)
+    } catch {
+      setProfileData(fallback.profile)
+      setNotifications(fallback.notifications)
+      setAuditTrail(fallback.audit)
+    }
+  }, [storageKey, user?.anonymousCode, user?.ngoId])
+
+  const persistSettings = (next: StoredPortalSettings) => {
+    localStorage.setItem(storageKey, JSON.stringify(next))
+    setProfileData(next.profile)
+    setNotifications(next.notifications)
+    setAuditTrail(next.audit)
+  }
+
+  const appendAudit = (label: string, detail: string): SettingsAuditItem => ({
+    id: `${Date.now()}-${label}`,
+    label,
+    detail,
+    timestamp: new Date().toISOString()
+  })
+
+  const handleProfileChange = (field: keyof ProfileFormData, value: string) => {
+    setProfileData(prev => ({ ...prev, [field]: value }))
+  }
+
+  const handleProfileSubmit = (event: React.FormEvent) => {
+    event.preventDefault()
+    const nextAudit = appendAudit('Perfil atualizado', 'Dados de contacto e identificação local do portal foram revistos.')
+    const nextState = {
+      profile: profileData,
+      notifications,
+      audit: [nextAudit, ...auditTrail].slice(0, 6)
+    }
+    persistSettings(nextState)
+    toast.success('Perfil do portal atualizado.')
+  }
+
+  const handleNotificationToggle = (key: keyof NotificationSettings) => {
+    const nextNotifications = { ...notifications, [key]: !notifications[key] }
+    const nextAudit = appendAudit(
+      'Preferências atualizadas',
+      `A definição "${notificationLabels[key]}" foi ${nextNotifications[key] ? 'ativada' : 'desativada'}.`
+    )
+    persistSettings({
+      profile: profileData,
+      notifications: nextNotifications,
+      audit: [nextAudit, ...auditTrail].slice(0, 6)
+    })
+    toast.success('Preferências guardadas neste dispositivo.')
+  }
+
+  const handleLogout = () => {
+    const nextAudit = appendAudit('Sessão encerrada', 'A sessão local foi terminada a partir das configurações.')
+    persistSettings({
+      profile: profileData,
+      notifications,
+      audit: [nextAudit, ...auditTrail].slice(0, 6)
+    })
+    logout()
+    navigate('/')
+  }
+
+  const refreshApiStatus = async () => {
+    await checkHealth()
+    toast.info('Estado da API atualizado.')
+  }
+
+  const apiStatusLabel = isHealthy === null ? 'A verificar' : isHealthy ? 'Online' : 'Indisponível'
+  const apiStatusTone = isHealthy === null ? 'outline' : isHealthy ? 'default' : 'destructive'
 
   return (
-    <Layout title="Configurações" subtitle="Gerencie suas configurações da conta">
+    <Layout title="Configurações" subtitle="Ajuste preferências do portal, verifique o estado de acesso e mantenha o ambiente operacional consistente.">
       <div className="space-y-6">
+        <Card className="rounded-[32px] border-white/70 bg-white shadow-sm">
+          <CardContent className="flex flex-col gap-4 p-6 lg:flex-row lg:items-center lg:justify-between">
+            <div className="space-y-1">
+              <p className="text-sm font-semibold text-slate-950">Sessão ativa</p>
+              <p className="text-sm text-muted-foreground">
+                {user?.anonymousCode ?? 'STAFF'} · {user?.role ?? 'STAFF'} · {user?.ngoId ?? 'Sem ONG associada'}
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Badge variant={apiStatusTone}>{`API ${apiStatusLabel}`}</Badge>
+              {lastCheck ? <Badge variant="outline">{`Última verificação ${formatDateTime(lastCheck.toISOString())}`}</Badge> : null}
+            </div>
+          </CardContent>
+        </Card>
+
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3 lg:w-96 gap-8">
-            <TabsTrigger value="profile">
+          <TabsList className="grid w-full grid-cols-3 gap-2 lg:w-[420px]">
+            <TabsTrigger value="profile" onClick={() => navigate('/settings/profile')}>
               <User className="mr-2 h-4 w-4" />
               Perfil
             </TabsTrigger>
-            <TabsTrigger value="security">
-              <Shield className="mr-2 h-4 w-4" />
-              Segurança
+            <TabsTrigger value="access" onClick={() => navigate('/settings')}>
+              <ShieldCheck className="mr-2 h-4 w-4" />
+              Acesso
             </TabsTrigger>
-            <TabsTrigger value="notifications">
+            <TabsTrigger value="notifications" onClick={() => navigate('/settings')}>
               <Bell className="mr-2 h-4 w-4" />
-              Notificações
+              Alertas
             </TabsTrigger>
           </TabsList>
 
-          {/* Tab de Perfil */}
-          <TabsContent value="profile" className="space-y-6">
-            <Card>
+          <TabsContent value="profile">
+            <Card className="rounded-[32px] border-white/70 bg-white shadow-sm">
               <CardHeader>
-                <CardTitle>Informações do Perfil</CardTitle>
+                <CardTitle>Perfil operacional</CardTitle>
               </CardHeader>
               <CardContent>
-                <form onSubmit={handleProfileSubmit} className="space-y-6">
-                  <div className="flex items-center gap-6">
-                    <div className="relative">
-                      <div className="h-20 w-20 rounded-full bg-muted flex items-center justify-center">
-                        <User className="h-10 w-10 text-muted-foreground" />
+                <form onSubmit={handleProfileSubmit} className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label htmlFor="displayName">Nome de exibição</Label>
+                    <Input
+                      id="displayName"
+                      value={profileData.displayName}
+                      onChange={event => handleProfileChange('displayName', event.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="contactEmail">Email de contacto</Label>
+                    <Input
+                      id="contactEmail"
+                      type="email"
+                      placeholder="equipa@wira.org"
+                      value={profileData.contactEmail}
+                      onChange={event => handleProfileChange('contactEmail', event.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="phone">Telefone</Label>
+                    <Input
+                      id="phone"
+                      placeholder="+258 84 000 0000"
+                      value={profileData.phone}
+                      onChange={event => handleProfileChange('phone', event.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="location">Localização</Label>
+                    <Input
+                      id="location"
+                      placeholder="Maputo"
+                      value={profileData.location}
+                      onChange={event => handleProfileChange('location', event.target.value)}
+                    />
+                  </div>
+                  <div className="md:col-span-2 flex justify-end">
+                    <Button type="submit">
+                      <Save className="mr-2 h-4 w-4" />
+                      Guardar perfil
+                    </Button>
+                  </div>
+                </form>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="access">
+            <div className="grid gap-6 xl:grid-cols-[0.88fr_1.12fr]">
+              <Card className="rounded-[32px] border-white/70 bg-white shadow-sm">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <ShieldCheck className="h-5 w-5 text-primary" />
+                    Estado de acesso
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4 text-sm">
+                  <div className="rounded-2xl bg-slate-50 p-4">
+                    <p className="font-medium text-slate-950">Código da sessão</p>
+                    <p className="mt-1 font-mono text-slate-700">{user?.anonymousCode ?? 'STAFF'}</p>
+                  </div>
+                  <div className="rounded-2xl bg-slate-50 p-4">
+                    <p className="font-medium text-slate-950">Papel</p>
+                    <p className="mt-1 text-slate-700">{user?.role ?? 'STAFF'}</p>
+                  </div>
+                  <div className="rounded-2xl bg-slate-50 p-4">
+                    <p className="font-medium text-slate-950">Ligação à API</p>
+                    <p className="mt-1 text-slate-700">{apiStatusLabel}</p>
+                  </div>
+                  <div className="flex flex-col gap-2 sm:flex-row">
+                    <Button variant="outline" className="w-full" onClick={() => void refreshApiStatus()}>
+                      <RefreshCcw className="mr-2 h-4 w-4" />
+                      Verificar ligação
+                    </Button>
+                    <Button variant="destructive" className="w-full" onClick={handleLogout}>
+                      <LogOut className="mr-2 h-4 w-4" />
+                      Terminar sessão
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="rounded-[32px] border-white/70 bg-white shadow-sm">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <KeyRound className="h-5 w-5 text-primary" />
+                    Histórico recente
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {auditTrail.length === 0 ? (
+                    <p className="text-sm text-muted-foreground">Sem eventos de configuração registados neste dispositivo.</p>
+                  ) : (
+                    auditTrail.map(item => (
+                      <div key={item.id} className="rounded-2xl border border-slate-200 px-4 py-3">
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                          <p className="font-medium text-slate-950">{item.label}</p>
+                          <span className="text-xs text-muted-foreground">{formatDateTime(item.timestamp)}</span>
+                        </div>
+                        <p className="mt-1 text-sm text-muted-foreground">{item.detail}</p>
                       </div>
-                      <Button size="sm" variant="outline" className="absolute bottom-0 right-0 h-8 w-8 rounded-full p-0">
-                        <Camera className="h-4 w-4" />
-                      </Button>
-                    </div>
-                    <div>
-                      <Label>Imagem de Perfil</Label>
-                      <p className="text-sm text-muted-foreground">JPG, GIF ou PNG. Tamanho máximo de 5MB</p>
-                      <Button size="sm" variant="outline" className="mt-2">
-                        <Upload className="mr-2 h-4 w-4" />
-                        Carregar Imagem
-                      </Button>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="name">Nome Completo</Label>
-                      <Input
-                        id="name"
-                        name="name"
-                        value={profileData.name}
-                        onChange={handleProfileChange}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="email">Email</Label>
-                      <Input
-                        id="email"
-                        name="email"
-                        type="email"
-                        value={profileData.email}
-                        onChange={handleProfileChange}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="phone">Telefone</Label>
-                      <Input
-                        id="phone"
-                        name="phone"
-                        value={profileData.phone}
-                        onChange={handleProfileChange}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="location">Localização</Label>
-                      <Input
-                        id="location"
-                        name="location"
-                        value={profileData.location}
-                        onChange={handleProfileChange}
-                      />
-                    </div>
-                  </div>
-
-                  <Button type="submit" className="hover:shadow-md transition-shadow duration-200">
-                    <Save className="mr-2 h-4 w-4" />
-                    Salvar Alterações
-                  </Button>
-                </form>
-              </CardContent>
-            </Card>
+                    ))
+                  )}
+                </CardContent>
+              </Card>
+            </div>
           </TabsContent>
 
-          {/* Tab de Segurança */}
-          <TabsContent value="security" className="space-y-6">
-            <Card>
+          <TabsContent value="notifications">
+            <Card className="rounded-[32px] border-white/70 bg-white shadow-sm">
               <CardHeader>
-                <CardTitle>Segurança da Conta</CardTitle>
+                <CardTitle>Alertas e preferências locais</CardTitle>
               </CardHeader>
-              <CardContent>
-                <form onSubmit={handleSecuritySubmit} className="space-y-6">
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="currentPassword">Palavra-passe atual</Label>
-                      <Input
-                        id="currentPassword"
-                        name="currentPassword"
-                        type="password"
-                        value={securityData.currentPassword}
-                        onChange={handleSecurityChange}
-                      />
+              <CardContent className="grid gap-4 md:grid-cols-2">
+                {(Object.keys(notificationLabels) as Array<keyof NotificationSettings>).map(key => (
+                  <div key={key} className="rounded-3xl border border-slate-200 p-5">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <p className="font-medium text-slate-950">{notificationLabels[key]}</p>
+                        <p className="mt-1 text-sm text-muted-foreground">{notificationDescriptions[key]}</p>
+                      </div>
+                      <Badge variant={notifications[key] ? 'default' : 'outline'}>
+                        {notifications[key] ? 'Ativo' : 'Desativo'}
+                      </Badge>
                     </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="newPassword">Nova palavra-passe</Label>
-                      <Input
-                        id="newPassword"
-                        name="newPassword"
-                        type="password"
-                        value={securityData.newPassword}
-                        onChange={handleSecurityChange}
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="confirmNewPassword">Confirmar nova palavra-passe</Label>
-                      <Input
-                        id="confirmNewPassword"
-                        name="confirmNewPassword"
-                        type="password"
-                        value={securityData.confirmNewPassword}
-                        onChange={handleSecurityChange}
-                      />
-                    </div>
+                    <Button variant="outline" className="mt-4 w-full" onClick={() => handleNotificationToggle(key)}>
+                      {notifications[key] ? 'Desativar' : 'Ativar'}
+                    </Button>
                   </div>
-
-                  <Button type="submit" className="hover:shadow-md transition-shadow duration-200">
-                    <Key className="mr-2 h-4 w-4" />
-                    Atualizar palavra-passe
-                  </Button>
-                </form>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader>
-                <CardTitle>Atividade Recente</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between py-2 border-b border-border/50 last:border-0">
-                    <div>
-                      <p className="font-medium">Login bem-sucedido</p>
-                      <p className="text-sm text-muted-foreground">Hoje às 08:45 via navegador</p>
-                    </div>
-                    <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">Recente</span>
-                  </div>
-                  <div className="flex items-center justify-between py-2 border-b border-border/50 last:border-0">
-                    <div>
-                      <p className="font-medium">Alteração de palavra-passe</p>
-                      <p className="text-sm text-muted-foreground">15/10/2025 às 14:20</p>
-                    </div>
-                    <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">Segurança</span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Tab de Notificações */}
-          <TabsContent value="notifications" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Preferências de Notificações</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <Label className="font-normal">Notificações por Email</Label>
-                      <p className="text-sm text-muted-foreground">Receber atualizações de cursos e progresso</p>
-                    </div>
-                    <Button variant="outline" size="sm" className="hover:bg-accent hover:text-accent-foreground">Activado</Button>
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <Label className="font-normal">Notificações Push</Label>
-                      <p className="text-sm text-muted-foreground">Receber notificações no navegador</p>
-                    </div>
-                    <Button variant="outline" size="sm" className="hover:bg-accent hover:text-accent-foreground">Activado</Button>
-                  </div>
-                  
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <Label className="font-normal">SMS de Lembretes</Label>
-                      <p className="text-sm text-muted-foreground">Receber lembretes por SMS</p>
-                    </div>
-                    <Button variant="outline" size="sm" className="hover:bg-accent hover:text-accent-foreground">Desactivado</Button>
-                  </div>
-                  
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <Label className="font-normal">Notificações de Segurança</Label>
-                      <p className="text-sm text-muted-foreground">Alertas de login e atividades suspeitas</p>
-                    </div>
-                    <Button variant="outline" size="sm">Activado</Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader>
-                <CardTitle>Notificações de Curso</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <Label className="font-normal">Conclusão de Módulo</Label>
-                      <p className="text-sm text-muted-foreground">Quando você completa um módulo</p>
-                    </div>
-                    <Button variant="outline" size="sm" className="hover:bg-accent hover:text-accent-foreground">Activado</Button>
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <Label className="font-normal">Novos Cursos</Label>
-                      <p className="text-sm text-muted-foreground">Quando novos cursos são adicionados</p>
-                    </div>
-                    <Button variant="outline" size="sm" className="hover:bg-accent hover:text-accent-foreground">Activado</Button>
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <Label className="font-normal">Certificados</Label>
-                      <p className="text-sm text-muted-foreground">Quando você ganha um certificado</p>
-                    </div>
-                    <Button variant="outline" size="sm" className="hover:bg-accent hover:text-accent-foreground">Activado</Button>
-                  </div>
-                </div>
+                ))}
               </CardContent>
             </Card>
           </TabsContent>
         </Tabs>
       </div>
     </Layout>
-  );
+  )
 }
 
+const notificationLabels: Record<keyof NotificationSettings, string> = {
+  emailUpdates: 'Atualizações por email',
+  securityAlerts: 'Alertas de segurança',
+  weeklyDigest: 'Resumo semanal',
+  reportReady: 'Exportações concluídas'
+}
+
+const notificationDescriptions: Record<keyof NotificationSettings, string> = {
+  emailUpdates: 'Use quando quiser lembrar a equipa de novidades relevantes no portal.',
+  securityAlerts: 'Mantém avisos importantes sobre acesso e falhas de autenticação.',
+  weeklyDigest: 'Resume atividade operacional para revisão periódica.',
+  reportReady: 'Informa quando uma exportação foi iniciada e concluída com sucesso.'
+}

@@ -78,16 +78,16 @@ export default function ActivateUser() {
 
     return (
         <Layout
-            title="Activar Novo Usuário"
-            subtitle="Gere códigos de acesso anónimos para novas sobreviventes"
+            title="Nova ativação"
+            subtitle="Registe a beneficiária, gere um código seguro e conclua o acesso inicial num único fluxo."
         >
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-[1.08fr_0.92fr] gap-6">
                 {/* User Information Card */}
-                <Card>
+                <Card className="rounded-[32px] border-white/70 bg-white shadow-sm">
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2">
                             <UserCheck className="h-5 w-5 text-primary" />
-                            Informações do Usuário
+                            Dados da beneficiária
                         </CardTitle>
                     </CardHeader>
                     <CardContent>
@@ -165,11 +165,11 @@ export default function ActivateUser() {
                 </Card>
 
                 {/* Code Generation Card */}
-                <Card>
+                <Card className="rounded-[32px] border-white/70 bg-white shadow-sm">
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2">
                             <Shield className="h-5 w-5 text-primary" />
-                            Gerar Código de Acesso
+                            Código de acesso
                         </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
@@ -204,7 +204,7 @@ export default function ActivateUser() {
                                             {generatedCode}
                                         </div>
                                         <TypographySmall className="text-muted-foreground">
-                                            Guarde este código para o usuário aceder à aplicação WIRA
+                                            Entregue este código à beneficiária para acesso inicial à aplicação WIRA.
                                         </TypographySmall>
                                     </div>
                                 </div>
@@ -227,7 +227,7 @@ export default function ActivateUser() {
             </div>
 
             {/* Security Notice */}
-            <Card className="mt-6 border-primary/20 bg-primary/5">
+            <Card className="mt-6 rounded-[32px] border-primary/20 bg-primary/5 shadow-sm">
                 <CardContent className="p-6">
                     <div className="flex items-start gap-3">
                         <Shield className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
@@ -236,9 +236,9 @@ export default function ActivateUser() {
                                 Proteção de Identidade
                             </TypographyMuted>
                             <TypographyMuted className="text-sm">
-                                O usuário receberá um código anónimo para aceder à aplicação WIRA.
-                                Seu nome real e informações pessoais nunca serão expostos no sistema,
-                                garantindo total privacidade e segurança para a sobrevivente.
+                                A beneficiária recebe um código anónimo para aceder à aplicação WIRA.
+                                O portal operacional evita expor dados pessoais no acompanhamento de rotina,
+                                preservando privacidade e segurança.
                             </TypographyMuted>
                         </div>
                     </div>
