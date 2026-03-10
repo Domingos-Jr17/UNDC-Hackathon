@@ -1,4 +1,4 @@
-﻿import React from 'react'
+import React from 'react'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { StyleSheet, Text, TouchableOpacity, View, Image } from 'react-native'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
@@ -13,9 +13,9 @@ interface WelcomeScreenProps {
 }
 
 const trustPoints = [
-  'Acesso por código anónimo',
+  'Acesso por codigo anonimo e seguro',
   'Cursos profissionais com acompanhamento',
-  'Apoio e oportunidades de emprego no mesmo app'
+  'Apoio e oportunidades no mesmo aplicativo'
 ]
 
 export default function WelcomeScreen({ navigation }: WelcomeScreenProps) {
@@ -23,19 +23,37 @@ export default function WelcomeScreen({ navigation }: WelcomeScreenProps) {
     <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right', 'bottom']}>
       <View style={styles.container}>
         <View style={styles.heroCard}>
-          <View style={styles.logoWrap}>
-            <Image
-              source={require('../../assets/icon.png')}
-              style={styles.logo}
-              resizeMode="contain"
-            />
+          <View style={styles.brandRow}>
+            <View style={styles.logoWrap}>
+              <Image
+                source={require('../../assets/icon.png')}
+                style={styles.logo}
+                resizeMode="contain"
+              />
+            </View>
+            <View style={styles.brandBadge}>
+              <Ionicons name="shield-checkmark-outline" size={16} color={colors.textOnPrimary} />
+              <Text style={styles.brandBadgeText}>Acesso protegido</Text>
+            </View>
           </View>
 
           <Text style={styles.eyebrow}>WIRA</Text>
           <Text style={styles.title}>Aprenda, avance e volte a decidir o seu futuro.</Text>
           <Text style={styles.subtitle}>
-            Uma experiência segura para capacitação profissional, apoio e acesso a novas oportunidades.
+            Uma experiencia segura para capacitacao profissional, apoio e acesso a novas oportunidades.
           </Text>
+        </View>
+
+        <View style={styles.guidanceCard}>
+          <View style={styles.guidanceIconWrap}>
+            <Ionicons name="sparkles-outline" size={18} color={colors.primary} />
+          </View>
+          <View style={styles.guidanceCopy}>
+            <Text style={styles.guidanceTitle}>Como funciona</Text>
+            <Text style={styles.guidanceText}>
+              Entre com o seu codigo ou fale com a equipa parceira para ativar o acesso em seguranca.
+            </Text>
+          </View>
         </View>
 
         <View style={styles.trustCard}>
@@ -51,11 +69,11 @@ export default function WelcomeScreen({ navigation }: WelcomeScreenProps) {
 
         <View style={styles.actions}>
           <TouchableOpacity style={styles.primaryButton} onPress={() => navigation.navigate('Login')}>
-            <Text style={styles.primaryButtonText}>Já tenho código de acesso</Text>
+            <Text style={styles.primaryButtonText}>Ja tenho codigo de acesso</Text>
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.secondaryButton} onPress={() => navigation.navigate('Support')}>
-            <Text style={styles.secondaryButtonText}>Preciso de ajuda para obter um código</Text>
+            <Text style={styles.secondaryButtonText}>Preciso de ajuda para obter um codigo</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -81,18 +99,38 @@ const styles = StyleSheet.create({
     padding: 24,
     ...shadows.card
   },
+  brandRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    gap: 12,
+    marginBottom: 20
+  },
   logoWrap: {
     width: 84,
     height: 84,
     borderRadius: 28,
     backgroundColor: 'rgba(255,255,255,0.12)',
     alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 20
+    justifyContent: 'center'
   },
   logo: {
     width: 54,
     height: 54
+  },
+  brandBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    borderRadius: 999,
+    backgroundColor: 'rgba(255,255,255,0.12)',
+    paddingHorizontal: 12,
+    paddingVertical: 8
+  },
+  brandBadgeText: {
+    color: colors.textOnPrimary,
+    fontSize: 12,
+    fontWeight: '700'
   },
   eyebrow: {
     color: '#CDE4F6',
@@ -113,6 +151,36 @@ const styles = StyleSheet.create({
     color: '#D9ECFA',
     fontSize: 16,
     lineHeight: 24
+  },
+  guidanceCard: {
+    borderRadius: 24,
+    backgroundColor: colors.primarySoft,
+    padding: 18,
+    flexDirection: 'row',
+    gap: 14,
+    alignItems: 'flex-start'
+  },
+  guidanceIconWrap: {
+    width: 40,
+    height: 40,
+    borderRadius: 16,
+    backgroundColor: colors.surface,
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  guidanceCopy: {
+    flex: 1,
+    gap: 4
+  },
+  guidanceTitle: {
+    color: colors.text,
+    fontSize: 16,
+    fontWeight: '800'
+  },
+  guidanceText: {
+    color: colors.textMuted,
+    fontSize: 13,
+    lineHeight: 19
   },
   trustCard: {
     borderRadius: 28,

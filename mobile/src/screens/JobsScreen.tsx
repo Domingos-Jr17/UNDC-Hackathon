@@ -1,4 +1,4 @@
-﻿import React, { useCallback, useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
@@ -57,7 +57,7 @@ export default function JobsScreen({ navigation }: JobsScreenProps) {
     try {
       const userCode = await sessionService.getUserCode()
       if (!userCode) {
-        showAlert('Sessão expirada', 'Faça login novamente.')
+        showAlert('Sessao expirada', 'Faca login novamente.')
         navigation.reset({ index: 0, routes: [{ name: 'Login' }] })
         return
       }
@@ -74,7 +74,7 @@ export default function JobsScreen({ navigation }: JobsScreenProps) {
         ...prev,
         jobs: [],
         source: 'all',
-        error: normalizeErrorMessage(error, 'Não foi possível carregar vagas agora.')
+        error: normalizeErrorMessage(error, 'Nao foi possivel carregar vagas agora.')
       }))
     } finally {
       setLoading(false)
@@ -89,7 +89,7 @@ export default function JobsScreen({ navigation }: JobsScreenProps) {
   const handleApply = useCallback(
     async (jobId: string): Promise<void> => {
       if (!state.userCode) {
-        showAlert('Sessão expirada', 'Faça login novamente.')
+        showAlert('Sessao expirada', 'Faca login novamente.')
         navigation.reset({ index: 0, routes: [{ name: 'Login' }] })
         return
       }
@@ -99,7 +99,7 @@ export default function JobsScreen({ navigation }: JobsScreenProps) {
         await apiService.applyToJob(jobId, state.userCode)
         showAlert('Candidatura enviada', 'A sua candidatura foi registada com sucesso.')
       } catch (error) {
-        showAlert('Erro ao candidatar', normalizeErrorMessage(error, 'Não foi possível enviar a candidatura.'))
+        showAlert('Erro ao candidatar', normalizeErrorMessage(error, 'Nao foi possivel enviar a candidatura.'))
       } finally {
         setApplyingJobId(null)
       }
@@ -107,19 +107,41 @@ export default function JobsScreen({ navigation }: JobsScreenProps) {
     [navigation, state.userCode]
   )
 
+  const summaryText = useMemo(() => {
+    if (state.jobs.length === 0) {
+      return 'Ainda nao ha vagas disponiveis. Vale a pena voltar mais tarde e manter o seu percurso atualizado.'
+    }
+
+    if (state.source === 'matching') {
+      return `${state.jobs.length} oportunidade${state.jobs.length > 1 ? 's' : ''} com melhor afinidade para o seu perfil e percurso atual.`
+    }
+
+    return `${state.jobs.length} vaga${state.jobs.length > 1 ? 's' : ''} geral${state.jobs.length > 1 ? 'is' : ''} exibida${state.jobs.length > 1 ? 's' : ''} enquanto o matching automatico nao estiver disponivel.`
+  }, [state.jobs.length, state.source])
+
   return (
     <AppShell
       navigation={navigation}
       activeRoute="Jobs"
-      title="Vagas compatíveis"
-      subtitle="Veja oportunidades que combinam com a sua formação e candidate-se com confiança."
+      title="Vagas compativeis"
+      subtitle="Veja oportunidades que combinam com a sua formacao e candidate-se com confianca."
       refreshing={refreshing}
       onRefresh={() => void loadJobs('refresh')}
     >
+      <View style={styles.summaryCard}>
+        <View style={styles.summaryIconWrap}>
+          <Ionicons name="briefcase-outline" size={20} color={colors.primary} />
+        </View>
+        <View style={styles.summaryCopy}>
+          <Text style={styles.summaryTitle}>Leitura rapida</Text>
+          <Text style={styles.summaryText}>{summaryText}</Text>
+        </View>
+      </View>
+
       {state.source === 'all' ? (
         <View style={styles.infoBanner}>
           <Ionicons name="information-circle-outline" size={18} color={colors.warning} />
-          <Text style={styles.infoBannerText}>Mostramos vagas gerais porque o matching automático não esteve disponível agora.</Text>
+          <Text style={styles.infoBannerText}>Mostramos vagas gerais porque o matching automatico nao esteve disponivel agora.</Text>
         </View>
       ) : null}
 
@@ -136,13 +158,14 @@ export default function JobsScreen({ navigation }: JobsScreenProps) {
         </View>
       ) : state.jobs.length === 0 ? (
         <View style={styles.emptyCard}>
-          <Text style={styles.emptyTitle}>Ainda não existem vagas disponíveis</Text>
-          <Text style={styles.emptySubtitle}>Volte mais tarde ou use a área de apoio se precisar de orientação.</Text>
+          <Text style={styles.emptyTitle}>Ainda nao existem vagas disponiveis</Text>
+          <Text style={styles.emptySubtitle}>Volte mais tarde ou use a area de apoio se precisar de orientacao sobre os proximos passos.</Text>
         </View>
       ) : (
         state.jobs.map(job => {
           const sharedSkills = job.matching?.sharedSkills.join(', ') ?? ''
           const isApplying = applyingJobId === job.id
+
           return (
             <View key={job.id} style={styles.jobCard}>
               <View style={styles.jobHeader}>
@@ -154,12 +177,21 @@ export default function JobsScreen({ navigation }: JobsScreenProps) {
                 ) : null}
               </View>
 
-              <Text style={styles.jobCompany}>{job.employer?.name ?? 'Empresa não informada'}</Text>
-              <Text style={styles.jobMeta}>Local: {job.location}</Text>
-              <Text style={styles.jobMeta}>Contrato: {job.contract_type}</Text>
-              {job.salary_range ? <Text style={styles.jobMeta}>Salário: {job.salary_range}</Text> : null}
-              {job.schedule ? <Text style={styles.jobMeta}>Horário: {job.schedule}</Text> : null}
-              {sharedSkills.length > 0 ? <Text style={styles.skillsText}>Competências em comum: {sharedSkills}</Text> : null}
+              <Text style={styles.jobCompany}>{job.employer?.name ?? 'Empresa nao informada'}</Text>
+
+              <View style={styles.metaChips}>
+                <MetaChip icon="location-outline" label={job.location} />
+                <MetaChip icon="document-text-outline" label={job.contract_type} />
+                {job.salary_range ? <MetaChip icon="cash-outline" label={job.salary_range} /> : null}
+              </View>
+
+              {sharedSkills.length > 0 ? (
+                <View style={styles.skillCallout}>
+                  <Text style={styles.skillCalloutTitle}>Porque combina consigo</Text>
+                  <Text style={styles.skillsText}>{sharedSkills}</Text>
+                </View>
+              ) : null}
+
               <Text style={styles.description}>{job.description}</Text>
 
               <TouchableOpacity
@@ -180,7 +212,46 @@ export default function JobsScreen({ navigation }: JobsScreenProps) {
   )
 }
 
+function MetaChip({ icon, label }: { icon: keyof typeof Ionicons.glyphMap; label: string }) {
+  return (
+    <View style={styles.metaChip}>
+      <Ionicons name={icon} size={14} color={colors.textMuted} />
+      <Text style={styles.metaChipText}>{label}</Text>
+    </View>
+  )
+}
+
 const styles = StyleSheet.create({
+  summaryCard: {
+    borderRadius: 24,
+    backgroundColor: colors.primarySoft,
+    padding: 18,
+    flexDirection: 'row',
+    gap: 14,
+    alignItems: 'flex-start'
+  },
+  summaryIconWrap: {
+    width: 42,
+    height: 42,
+    borderRadius: 16,
+    backgroundColor: colors.surface,
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  summaryCopy: {
+    flex: 1,
+    gap: 4
+  },
+  summaryTitle: {
+    color: colors.text,
+    fontSize: 16,
+    fontWeight: '800'
+  },
+  summaryText: {
+    color: colors.textMuted,
+    fontSize: 13,
+    lineHeight: 19
+  },
   infoBanner: {
     borderRadius: 22,
     backgroundColor: colors.warningSoft,
@@ -243,7 +314,7 @@ const styles = StyleSheet.create({
     padding: 18,
     borderWidth: 1,
     borderColor: colors.border,
-    gap: 7,
+    gap: 10,
     ...shadows.card
   },
   jobHeader: {
@@ -274,25 +345,49 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '700'
   },
-  jobMeta: {
+  metaChips: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8
+  },
+  metaChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    borderRadius: 999,
+    backgroundColor: colors.surfaceMuted,
+    paddingHorizontal: 10,
+    paddingVertical: 7
+  },
+  metaChipText: {
     color: colors.textMuted,
-    fontSize: 13
+    fontSize: 12,
+    fontWeight: '600'
+  },
+  skillCallout: {
+    borderRadius: 18,
+    backgroundColor: colors.infoSoft,
+    padding: 14,
+    gap: 4
+  },
+  skillCalloutTitle: {
+    color: colors.text,
+    fontSize: 13,
+    fontWeight: '800'
   },
   skillsText: {
-    marginTop: 4,
     color: colors.info,
     fontSize: 13,
     lineHeight: 19,
     fontWeight: '600'
   },
   description: {
-    marginTop: 6,
     color: colors.textMuted,
     fontSize: 13,
     lineHeight: 20
   },
   applyButton: {
-    marginTop: 10,
+    marginTop: 2,
     borderRadius: 18,
     backgroundColor: colors.primary,
     paddingVertical: 14,

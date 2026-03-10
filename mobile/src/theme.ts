@@ -1,10 +1,10 @@
-﻿export const colors = {
+export const colors = {
   background: '#F3F7FB',
   surface: '#FFFFFF',
   surfaceMuted: '#EEF4FA',
   primary: '#1E3A8A',
-  primaryDark: '#0A4065',
-  primarySoft: '#DCECF8',
+  primaryDark: '#142B6F',
+  primarySoft: '#E7ECFA',
   accent: '#F2B24A',
   accentSoft: '#FFF1D4',
   text: '#142235',
@@ -18,7 +18,7 @@
   danger: '#C24C4C',
   dangerSoft: '#FDE7E7',
   info: '#1E3A8A',
-  infoSoft: '#E6F1FB'
+  infoSoft: '#E7ECFA'
 } as const
 
 export const spacing = {

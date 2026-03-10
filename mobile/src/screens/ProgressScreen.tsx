@@ -1,4 +1,4 @@
-﻿import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { useNavigation } from '@react-navigation/native'
@@ -49,6 +49,19 @@ export default function ProgressScreen() {
     [progress]
   )
 
+  const completedCourses = progress?.courses.filter(course => course.progress >= 100).length ?? 0
+
+  const guidanceText = useMemo(() => {
+    if (!nextCourse) {
+      return 'Ainda nao existe um curso em andamento. Explore a biblioteca e comece um percurso que faca sentido para si.'
+    }
+
+    const remainingModules = Math.max(0, nextCourse.modulesCount - nextCourse.currentModule)
+    return remainingModules > 0
+      ? `Retome ${nextCourse.title}. Faltam ${remainingModules} modulo${remainingModules > 1 ? 's' : ''} apos o modulo atual para concluir este percurso.`
+      : `Esta muito perto de concluir ${nextCourse.title}. Falta validar os ultimos passos para desbloquear o certificado.`
+  }, [nextCourse])
+
   if (loading) {
     return (
       <View style={styles.loaderContainer}>
@@ -62,10 +75,20 @@ export default function ProgressScreen() {
       navigation={navigation}
       activeRoute="Progress"
       title="O seu progresso"
-      subtitle="Veja o que já avançou e qual curso merece a sua atenção agora."
+      subtitle="Veja o que ja avancou e qual curso merece a sua atencao agora."
       refreshing={refreshing}
       onRefresh={() => void loadProgress('refresh')}
     >
+      <View style={styles.guidanceCard}>
+        <View style={styles.guidanceIconWrap}>
+          <Ionicons name="trail-sign-outline" size={20} color={colors.primary} />
+        </View>
+        <View style={styles.guidanceCopy}>
+          <Text style={styles.guidanceTitle}>Leitura rapida</Text>
+          <Text style={styles.guidanceText}>{guidanceText}</Text>
+        </View>
+      </View>
+
       {nextCourse ? (
         <TouchableOpacity
           style={styles.recommendationCard}
@@ -75,9 +98,9 @@ export default function ProgressScreen() {
             <Ionicons name="trending-up-outline" size={20} color={colors.primary} />
           </View>
           <View style={styles.recommendationCopy}>
-            <Text style={styles.recommendationTitle}>Melhor próximo passo</Text>
+            <Text style={styles.recommendationTitle}>Melhor proximo passo</Text>
             <Text style={styles.recommendationText}>
-              Retome {nextCourse.title}: está em {nextCourse.progress}% e no módulo {nextCourse.currentModule}.
+              Retome {nextCourse.title}: esta em {nextCourse.progress}% e no modulo {nextCourse.currentModule}.
             </Text>
           </View>
           <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
@@ -87,36 +110,45 @@ export default function ProgressScreen() {
       <View style={styles.statsRow}>
         <ProgressStat label="Cursos" value={progress?.summary.totalCourses ?? 0} />
         <ProgressStat label="Ativos" value={progress?.summary.activeCourses ?? 0} />
-        <ProgressStat label="Média" value={`${progress?.summary.averageProgress ?? 0}%`} />
+        <ProgressStat label="Concluidos" value={completedCourses} />
       </View>
 
       <View style={styles.sectionCard}>
         <Text style={styles.sectionTitle}>Detalhes por curso</Text>
         {(progress?.courses ?? []).length === 0 ? (
-          <Text style={styles.emptyText}>Ainda não há cursos em progresso. Explore a biblioteca para começar.</Text>
+          <Text style={styles.emptyText}>Ainda nao ha cursos em progresso. Explore a biblioteca para comecar.</Text>
         ) : (
-          (progress?.courses ?? []).map(course => (
-            <TouchableOpacity
-              key={course.courseId}
-              style={styles.courseCard}
-              onPress={() => navigation.navigate('CourseDetail', { courseId: course.courseId })}
-            >
-              <View style={styles.courseHeader}>
-                <Text style={styles.courseTitle}>{course.title}</Text>
-                <Text style={styles.coursePercentage}>{course.progress}%</Text>
-              </View>
+          (progress?.courses ?? []).map(course => {
+            const needsAttention = course.progress > 0 && course.progress < 35
 
-              <View style={styles.progressTrack}>
-                <View style={[styles.progressFill, { width: `${course.progress}%` }]} />
-              </View>
+            return (
+              <TouchableOpacity
+                key={course.courseId}
+                style={styles.courseCard}
+                onPress={() => navigation.navigate('CourseDetail', { courseId: course.courseId })}
+              >
+                <View style={styles.courseHeader}>
+                  <Text style={styles.courseTitle}>{course.title}</Text>
+                  <Text style={styles.coursePercentage}>{course.progress}%</Text>
+                </View>
 
-              <Text style={styles.courseMeta}>Módulo atual: {course.currentModule}/{course.modulesCount}</Text>
-              <Text style={styles.courseMeta}>Módulos concluídos: {course.completedModules.length}</Text>
-              <Text style={styles.courseMeta}>
-                Última atividade: {course.lastActivity ? new Date(course.lastActivity).toLocaleDateString('pt-PT') : 'Sem atividade'}
-              </Text>
-            </TouchableOpacity>
-          ))
+                <View style={styles.progressTrack}>
+                  <View style={[styles.progressFill, { width: `${course.progress}%` }]} />
+                </View>
+
+                <Text style={styles.courseMeta}>Modulo atual: {course.currentModule}/{course.modulesCount}</Text>
+                <Text style={styles.courseMeta}>Modulos concluidos: {course.completedModules.length}</Text>
+                <Text style={styles.courseMeta}>
+                  Ultima atividade: {course.lastActivity ? new Date(course.lastActivity).toLocaleDateString('pt-PT') : 'Sem atividade'}
+                </Text>
+                <View style={[styles.courseHintPill, needsAttention ? styles.courseHintAttention : styles.courseHintNormal]}>
+                  <Text style={[styles.courseHintText, needsAttention ? styles.courseHintAttentionText : styles.courseHintNormalText]}>
+                    {needsAttention ? 'Precisa de retoma' : course.progress >= 100 ? 'Percurso concluido' : 'Ritmo consistente'}
+                  </Text>
+                </View>
+              </TouchableOpacity>
+            )
+          })
         )}
       </View>
     </AppShell>
@@ -138,6 +170,36 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: colors.background
+  },
+  guidanceCard: {
+    borderRadius: 24,
+    backgroundColor: colors.primarySoft,
+    padding: 18,
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 14
+  },
+  guidanceIconWrap: {
+    width: 42,
+    height: 42,
+    borderRadius: 16,
+    backgroundColor: colors.surface,
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  guidanceCopy: {
+    flex: 1,
+    gap: 4
+  },
+  guidanceTitle: {
+    color: colors.text,
+    fontSize: 16,
+    fontWeight: '800'
+  },
+  guidanceText: {
+    color: colors.textMuted,
+    fontSize: 13,
+    lineHeight: 19
   },
   recommendationCard: {
     borderRadius: 24,
@@ -253,5 +315,28 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
     fontSize: 13,
     lineHeight: 18
+  },
+  courseHintPill: {
+    alignSelf: 'flex-start',
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    marginTop: 4
+  },
+  courseHintAttention: {
+    backgroundColor: colors.warningSoft
+  },
+  courseHintNormal: {
+    backgroundColor: colors.successSoft
+  },
+  courseHintText: {
+    fontSize: 12,
+    fontWeight: '800'
+  },
+  courseHintAttentionText: {
+    color: colors.warning
+  },
+  courseHintNormalText: {
+    color: colors.success
   }
 })

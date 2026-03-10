@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react'
+import React, { useState } from 'react'
 import { ActivityIndicator, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
@@ -22,7 +22,7 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
   const handleLogin = async (): Promise<void> => {
     const normalizedCode = accessCode.trim().toUpperCase()
     if (!normalizedCode) {
-      showAlert('Código em falta', 'Por favor, introduza o seu código de acesso.')
+      showAlert('Codigo em falta', 'Por favor, introduza o seu codigo de acesso.')
       return
     }
 
@@ -50,17 +50,30 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
         </TouchableOpacity>
 
         <View style={styles.panel}>
-          <Text style={styles.eyebrow}>Acesso seguro</Text>
-          <Text style={styles.title}>Entre com o seu código anónimo</Text>
-          <Text style={styles.subtitle}>
-            O código protege a sua identidade e permite retomar a jornada exatamente de onde ficou.
-          </Text>
+          <View style={styles.headerBlock}>
+            <View style={styles.eyebrowRow}>
+              <Text style={styles.eyebrow}>Acesso seguro</Text>
+              <View style={styles.badge}>
+                <Ionicons name="lock-closed-outline" size={14} color={colors.primary} />
+                <Text style={styles.badgeText}>Anonimo</Text>
+              </View>
+            </View>
+            <Text style={styles.title}>Entre com o seu codigo anonimo</Text>
+            <Text style={styles.subtitle}>
+              O codigo protege a sua identidade e permite retomar a jornada exatamente de onde ficou.
+            </Text>
+          </View>
+
+          <View style={styles.helperInfo}>
+            <Ionicons name="information-circle-outline" size={18} color={colors.primary} />
+            <Text style={styles.helperInfoText}>Introduza o codigo como recebeu. O app faz a normalizacao automaticamente.</Text>
+          </View>
 
           <View style={styles.inputWrap}>
             <Ionicons name="key-outline" size={18} color={colors.textMuted} style={styles.inputIcon} />
             <TextInput
               style={styles.input}
-              placeholder="Código (ex: V0042)"
+              placeholder="Codigo (ex: V0042)"
               placeholderTextColor={colors.textMuted}
               value={accessCode}
               onChangeText={setAccessCode}
@@ -85,8 +98,8 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
           </TouchableOpacity>
 
           <View style={styles.helperCard}>
-            <Text style={styles.helperTitle}>Ainda não recebeu código?</Text>
-            <Text style={styles.helperText}>Fale com a ONG parceira para ativar o seu acesso em segurança.</Text>
+            <Text style={styles.helperTitle}>Ainda nao recebeu codigo?</Text>
+            <Text style={styles.helperText}>Fale com a ONG parceira para ativar o seu acesso em seguranca.</Text>
             <TouchableOpacity style={styles.helperButton} onPress={() => navigation.navigate('Support')}>
               <Text style={styles.helperButtonText}>Preciso de ajuda</Text>
             </TouchableOpacity>
@@ -128,26 +141,61 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     ...shadows.card
   },
+  headerBlock: {
+    gap: 10,
+    marginBottom: 20
+  },
+  eyebrowRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 12
+  },
   eyebrow: {
     color: colors.primary,
     fontSize: 12,
     fontWeight: '700',
     letterSpacing: 1.1,
-    textTransform: 'uppercase',
-    marginBottom: 10
+    textTransform: 'uppercase'
+  },
+  badge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    borderRadius: 999,
+    backgroundColor: colors.primarySoft,
+    paddingHorizontal: 10,
+    paddingVertical: 6
+  },
+  badgeText: {
+    color: colors.primary,
+    fontSize: 12,
+    fontWeight: '700'
   },
   title: {
     color: colors.text,
     fontSize: 28,
     fontWeight: '800',
-    lineHeight: 34,
-    marginBottom: 10
+    lineHeight: 34
   },
   subtitle: {
     color: colors.textMuted,
     fontSize: 15,
-    lineHeight: 22,
-    marginBottom: 28
+    lineHeight: 22
+  },
+  helperInfo: {
+    borderRadius: 18,
+    backgroundColor: colors.primarySoft,
+    padding: 14,
+    flexDirection: 'row',
+    gap: 10,
+    marginBottom: 18
+  },
+  helperInfoText: {
+    flex: 1,
+    color: colors.text,
+    fontSize: 13,
+    lineHeight: 19
   },
   inputWrap: {
     position: 'relative',
@@ -187,7 +235,7 @@ const styles = StyleSheet.create({
   helperCard: {
     marginTop: 'auto',
     borderRadius: 22,
-    backgroundColor: colors.primarySoft,
+    backgroundColor: colors.surfaceMuted,
     padding: 18,
     gap: 8
   },

@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { ActivityIndicator, Linking, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
@@ -16,7 +16,7 @@ interface SupportScreenProps {
 }
 
 const SUPPORT_PHONE = process.env.EXPO_PUBLIC_SUPPORT_PHONE ?? '+258840000000'
-const SUPPORT_MESSAGE = process.env.EXPO_PUBLIC_SUPPORT_MESSAGE ?? 'Olá, preciso de apoio para obter um código de acesso para a plataforma WIRA.'
+const SUPPORT_MESSAGE = process.env.EXPO_PUBLIC_SUPPORT_MESSAGE ?? 'Ola, preciso de apoio para obter um codigo de acesso para a plataforma WIRA.'
 
 const normalizePhone = (value: string): string => value.replace(/\D/g, '')
 
@@ -39,7 +39,7 @@ export default function SupportScreen({ navigation }: SupportScreenProps) {
 
   const handleOpen = async (url: string): Promise<void> => {
     if (!url) {
-      showAlert('Contacto indisponível', 'Configure o telefone de suporte no aplicativo.')
+      showAlert('Contacto indisponivel', 'Neste momento nao existe um contacto configurado.')
       return
     }
     try {
@@ -57,7 +57,13 @@ export default function SupportScreen({ navigation }: SupportScreenProps) {
     )
   }
 
-  const content = <SupportCards onWhatsApp={() => void handleOpen(whatsappUrl)} onCall={() => void handleOpen(callUrl)} />
+  const content = (
+    <SupportCards
+      supportPhone={SUPPORT_PHONE}
+      onWhatsApp={() => void handleOpen(whatsappUrl)}
+      onCall={() => void handleOpen(callUrl)}
+    />
+  )
 
   if (hasSession) {
     return (
@@ -65,7 +71,7 @@ export default function SupportScreen({ navigation }: SupportScreenProps) {
         navigation={navigation}
         activeRoute="Support"
         title="Apoio e contacto"
-        subtitle="Peça ajuda rapidamente sempre que precisar de orientação, acesso ou esclarecimentos."
+        subtitle="Peça ajuda sempre que precisar de orientacao, acesso ou esclarecimentos."
       >
         {content}
       </AppShell>
@@ -80,10 +86,10 @@ export default function SupportScreen({ navigation }: SupportScreenProps) {
           <Text style={styles.preloginBackText}>Voltar</Text>
         </TouchableOpacity>
         <View style={styles.preloginHeader}>
-          <Text style={styles.preloginEyebrow}>Preciso de um código</Text>
-          <Text style={styles.preloginTitle}>A equipa parceira pode ajudar a ativar o seu acesso.</Text>
+          <Text style={styles.preloginEyebrow}>Preciso de um codigo</Text>
+          <Text style={styles.preloginTitle}>Nao esta sozinha. A equipa parceira pode ajudar a ativar o seu acesso.</Text>
           <Text style={styles.preloginSubtitle}>
-            Use os contactos abaixo para pedir apoio em segurança e esclarecer qualquer dúvida antes de entrar.
+            Use um dos contactos abaixo para pedir apoio em seguranca e esclarecer qualquer duvida antes de entrar.
           </Text>
         </View>
         {content}
@@ -92,15 +98,23 @@ export default function SupportScreen({ navigation }: SupportScreenProps) {
   )
 }
 
-function SupportCards({ onWhatsApp, onCall }: { onWhatsApp: () => void; onCall: () => void }) {
+function SupportCards({
+  supportPhone,
+  onWhatsApp,
+  onCall
+}: {
+  supportPhone: string
+  onWhatsApp: () => void
+  onCall: () => void
+}) {
   return (
     <View style={styles.cardsWrap}>
       <View style={styles.card}>
         <View style={styles.cardIconWrap}>
           <Ionicons name="logo-whatsapp" size={20} color={colors.primary} />
         </View>
-        <Text style={styles.cardTitle}>WhatsApp</Text>
-        <Text style={styles.cardText}>Envie uma mensagem para a equipa e peça ajuda para obter o seu código.</Text>
+        <Text style={styles.cardTitle}>Mensagem com apoio</Text>
+        <Text style={styles.cardText}>Envie uma mensagem e explique se precisa de codigo, orientacao ou ajuda para continuar.</Text>
         <TouchableOpacity style={styles.primaryButton} onPress={onWhatsApp}>
           <Text style={styles.primaryButtonText}>Abrir WhatsApp</Text>
         </TouchableOpacity>
@@ -110,17 +124,17 @@ function SupportCards({ onWhatsApp, onCall }: { onWhatsApp: () => void; onCall: 
         <View style={styles.cardIconWrap}>
           <Ionicons name="call-outline" size={20} color={colors.primary} />
         </View>
-        <Text style={styles.cardTitle}>Telefone</Text>
-        <Text style={styles.cardText}>Ligue diretamente para a ONG parceira se preferir contacto imediato.</Text>
+        <Text style={styles.cardTitle}>Ligacao direta</Text>
+        <Text style={styles.cardText}>Se preferir falar com alguem de imediato, ligue para a equipa parceira.</Text>
         <TouchableOpacity style={styles.secondaryButton} onPress={onCall}>
           <Text style={styles.secondaryButtonText}>Ligar agora</Text>
         </TouchableOpacity>
       </View>
 
       <View style={styles.infoCard}>
-        <Text style={styles.infoTitle}>Número de suporte</Text>
-        <Text style={styles.infoValue}>{SUPPORT_PHONE}</Text>
-        <Text style={styles.infoHint}>Pode atualizar este número através da variável EXPO_PUBLIC_SUPPORT_PHONE.</Text>
+        <Text style={styles.infoTitle}>Contacto de apoio</Text>
+        <Text style={styles.infoValue}>{supportPhone}</Text>
+        <Text style={styles.infoHint}>Guarde este contacto se achar util para pedir apoio novamente.</Text>
       </View>
     </View>
   )

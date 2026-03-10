@@ -1,12 +1,15 @@
-﻿import React, { useCallback, useEffect, useMemo, useState } from 'react'
-import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import { VideoView, useVideoPlayer } from 'expo-video'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import { RouteProp } from '@react-navigation/native'
+import { Ionicons } from '@expo/vector-icons'
+import AppShell from '../components/AppShell'
 import { RootStackParamList } from '../types/navigation'
 import apiService, { AggregatedProgress, CourseModule } from '../services/api'
 import sessionService from '../services/session'
 import { showAlert } from '../utils/alerts'
+import { colors, shadows } from '../theme'
 
 type VideoLessonScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'VideoLesson'>
 type VideoLessonScreenRouteProp = RouteProp<RootStackParamList, 'VideoLesson'>
@@ -43,7 +46,7 @@ export default function VideoLessonScreen({ route, navigation }: VideoLessonScre
     try {
       const userCode = await sessionService.getUserCode()
       if (!userCode) {
-        navigation.navigate('Login')
+        navigation.reset({ index: 0, routes: [{ name: 'Login' }] })
         return
       }
 
@@ -78,7 +81,7 @@ export default function VideoLessonScreen({ route, navigation }: VideoLessonScre
 
   const togglePlayPause = (): void => {
     if (!state.module?.videoUrl) {
-      showAlert('Vídeo indisponível', 'Este módulo ainda não possui vídeo publicado.')
+      showAlert('Video indisponivel', 'Este modulo ainda nao possui video publicado.')
       return
     }
 
@@ -92,13 +95,13 @@ export default function VideoLessonScreen({ route, navigation }: VideoLessonScre
 
   const handleDownload = (): void => {
     if (!state.module?.downloadable || !state.module?.videoUrl) {
-      showAlert('Offline indisponível', 'Este conteúdo não possui pacote offline no momento.')
+      showAlert('Offline indisponivel', 'Este conteudo nao possui pacote offline no momento.')
       return
     }
 
     showAlert(
-      'Offline indisponível',
-      'Pacote offline não disponível para este módulo no backend atual.'
+      'Offline indisponivel',
+      'O pacote offline ainda nao esta disponivel no backend atual.'
     )
   }
 
@@ -118,7 +121,7 @@ export default function VideoLessonScreen({ route, navigation }: VideoLessonScre
     try {
       setSubmitting(true)
       await apiService.updateProgress(state.userCode, courseId, [...completed], percentage, { currentModule })
-      showAlert('Concluído', 'Módulo marcado como concluído com sucesso.', [
+      showAlert('Concluido', 'Modulo marcado como concluido com sucesso.', [
         { text: 'OK', onPress: () => navigation.goBack() }
       ])
     } catch (error) {
@@ -131,7 +134,7 @@ export default function VideoLessonScreen({ route, navigation }: VideoLessonScre
   if (loading) {
     return (
       <View style={styles.loaderContainer}>
-        <ActivityIndicator size="large" color="#1E3A8A" />
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     )
   }
@@ -139,7 +142,7 @@ export default function VideoLessonScreen({ route, navigation }: VideoLessonScre
   if (!state.module) {
     return (
       <View style={styles.loaderContainer}>
-        <Text style={styles.errorText}>Módulo não encontrado.</Text>
+        <Text style={styles.errorText}>Modulo nao encontrado.</Text>
       </View>
     )
   }
@@ -147,13 +150,18 @@ export default function VideoLessonScreen({ route, navigation }: VideoLessonScre
   const isCompleted = (progressItem?.completedModules ?? []).includes(String(state.module.id))
 
   return (
-    <ScrollView style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Text style={styles.backButton}>Voltar</Text>
-        </TouchableOpacity>
-        <Text style={styles.title}>Módulo {moduleId}</Text>
-      </View>
+    <AppShell
+      navigation={navigation}
+      activeRoute="CourseLibrary"
+      title={`Modulo ${moduleId}`}
+      subtitle="Assista com calma, conclua o passo atual e avance para a avaliacao quando fizer sentido."
+      showBottomNav={false}
+      showLogout={false}
+    >
+      <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+        <Ionicons name="arrow-back" size={18} color={colors.primaryDark} />
+        <Text style={styles.backButtonText}>Voltar para o curso</Text>
+      </TouchableOpacity>
 
       <View style={styles.videoWrapper}>
         {state.module.videoUrl ? (
@@ -167,15 +175,22 @@ export default function VideoLessonScreen({ route, navigation }: VideoLessonScre
           />
         ) : (
           <View style={styles.videoUnavailable}>
-            <Text style={styles.videoUnavailableText}>Vídeo ainda não publicado para este módulo.</Text>
+            <Text style={styles.videoUnavailableText}>Video ainda nao publicado para este modulo.</Text>
           </View>
         )}
       </View>
 
-      <View style={styles.content}>
+      <View style={styles.contentCard}>
         <Text style={styles.moduleTitle}>{state.module.title}</Text>
-        <Text style={styles.moduleMeta}>Duração: {state.module.duration}</Text>
-        <Text style={styles.moduleDescription}>{state.module.description ?? 'Sem descrição adicional.'}</Text>
+        <Text style={styles.moduleMeta}>Duracao: {state.module.duration}</Text>
+        <Text style={styles.moduleDescription}>{state.module.description ?? 'Sem descricao adicional.'}</Text>
+
+        <View style={styles.guidanceCard}>
+          <Ionicons name="bulb-outline" size={18} color={colors.primary} />
+          <Text style={styles.guidanceText}>
+            Assista primeiro ao conteudo principal e marque como concluido apenas quando terminar este passo com seguranca.
+          </Text>
+        </View>
 
         <View style={styles.actionsRow}>
           <TouchableOpacity style={styles.secondaryButton} onPress={togglePlayPause}>
@@ -194,7 +209,7 @@ export default function VideoLessonScreen({ route, navigation }: VideoLessonScre
           disabled={submitting || isCompleted}
         >
           <Text style={styles.primaryButtonText}>
-            {isCompleted ? 'Módulo já concluído' : submitting ? 'A guardar...' : 'Marcar como concluído'}
+            {isCompleted ? 'Modulo ja concluido' : submitting ? 'A guardar...' : 'Marcar como concluido'}
           </Text>
         </TouchableOpacity>
 
@@ -202,10 +217,10 @@ export default function VideoLessonScreen({ route, navigation }: VideoLessonScre
           style={styles.quizButton}
           onPress={() => navigation.navigate('Quiz', { courseId, moduleId: String(state.module?.id ?? moduleId) })}
         >
-          <Text style={styles.quizButtonText}>Fazer quiz deste módulo</Text>
+          <Text style={styles.quizButtonText}>Fazer quiz deste modulo</Text>
         </TouchableOpacity>
       </View>
-    </ScrollView>
+    </AppShell>
   )
 }
 
@@ -214,38 +229,28 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#F5F5F5'
+    backgroundColor: colors.background
   },
   errorText: {
-    color: '#B91C1C',
+    color: colors.danger,
     fontSize: 16,
-    fontWeight: '600'
-  },
-  container: {
-    flex: 1,
-    backgroundColor: '#F5F5F5'
-  },
-  header: {
-    backgroundColor: '#1E3A8A',
-    paddingTop: 56,
-    paddingHorizontal: 20,
-    paddingBottom: 18
+    fontWeight: '700'
   },
   backButton: {
-    color: '#90CAF9',
-    fontSize: 15,
-    marginBottom: 8
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6
   },
-  title: {
-    color: '#FFFFFF',
-    fontSize: 22,
+  backButtonText: {
+    color: colors.primaryDark,
+    fontSize: 15,
     fontWeight: '700'
   },
   videoWrapper: {
     backgroundColor: '#000000',
-    margin: 20,
-    borderRadius: 12,
-    overflow: 'hidden'
+    borderRadius: 24,
+    overflow: 'hidden',
+    ...shadows.card
   },
   video: {
     width: '100%',
@@ -261,65 +266,78 @@ const styles = StyleSheet.create({
     color: '#E5E7EB',
     textAlign: 'center'
   },
-  content: {
-    paddingHorizontal: 20,
-    paddingBottom: 24
+  contentCard: {
+    borderRadius: 28,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    padding: 20,
+    gap: 12,
+    ...shadows.card
   },
   moduleTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#111827'
+    fontSize: 22,
+    fontWeight: '800',
+    color: colors.text
   },
   moduleMeta: {
-    marginTop: 8,
-    color: '#6B7280',
+    color: colors.textMuted,
     fontSize: 13
   },
   moduleDescription: {
-    marginTop: 10,
-    color: '#374151',
+    color: colors.textMuted,
+    lineHeight: 20
+  },
+  guidanceCard: {
+    borderRadius: 18,
+    backgroundColor: colors.primarySoft,
+    padding: 14,
+    flexDirection: 'row',
+    gap: 10
+  },
+  guidanceText: {
+    flex: 1,
+    color: colors.text,
+    fontSize: 13,
     lineHeight: 19
   },
   actionsRow: {
-    marginTop: 14,
     flexDirection: 'row',
     gap: 8
   },
   secondaryButton: {
     flex: 1,
-    backgroundColor: '#E5E7EB',
-    borderRadius: 8,
+    backgroundColor: colors.surfaceMuted,
+    borderRadius: 16,
     paddingVertical: 12,
     alignItems: 'center'
   },
   secondaryButtonText: {
-    color: '#1F2937',
-    fontWeight: '700'
+    color: colors.text,
+    fontWeight: '800'
   },
   primaryButton: {
-    marginTop: 14,
-    backgroundColor: '#1E3A8A',
-    borderRadius: 8,
+    marginTop: 2,
+    backgroundColor: colors.primary,
+    borderRadius: 16,
     paddingVertical: 13,
     alignItems: 'center'
   },
   primaryButtonText: {
-    color: '#FFFFFF',
-    fontWeight: '700'
+    color: colors.textOnPrimary,
+    fontWeight: '800'
   },
   disabledButton: {
     opacity: 0.65
   },
   quizButton: {
-    marginTop: 10,
-    backgroundColor: '#047857',
-    borderRadius: 8,
+    backgroundColor: colors.success,
+    borderRadius: 16,
     paddingVertical: 13,
     alignItems: 'center'
   },
   quizButtonText: {
-    color: '#FFFFFF',
-    fontWeight: '700'
+    color: colors.textOnPrimary,
+    fontWeight: '800'
   }
 })
-

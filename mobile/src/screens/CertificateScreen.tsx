@@ -1,11 +1,14 @@
 import React, { useEffect, useMemo, useState } from 'react'
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator, Linking } from 'react-native'
+import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator, Linking } from 'react-native'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import { RouteProp } from '@react-navigation/native'
+import { Ionicons } from '@expo/vector-icons'
+import AppShell from '../components/AppShell'
 import { RootStackParamList } from '../types/navigation'
 import apiService, { CertificateRecord } from '../services/api'
 import sessionService from '../services/session'
 import { showAlert } from '../utils/alerts'
+import { colors, shadows } from '../theme'
 
 type CertificateScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Certificate'>
 type CertificateScreenRouteProp = RouteProp<RootStackParamList, 'Certificate'>
@@ -26,7 +29,7 @@ export default function CertificateScreen({ route, navigation }: CertificateScre
         setLoading(true)
         const userCode = await sessionService.getUserCode()
         if (!userCode) {
-          navigation.navigate('Login')
+          navigation.reset({ index: 0, routes: [{ name: 'Login' }] })
           return
         }
         const data = await apiService.getUserCertificates(userCode)
@@ -46,66 +49,84 @@ export default function CertificateScreen({ route, navigation }: CertificateScre
     [certificates, courseId]
   )
 
-  if (loading) {
-    return (
-      <View style={styles.loaderContainer}>
-        <ActivityIndicator size="large" color="#1E3A8A" />
-      </View>
-    )
-  }
-
-  if (!certificate) {
-    return (
-      <View style={styles.container}>
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => navigation.goBack()}>
-            <Text style={styles.backButton}>← Voltar</Text>
-          </TouchableOpacity>
-        </View>
-        <View style={styles.notCompletedContainer}>
-          <Text style={styles.notCompletedTitle}>Certificado não disponível</Text>
-          <Text style={styles.notCompletedText}>Conclua o curso e atinja 70% no quiz para gerar seu certificado.</Text>
-        </View>
-      </View>
-    )
-  }
-
   const handleOpenVerification = async (): Promise<void> => {
+    if (!certificate) return
     try {
       await Linking.openURL(certificate.qrCode)
     } catch {
-      showAlert('Verificação', `Código: ${certificate.verificationCode}`)
+      showAlert('Verificacao', `Codigo: ${certificate.verificationCode}`)
     }
   }
 
+  if (loading) {
+    return (
+      <View style={styles.loaderContainer}>
+        <ActivityIndicator size="large" color={colors.primary} />
+      </View>
+    )
+  }
+
   return (
-    <ScrollView style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Text style={styles.backButton}>← Voltar</Text>
-        </TouchableOpacity>
-        <Text style={styles.title}>Certificado</Text>
-      </View>
+    <AppShell
+      navigation={navigation}
+      activeRoute="Progress"
+      title="Certificado"
+      subtitle="Guarde esta conquista e use o codigo de verificacao sempre que precisar confirmar o resultado."
+      showBottomNav={false}
+      showLogout={false}
+    >
+      <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+        <Ionicons name="arrow-back" size={18} color={colors.primaryDark} />
+        <Text style={styles.backButtonText}>Voltar</Text>
+      </TouchableOpacity>
 
-      <View style={styles.certificateContainer}>
-        <Text style={styles.certificateTitle}>CERTIFICADO DE COMPETÊNCIA</Text>
-        <Text style={styles.label}>Curso</Text>
-        <Text style={styles.value}>{certificate.courseTitle}</Text>
+      {!certificate ? (
+        <View style={styles.emptyCard}>
+          <Text style={styles.emptyTitle}>Certificado ainda nao disponivel</Text>
+          <Text style={styles.emptyText}>Conclua o curso e atinja o resultado minimo no quiz para gerar o certificado.</Text>
+        </View>
+      ) : (
+        <>
+          <View style={styles.certificateCard}>
+            <View style={styles.certificateBadge}>
+              <Ionicons name="ribbon-outline" size={18} color={colors.textOnPrimary} />
+              <Text style={styles.certificateBadgeText}>Conquista desbloqueada</Text>
+            </View>
 
-        <Text style={styles.label}>Código de verificação</Text>
-        <Text style={styles.value}>{certificate.verificationCode}</Text>
+            <Text style={styles.certificateTitle}>Certificado de competencia</Text>
+            <Text style={styles.label}>Curso</Text>
+            <Text style={styles.value}>{certificate.courseTitle}</Text>
 
-        <Text style={styles.label}>Data de emissão</Text>
-        <Text style={styles.value}>{new Date(certificate.issueDate).toLocaleDateString()}</Text>
+            <Text style={styles.label}>Codigo de verificacao</Text>
+            <Text style={styles.value}>{certificate.verificationCode}</Text>
 
-        <Text style={styles.label}>Pontuação final</Text>
-        <Text style={styles.value}>{certificate.score}%</Text>
+            <View style={styles.infoRow}>
+              <InfoBlock label="Emissao" value={new Date(certificate.issueDate).toLocaleDateString('pt-PT')} />
+              <InfoBlock label="Pontuacao" value={`${certificate.score}%`} />
+            </View>
+          </View>
 
-        <TouchableOpacity style={styles.verifyButton} onPress={() => void handleOpenVerification()}>
-          <Text style={styles.verifyButtonText}>Verificar Certificado</Text>
-        </TouchableOpacity>
-      </View>
-    </ScrollView>
+          <View style={styles.helperCard}>
+            <Text style={styles.helperTitle}>Como usar este certificado</Text>
+            <Text style={styles.helperText}>
+              Use o codigo de verificacao para confirmar autenticidade e partilhe esta conquista quando fizer sentido para oportunidades futuras.
+            </Text>
+            <TouchableOpacity style={styles.verifyButton} onPress={() => void handleOpenVerification()}>
+              <Text style={styles.verifyButtonText}>Verificar certificado</Text>
+            </TouchableOpacity>
+          </View>
+        </>
+      )}
+    </AppShell>
+  )
+}
+
+function InfoBlock({ label, value }: { label: string; value: string }) {
+  return (
+    <View style={styles.infoBlock}>
+      <Text style={styles.label}>{label}</Text>
+      <Text style={styles.infoValue}>{value}</Text>
+    </View>
   )
 }
 
@@ -114,79 +135,119 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#F5F5F5'
-  },
-  container: {
-    flex: 1,
-    backgroundColor: '#F5F5F5'
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 20,
-    paddingTop: 40
+    backgroundColor: colors.background
   },
   backButton: {
-    fontSize: 16,
-    color: '#1E3A8A',
-    marginRight: 20
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6
   },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#1E3A8A'
+  backButtonText: {
+    color: colors.primaryDark,
+    fontSize: 15,
+    fontWeight: '700'
   },
-  certificateContainer: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    margin: 20,
-    padding: 20
+  emptyCard: {
+    borderRadius: 26,
+    backgroundColor: colors.surface,
+    padding: 22,
+    borderWidth: 1,
+    borderColor: colors.border,
+    ...shadows.card
+  },
+  emptyTitle: {
+    fontSize: 20,
+    fontWeight: '800',
+    color: colors.text,
+    marginBottom: 10
+  },
+  emptyText: {
+    fontSize: 15,
+    color: colors.textMuted,
+    lineHeight: 22
+  },
+  certificateCard: {
+    backgroundColor: colors.surface,
+    borderRadius: 30,
+    padding: 22,
+    borderWidth: 1,
+    borderColor: colors.border,
+    ...shadows.card
+  },
+  certificateBadge: {
+    alignSelf: 'flex-start',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    borderRadius: 999,
+    backgroundColor: colors.primary,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    marginBottom: 18
+  },
+  certificateBadgeText: {
+    color: colors.textOnPrimary,
+    fontSize: 12,
+    fontWeight: '800'
   },
   certificateTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#1E3A8A',
-    marginBottom: 16,
-    textAlign: 'center'
+    fontSize: 24,
+    fontWeight: '800',
+    color: colors.primary,
+    marginBottom: 18
   },
   label: {
     fontSize: 13,
-    color: '#6B7280',
+    color: colors.textMuted,
     marginTop: 10
   },
   value: {
-    fontSize: 16,
-    color: '#111827',
-    fontWeight: '600'
-  },
-  verifyButton: {
-    marginTop: 20,
-    backgroundColor: '#1E3A8A',
-    paddingVertical: 14,
-    borderRadius: 8
-  },
-  verifyButtonText: {
-    color: '#FFFFFF',
-    textAlign: 'center',
+    fontSize: 17,
+    color: colors.text,
     fontWeight: '700'
   },
-  notCompletedContainer: {
+  infoRow: {
+    flexDirection: 'row',
+    gap: 12,
+    marginTop: 18
+  },
+  infoBlock: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 40
+    borderRadius: 18,
+    backgroundColor: colors.surfaceMuted,
+    padding: 14
   },
-  notCompletedTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#333333',
-    textAlign: 'center',
-    marginBottom: 10
+  infoValue: {
+    fontSize: 15,
+    color: colors.text,
+    fontWeight: '700'
   },
-  notCompletedText: {
-    fontSize: 16,
-    color: '#757575',
+  helperCard: {
+    borderRadius: 26,
+    backgroundColor: colors.primarySoft,
+    padding: 20,
+    gap: 10
+  },
+  helperTitle: {
+    color: colors.text,
+    fontSize: 17,
+    fontWeight: '800'
+  },
+  helperText: {
+    color: colors.textMuted,
+    fontSize: 14,
+    lineHeight: 21
+  },
+  verifyButton: {
+    marginTop: 4,
+    backgroundColor: colors.primary,
+    paddingVertical: 14,
+    borderRadius: 18,
+    alignItems: 'center'
+  },
+  verifyButtonText: {
+    color: colors.textOnPrimary,
     textAlign: 'center',
-    lineHeight: 22
+    fontWeight: '800'
   }
 })

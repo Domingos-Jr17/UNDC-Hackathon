@@ -1,4 +1,4 @@
-﻿import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import { useFocusEffect } from '@react-navigation/native'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
@@ -43,7 +43,7 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
     try {
       const userCode = await sessionService.getUserCode()
       if (!userCode) {
-        showAlert('Sessão expirada', 'Faça login novamente para continuar.')
+        showAlert('Sessao expirada', 'Faca login novamente para continuar.')
         navigation.reset({ index: 0, routes: [{ name: 'Login' }] })
         return
       }
@@ -83,11 +83,23 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
   ) ?? state.progress?.courses[0]
 
   const stats = useMemo(() => ({
-    coursesCompleted: state.progress?.courses.filter(course => course.progress >= 100).length ?? 0,
-    coursesInProgress: state.progress?.courses.filter(course => course.progress > 0 && course.progress < 100).length ?? 0,
-    certificatesEarned: state.certificates.length,
-    totalHours: Math.round((state.progress?.summary.averageProgress ?? 0) * 0.4)
+    completed: state.progress?.courses.filter(course => course.progress >= 100).length ?? 0,
+    active: state.progress?.courses.filter(course => course.progress > 0 && course.progress < 100).length ?? 0,
+    certificates: state.certificates.length
   }), [state.certificates.length, state.progress])
+
+  const weeklyGoal = useMemo(() => {
+    if (!currentCourse) {
+      return 'Escolha um primeiro curso para iniciar a sua jornada.'
+    }
+
+    const remainingModules = Math.max(0, currentCourse.modulesCount - currentCourse.currentModule)
+    if (remainingModules === 0) {
+      return 'Conclua a avaliacao final deste curso para se aproximar do certificado.'
+    }
+
+    return `Foque-se em concluir o modulo ${currentCourse.currentModule} e depois avance para mais ${remainingModules} modulo${remainingModules > 1 ? 's' : ''}.`
+  }, [currentCourse])
 
   if (loading) {
     return (
@@ -102,17 +114,17 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
       navigation={navigation}
       activeRoute="Home"
       headerVariant="hero"
-      title={`Olá, ${state.userCode}!`}
-      subtitle="Hoje o foco é retomar o próximo passo da sua jornada de aprendizagem."
+      title={`Ola, ${state.userCode}!`}
+      subtitle="Hoje o foco e retomar o passo mais importante da sua aprendizagem."
       refreshing={refreshing}
       onRefresh={() => void loadHome('refresh')}
     >
       <View style={styles.recommendationCard}>
         <View style={styles.recommendationHeader}>
-          <Text style={styles.sectionEyebrow}>Próximo passo</Text>
+          <Text style={styles.sectionEyebrow}>Proximo passo</Text>
           {currentCourse ? (
             <View style={styles.progressBadge}>
-              <Text style={styles.progressBadgeText}>{currentCourse.progress}% concluído</Text>
+              <Text style={styles.progressBadgeText}>{currentCourse.progress}% concluido</Text>
             </View>
           ) : null}
         </View>
@@ -121,7 +133,7 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
           <>
             <Text style={styles.recommendationTitle}>{currentCourse.title}</Text>
             <Text style={styles.recommendationText}>
-              Continue no módulo {currentCourse.currentModule} de {currentCourse.modulesCount}. Cada sessão concluída aproxima-a do certificado final.
+              Continue no modulo {currentCourse.currentModule} de {currentCourse.modulesCount}. Cada sessao concluida aproxima-a do certificado.
             </Text>
             <View style={styles.progressTrack}>
               <View style={[styles.progressFill, { width: `${currentCourse.progress}%` }]} />
@@ -138,36 +150,51 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
           <>
             <Text style={styles.recommendationTitle}>Escolha o seu primeiro curso</Text>
             <Text style={styles.recommendationText}>
-              Explore a biblioteca e inicie uma jornada de capacitação profissional ao seu ritmo.
+              Explore a biblioteca e inicie uma jornada de capacitacao profissional ao seu ritmo.
             </Text>
             <TouchableOpacity style={styles.primaryAction} onPress={() => navigation.navigate('CourseLibrary')}>
               <Ionicons name="book-outline" size={20} color={colors.textOnPrimary} />
-              <Text style={styles.primaryActionText}>Ver cursos disponíveis</Text>
+              <Text style={styles.primaryActionText}>Ver cursos disponiveis</Text>
             </TouchableOpacity>
           </>
         )}
       </View>
 
-      <View style={styles.statsGrid}>
-        <StatCard label="Concluídos" value={stats.coursesCompleted} icon="checkmark-circle" />
-        <StatCard label="Em curso" value={stats.coursesInProgress} icon="sparkles" />
-        <StatCard label="Certificados" value={stats.certificatesEarned} icon="ribbon" />
-        <StatCard label="Horas" value={`${stats.totalHours}h`} icon="time" />
+      <View style={styles.guidanceCard}>
+        <View style={styles.guidanceIconWrap}>
+          <Ionicons name="flag-outline" size={18} color={colors.primary} />
+        </View>
+        <View style={styles.guidanceCopy}>
+          <Text style={styles.guidanceTitle}>Meta desta semana</Text>
+          <Text style={styles.guidanceText}>{weeklyGoal}</Text>
+        </View>
+      </View>
+
+      <View style={styles.statsStrip}>
+        <MiniStat label="Concluidos" value={stats.completed} />
+        <MiniStat label="Em curso" value={stats.active} />
+        <MiniStat label="Certificados" value={stats.certificates} />
       </View>
 
       <View style={styles.sectionCard}>
-        <Text style={styles.sectionTitle}>Atalhos úteis</Text>
+        <Text style={styles.sectionTitle}>Atalhos uteis</Text>
         <View style={styles.quickActions}>
+          <QuickAction
+            icon="book-outline"
+            title="Explorar biblioteca"
+            subtitle="Descubra novos percursos e volte aos cursos que ja iniciou."
+            onPress={() => navigation.navigate('CourseLibrary')}
+          />
           <QuickAction
             icon="ribbon-outline"
             title="Os meus certificados"
-            subtitle="Veja certificados emitidos e validações."
+            subtitle="Veja certificados emitidos e acompanhe conquistas ja desbloqueadas."
             onPress={() => navigation.navigate('Certificate', { courseId: currentCourse?.courseId ?? 'costura' })}
           />
           <QuickAction
             icon="chatbubble-ellipses-outline"
             title="Falar com apoio"
-            subtitle="Peça ajuda se tiver dúvidas sobre acesso ou percurso."
+            subtitle="Peça ajuda se tiver duvidas sobre acesso, percurso ou proximos passos."
             onPress={() => navigation.navigate('Support')}
           />
         </View>
@@ -176,14 +203,11 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
   )
 }
 
-function StatCard({ label, value, icon }: { label: string; value: string | number; icon: keyof typeof Ionicons.glyphMap }) {
+function MiniStat({ label, value }: { label: string; value: string | number }) {
   return (
-    <View style={styles.statCard}>
-      <View style={styles.statIconWrap}>
-        <Ionicons name={icon} size={18} color={colors.primary} />
-      </View>
-      <Text style={styles.statValue}>{value}</Text>
-      <Text style={styles.statLabel}>{label}</Text>
+    <View style={styles.miniStatCard}>
+      <Text style={styles.miniStatValue}>{value}</Text>
+      <Text style={styles.miniStatLabel}>{label}</Text>
     </View>
   )
 }
@@ -279,38 +303,58 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '800'
   },
-  statsGrid: {
+  guidanceCard: {
+    borderRadius: 24,
+    backgroundColor: colors.primarySoft,
+    padding: 18,
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-    gap: 12
+    gap: 14,
+    alignItems: 'flex-start'
   },
-  statCard: {
-    width: '48%',
-    borderRadius: 22,
+  guidanceIconWrap: {
+    width: 40,
+    height: 40,
+    borderRadius: 16,
+    backgroundColor: colors.surface,
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  guidanceCopy: {
+    flex: 1,
+    gap: 4
+  },
+  guidanceTitle: {
+    color: colors.text,
+    fontSize: 16,
+    fontWeight: '800'
+  },
+  guidanceText: {
+    color: colors.textMuted,
+    fontSize: 13,
+    lineHeight: 19
+  },
+  statsStrip: {
+    flexDirection: 'row',
+    gap: 10
+  },
+  miniStatCard: {
+    flex: 1,
+    borderRadius: 20,
     backgroundColor: colors.surface,
     borderWidth: 1,
     borderColor: colors.border,
-    padding: 16,
+    paddingHorizontal: 14,
+    paddingVertical: 14,
     ...shadows.card
   },
-  statIconWrap: {
-    width: 36,
-    height: 36,
-    borderRadius: 14,
-    backgroundColor: colors.primarySoft,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 10
-  },
-  statValue: {
+  miniStatValue: {
     color: colors.text,
-    fontSize: 24,
+    fontSize: 20,
     fontWeight: '800'
   },
-  statLabel: {
+  miniStatLabel: {
     color: colors.textMuted,
-    fontSize: 13,
+    fontSize: 12,
     marginTop: 4
   },
   sectionCard: {

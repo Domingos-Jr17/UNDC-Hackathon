@@ -1,9 +1,9 @@
-﻿import React, { useCallback, useEffect, useMemo, useState } from 'react'
-import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import { RouteProp } from '@react-navigation/native'
 import { Ionicons } from '@expo/vector-icons'
+import AppShell from '../components/AppShell'
 import { RootStackParamList } from '../types/navigation'
 import apiService, { AggregatedProgress, CourseItem, CourseModule } from '../services/api'
 import sessionService from '../services/session'
@@ -30,12 +30,21 @@ const initialState: DetailState = {
   progress: null
 }
 
+type ModuleStatus = 'completed' | 'current' | 'upcoming'
+
 export default function CourseDetailScreen({ route, navigation }: CourseDetailScreenProps) {
   const { courseId } = route.params
   const [state, setState] = useState<DetailState>(initialState)
   const [loading, setLoading] = useState(true)
+  const [refreshing, setRefreshing] = useState(false)
 
-  const loadData = useCallback(async (): Promise<void> => {
+  const loadData = useCallback(async (mode: 'initial' | 'refresh' = 'initial'): Promise<void> => {
+    if (mode === 'initial') {
+      setLoading(true)
+    } else {
+      setRefreshing(true)
+    }
+
     try {
       const userCode = await sessionService.getUserCode()
       if (!userCode) {
@@ -55,11 +64,12 @@ export default function CourseDetailScreen({ route, navigation }: CourseDetailSc
       showAlert('Erro', (error as Error).message)
     } finally {
       setLoading(false)
+      setRefreshing(false)
     }
   }, [courseId, navigation])
 
   useEffect(() => {
-    void loadData()
+    void loadData('initial')
   }, [loadData])
 
   const progressItem = useMemo(
@@ -82,6 +92,17 @@ export default function CourseDetailScreen({ route, navigation }: CourseDetailSc
     navigation.navigate('Quiz', { courseId, moduleId: String(moduleId) })
   }
 
+  const courseGuidance = useMemo(() => {
+    if (!progressItem) {
+      return 'Comece pelo primeiro modulo e avance de forma sequencial para construir uma base solida.'
+    }
+
+    const remaining = Math.max(0, progressItem.modulesCount - progressItem.currentModule)
+    return remaining > 0
+      ? `A recomendacao agora e concluir o modulo ${progressItem.currentModule}. Depois faltarao ${remaining} modulo${remaining > 1 ? 's' : ''}.`
+      : 'Esta muito perto de concluir este curso. Termine os ultimos passos e avance para a avaliacao.'
+  }, [progressItem])
+
   if (loading) {
     return (
       <View style={styles.loaderContainer}>
@@ -93,77 +114,107 @@ export default function CourseDetailScreen({ route, navigation }: CourseDetailSc
   if (!state.course) {
     return (
       <View style={styles.loaderContainer}>
-        <Text style={styles.errorText}>Curso não encontrado.</Text>
+        <Text style={styles.errorText}>Curso nao encontrado.</Text>
       </View>
     )
   }
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
-      <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer} showsVerticalScrollIndicator={false}>
-        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back" size={18} color={colors.primaryDark} />
-          <Text style={styles.backButtonText}>Voltar</Text>
-        </TouchableOpacity>
+    <AppShell
+      navigation={navigation}
+      activeRoute="CourseLibrary"
+      title={state.course.title}
+      subtitle="Siga a recomendacao abaixo para manter uma progressao clara e consistente."
+      refreshing={refreshing}
+      onRefresh={() => void loadData('refresh')}
+      showBottomNav={false}
+      showLogout={false}
+    >
+      <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+        <Ionicons name="arrow-back" size={18} color={colors.primaryDark} />
+        <Text style={styles.backButtonText}>Voltar para cursos</Text>
+      </TouchableOpacity>
 
-        <View style={styles.summaryCard}>
-          <Text style={styles.summaryEyebrow}>Plano de aprendizagem</Text>
-          <Text style={styles.summaryTitle}>{state.course.title}</Text>
-          <Text style={styles.summaryInstructor}>{state.course.instructor ?? 'Equipa técnica WIRA'}</Text>
-          <Text style={styles.summaryMeta}>{state.course.duration_hours}h · {state.course.modules_count} módulos · {state.course.level}</Text>
-          <Text style={styles.summaryDescription}>{state.course.description ?? 'Formação profissional com certificado.'}</Text>
+      <View style={styles.summaryCard}>
+        <Text style={styles.summaryEyebrow}>Plano de aprendizagem</Text>
+        <Text style={styles.summaryTitle}>{state.course.title}</Text>
+        <Text style={styles.summaryInstructor}>{state.course.instructor ?? 'Equipa tecnica WIRA'}</Text>
+        <Text style={styles.summaryMeta}>{state.course.duration_hours}h · {state.course.modules_count} modulos · {state.course.level}</Text>
+        <Text style={styles.summaryDescription}>{state.course.description ?? 'Formacao profissional com certificado.'}</Text>
 
-          <View style={styles.progressTrack}>
-            <View style={[styles.progressFill, { width: `${progressItem?.progress ?? 0}%` }]} />
-          </View>
-          <Text style={styles.progressText}>{progressItem?.progress ?? 0}% concluído · módulo atual {progressItem?.currentModule ?? 1}</Text>
-
-          <TouchableOpacity style={styles.primaryButton} onPress={() => openModule(currentModule)}>
-            <Ionicons name="play-circle-outline" size={20} color={colors.textOnPrimary} />
-            <Text style={styles.primaryButtonText}>Continuar no módulo recomendado</Text>
-          </TouchableOpacity>
+        <View style={styles.progressTrack}>
+          <View style={[styles.progressFill, { width: `${progressItem?.progress ?? 0}%` }]} />
         </View>
+        <Text style={styles.progressText}>{progressItem?.progress ?? 0}% concluido · modulo atual {progressItem?.currentModule ?? 1}</Text>
 
-        <View style={styles.sectionCard}>
-          <Text style={styles.sectionTitle}>Módulos</Text>
-          {state.modules.map(module => {
-            const done = completed.has(String(module.id))
-            const isCurrent = module.id === currentModule
-            return (
-              <View key={module.id} style={[styles.moduleCard, isCurrent && styles.moduleCardCurrent]}>
-                <View style={styles.moduleHeader}>
-                  <Text style={styles.moduleTitle}>Módulo {module.id}: {module.title}</Text>
-                  <View style={[styles.statusPill, done ? styles.statusPillDone : isCurrent ? styles.statusPillCurrent : styles.statusPillPending]}>
-                    <Text style={[styles.statusPillText, done ? styles.statusPillTextDone : isCurrent ? styles.statusPillTextCurrent : styles.statusPillTextPending]}>
-                      {done ? 'Concluído' : isCurrent ? 'Recomendado' : 'Pendente'}
-                    </Text>
-                  </View>
-                </View>
-                <Text style={styles.moduleDescription}>{module.description ?? 'Sem descrição detalhada.'}</Text>
-                <Text style={styles.moduleMeta}>Duração: {module.duration}</Text>
+        <TouchableOpacity style={styles.primaryButton} onPress={() => openModule(currentModule)}>
+          <Ionicons name="play-circle-outline" size={20} color={colors.textOnPrimary} />
+          <Text style={styles.primaryButtonText}>Continuar no modulo recomendado</Text>
+        </TouchableOpacity>
+      </View>
 
-                <View style={styles.moduleActions}>
-                  <TouchableOpacity style={styles.secondaryButton} onPress={() => openModule(module.id)}>
-                    <Text style={styles.secondaryButtonText}>Ver aula</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity style={styles.primarySmallButton} onPress={() => openQuiz(module.id)}>
-                    <Text style={styles.primarySmallButtonText}>Fazer quiz</Text>
-                  </TouchableOpacity>
+      <View style={styles.guidanceCard}>
+        <View style={styles.guidanceIconWrap}>
+          <Ionicons name="compass-outline" size={18} color={colors.primary} />
+        </View>
+        <View style={styles.guidanceCopy}>
+          <Text style={styles.guidanceTitle}>Como avancar melhor</Text>
+          <Text style={styles.guidanceText}>{courseGuidance}</Text>
+        </View>
+      </View>
+
+      <View style={styles.sectionCard}>
+        <Text style={styles.sectionTitle}>Modulos</Text>
+        {state.modules.map(module => {
+          const status: ModuleStatus = completed.has(String(module.id))
+            ? 'completed'
+            : module.id === currentModule
+              ? 'current'
+              : 'upcoming'
+
+          const canOpenLesson = status !== 'upcoming'
+          const canOpenQuiz = status === 'completed' || status === 'current'
+
+          return (
+            <View key={module.id} style={[styles.moduleCard, status === 'current' && styles.moduleCardCurrent]}>
+              <View style={styles.moduleHeader}>
+                <Text style={styles.moduleTitle}>Modulo {module.id}: {module.title}</Text>
+                <View style={[styles.statusPill, status === 'completed' ? styles.statusPillDone : status === 'current' ? styles.statusPillCurrent : styles.statusPillUpcoming]}>
+                  <Text style={[styles.statusPillText, status === 'completed' ? styles.statusPillTextDone : status === 'current' ? styles.statusPillTextCurrent : styles.statusPillTextUpcoming]}>
+                    {status === 'completed' ? 'Concluido' : status === 'current' ? 'Recomendado' : 'Depois deste'}
+                  </Text>
                 </View>
               </View>
-            )
-          })}
-        </View>
-      </ScrollView>
-    </SafeAreaView>
+
+              <Text style={styles.moduleDescription}>{module.description ?? 'Sem descricao detalhada.'}</Text>
+              <Text style={styles.moduleMeta}>Duracao: {module.duration}</Text>
+              {status === 'upcoming' ? <Text style={styles.moduleHint}>Conclua o modulo recomendado antes de avancar para este passo.</Text> : null}
+
+              <View style={styles.moduleActions}>
+                <TouchableOpacity
+                  style={[styles.secondaryButton, !canOpenLesson && styles.disabledButton]}
+                  onPress={() => openModule(module.id)}
+                  disabled={!canOpenLesson}
+                >
+                  <Text style={styles.secondaryButtonText}>{status === 'current' ? 'Ver aula agora' : 'Rever aula'}</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.primarySmallButton, !canOpenQuiz && styles.disabledButton]}
+                  onPress={() => openQuiz(module.id)}
+                  disabled={!canOpenQuiz}
+                >
+                  <Text style={styles.primarySmallButtonText}>Fazer quiz</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          )
+        })}
+      </View>
+    </AppShell>
   )
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: colors.background
-  },
   loaderContainer: {
     flex: 1,
     justifyContent: 'center',
@@ -175,20 +226,10 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '700'
   },
-  container: {
-    flex: 1,
-    backgroundColor: colors.background
-  },
-  contentContainer: {
-    padding: 20,
-    gap: 18,
-    paddingBottom: 32
-  },
   backButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    marginBottom: 4
+    gap: 6
   },
   backButtonText: {
     color: colors.primaryDark,
@@ -262,6 +303,35 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '800'
   },
+  guidanceCard: {
+    borderRadius: 24,
+    backgroundColor: colors.primarySoft,
+    padding: 18,
+    flexDirection: 'row',
+    gap: 14
+  },
+  guidanceIconWrap: {
+    width: 42,
+    height: 42,
+    borderRadius: 16,
+    backgroundColor: colors.surface,
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  guidanceCopy: {
+    flex: 1,
+    gap: 4
+  },
+  guidanceTitle: {
+    color: colors.text,
+    fontSize: 16,
+    fontWeight: '800'
+  },
+  guidanceText: {
+    color: colors.textMuted,
+    fontSize: 13,
+    lineHeight: 19
+  },
   sectionCard: {
     borderRadius: 28,
     backgroundColor: colors.surface,
@@ -309,7 +379,7 @@ const styles = StyleSheet.create({
   statusPillCurrent: {
     backgroundColor: colors.primarySoft
   },
-  statusPillPending: {
+  statusPillUpcoming: {
     backgroundColor: colors.warningSoft
   },
   statusPillText: {
@@ -322,7 +392,7 @@ const styles = StyleSheet.create({
   statusPillTextCurrent: {
     color: colors.primary
   },
-  statusPillTextPending: {
+  statusPillTextUpcoming: {
     color: colors.warning
   },
   moduleDescription: {
@@ -333,6 +403,12 @@ const styles = StyleSheet.create({
   moduleMeta: {
     color: colors.textMuted,
     fontSize: 12
+  },
+  moduleHint: {
+    color: colors.warning,
+    fontSize: 12,
+    lineHeight: 18,
+    fontWeight: '600'
   },
   moduleActions: {
     marginTop: 4,
@@ -362,5 +438,8 @@ const styles = StyleSheet.create({
     color: colors.textOnPrimary,
     fontSize: 13,
     fontWeight: '800'
+  },
+  disabledButton: {
+    opacity: 0.45
   }
 })

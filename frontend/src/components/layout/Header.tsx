@@ -1,7 +1,5 @@
-import { useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
-  CalendarDays,
   FileText,
   LogOut,
   Menu,
@@ -34,15 +32,6 @@ export default function Header({ onMenuClick, className, showBreadcrumbs = true 
   const { user, logout } = useAuthContext()
   const navigate = useNavigate()
 
-  const dateLabel = useMemo(
-    () => new Intl.DateTimeFormat('pt-PT', {
-      weekday: 'long',
-      day: 'numeric',
-      month: 'long'
-    }).format(new Date()),
-    []
-  )
-
   const handleLogout = () => {
     logout()
     announceToScreenReader('Sessao terminada com sucesso')
@@ -67,18 +56,7 @@ export default function Header({ onMenuClick, className, showBreadcrumbs = true 
             >
               <Menu className="h-5 w-5" />
             </Button>
-
-            <div className="hidden h-10 w-10 items-center justify-center overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-slate-200 md:flex">
-              <img src="/esperanc.ico" alt="WIRA" className="h-7 w-7 object-contain" />
-            </div>
-
-            <div className="min-w-0">
-              <p className="truncate text-sm font-semibold text-slate-950">Coordenacao WIRA</p>
-              <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                <CalendarDays className="h-3.5 w-3.5" />
-                <span className="capitalize">{dateLabel}</span>
-              </div>
-            </div>
+            {showBreadcrumbs ? <Breadcrumbs className="hidden lg:flex" /> : null}
           </div>
 
           <div className="flex items-center gap-2">
@@ -125,11 +103,11 @@ export default function Header({ onMenuClick, className, showBreadcrumbs = true 
           </div>
         </div>
 
-        {showBreadcrumbs ? (
+        {/* {showBreadcrumbs ? (
           <div className="border-t border-slate-200/70 pt-3">
-            <Breadcrumbs />
+            <Breadcrumbs className="lg:hidden" />
           </div>
-        ) : null}
+        ) : null} */}
       </div>
     </header>
   )
