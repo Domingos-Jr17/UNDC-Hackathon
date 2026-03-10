@@ -1,0 +1,10 @@
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'UserRole') THEN
+    CREATE TYPE "UserRole" AS ENUM ('VICTIM', 'STAFF', 'ADMIN');
+  END IF;
+END $$;
+
+ALTER TABLE "User"
+  ALTER COLUMN "role" DROP DEFAULT,
+  ALTER COLUMN "role" TYPE "UserRole" USING "role"::"UserRole",
+  ALTER COLUMN "role" SET DEFAULT 'VICTIM';

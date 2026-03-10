@@ -45,13 +45,14 @@ cp .env.example .env
 
 Minimum variables required for local startup:
 - `DATABASE_URL` (PostgreSQL)
+- `DIRECT_URL` (PostgreSQL direct connection for migrations)
 - `JWT_SECRET`
 - `ENCRYPTION_KEY`
 
 ### 2.2 Initialize Database
 
 ```bash
-# Generate Prisma client, apply migrations, and seed data
+# Generate Prisma client, apply migrations (deploy), and seed data
 npm run setup:dev
 ```
 
@@ -229,7 +230,7 @@ sudo kill -9 <PID>
 # Recreate database
 cd wira-platform/backend
 rm -f data/wira.db
-npm run migrate
+npm run migrate:deploy
 npm run seed
 ```
 

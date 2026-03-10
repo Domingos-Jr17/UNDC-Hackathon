@@ -198,13 +198,15 @@ const generateDynamicOrigins = (port: number): string[] => {
     'http://localhost:5174',  // Vite alternative
     'http://localhost:5175',  // Additional Vite port
     'http://localhost:5176',  // Additional Vite port
+    'http://localhost:8081',  // React Native Web / Expo web dev server
     'http://127.0.0.1:3000',
     'http://127.0.0.1:3001',
     'http://127.0.0.1:3002',
     'http://127.0.0.1:5173',
     'http://127.0.0.1:5174',
     'http://127.0.0.1:5175',
-    'http://127.0.0.1:5176'
+    'http://127.0.0.1:5176',
+    'http://127.0.0.1:8081'
   ]
 
   // Allow additional ports from environment variable
@@ -220,9 +222,15 @@ const generateDynamicOrigins = (port: number): string[] => {
   return [...new Set(dynamicOrigins)] // Remove duplicates
 }
 
+const isLocalhostOrigin = (origin: string): boolean => {
+  return /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(origin)
+}
+
 // CORS configuration with dynamic port support
 export const corsOptions = {
   origin: function (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void): void {
+    const env = process.env.NODE_ENV ?? 'development'
+
     // Get current port from environment or default
     const currentPort = parseInt(process.env.PORT || '3000')
 
@@ -231,6 +239,11 @@ export const corsOptions = {
 
     // Allow requests with no origin (like mobile apps or curl)
     if (!origin) return callback(null, true)
+
+    // In development, allow any localhost origin (covers Expo / React Native web ports)
+    if (env !== 'production' && isLocalhostOrigin(origin)) {
+      return callback(null, true)
+    }
 
     if (allowedOrigins.indexOf(origin) !== -1) {
       callback(null, true)
