@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
-import { ActivityIndicator, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import { RouteProp } from '@react-navigation/native'
 import { RootStackParamList } from '../types/navigation'
@@ -13,6 +13,12 @@ type QuizScreenRouteProp = RouteProp<RootStackParamList, 'Quiz'>
 interface QuizScreenProps {
   route: QuizScreenRouteProp
   navigation: QuizScreenNavigationProp
+}
+
+interface QuizResult {
+  score: number
+  correct: number
+  passed: boolean
 }
 
 const PASSING_SCORE = 70
@@ -37,6 +43,7 @@ export default function QuizScreen({ route, navigation }: QuizScreenProps) {
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [hasSubmitted, setHasSubmitted] = useState(false)
+  const [result, setResult] = useState<QuizResult | null>(null)
 
   const loadQuiz = useCallback(async (): Promise<void> => {
     try {
@@ -50,6 +57,9 @@ export default function QuizScreen({ route, navigation }: QuizScreenProps) {
       setUserCode(storedUserCode)
       setQuestions(quiz)
       setAnswers(Array(quiz.length).fill(-1))
+      setResult(null)
+      setHasSubmitted(false)
+      setSubmitting(false)
     } catch (error) {
       showAlert('Erro', (error as Error).message)
     } finally {
@@ -72,8 +82,9 @@ export default function QuizScreen({ route, navigation }: QuizScreenProps) {
   }
 
   const persistProgress = async (score: number): Promise<void> => {
-    const [aggregated] = await Promise.all([
-      apiService.getAggregatedProgress(userCode)
+    const [aggregated, courseProgress] = await Promise.all([
+      apiService.getAggregatedProgress(userCode),
+      apiService.getCourseProgress(userCode, courseId).catch(() => null)
     ])
 
     const progressItem = aggregated.courses.find(item => item.courseId === courseId)
@@ -82,8 +93,15 @@ export default function QuizScreen({ route, navigation }: QuizScreenProps) {
 
     const modulesCount = progressItem?.modulesCount ?? completed.size
     const percentage = Math.min(100, Math.round((completed.size / modulesCount) * 100))
+    const completedNumbers = [...completed].map(value => Number(value)).filter(value => !Number.isNaN(value))
+    const currentModule = completedNumbers.length > 0 ? Math.max(...completedNumbers) : 1
+    const quizAttempts = (courseProgress?.quiz_attempts ?? 0) + 1
 
-    await apiService.updateProgress(userCode, courseId, [...completed], percentage)
+    await apiService.updateProgress(userCode, courseId, [...completed], percentage, {
+      currentModule,
+      quizAttempts,
+      lastQuizScore: score
+    })
 
     if (score >= PASSING_SCORE) {
       await apiService.generateCertificate(userCode, courseId, score)
@@ -111,39 +129,11 @@ export default function QuizScreen({ route, navigation }: QuizScreenProps) {
       setSubmitting(true)
       await persistProgress(score)
       setHasSubmitted(true)
-
-      if (score >= PASSING_SCORE) {
-        if (Platform.OS === 'web') {
-          navigation.navigate('Certificate', { courseId, score })
-          return
-        }
-
-        showAlert(
-          'Aprovada',
-          `Voce acertou ${correct} de ${questions.length} (${score}%). Certificado gerado.`,
-          [
-            {
-              text: 'Ver Certificado',
-              onPress: () => navigation.navigate('Certificate', { courseId, score })
-            },
-            {
-              text: 'Voltar',
-              onPress: () => navigation.goBack()
-            }
-          ]
-        )
-      } else {
-        if (Platform.OS === 'web') {
-          navigation.goBack()
-          return
-        }
-
-        showAlert(
-          'Continue estudando',
-          `Voce acertou ${correct} de ${questions.length} (${score}%). A nota minima e ${PASSING_SCORE}%.`,
-          [{ text: 'OK', onPress: () => navigation.goBack() }]
-        )
-      }
+      setResult({
+        score,
+        correct,
+        passed: score >= PASSING_SCORE
+      })
     } catch (error) {
       setHasSubmitted(false)
       showAlert('Erro ao finalizar quiz', (error as Error).message)
@@ -201,8 +191,9 @@ export default function QuizScreen({ route, navigation }: QuizScreenProps) {
             return (
               <TouchableOpacity
                 key={option}
-                style={[styles.optionButton, selected && styles.optionButtonSelected]}
+                style={[styles.optionButton, selected && styles.optionButtonSelected, hasSubmitted && styles.disabledButton]}
                 onPress={() => setAnswer(currentQuestion, index)}
+                disabled={hasSubmitted}
               >
                 <Text style={[styles.optionText, selected && styles.optionTextSelected]}>
                   {String.fromCharCode(65 + index)}. {option}
@@ -240,6 +231,56 @@ export default function QuizScreen({ route, navigation }: QuizScreenProps) {
             </TouchableOpacity>
           )}
         </View>
+
+        {result ? (
+          <View style={styles.resultCard}>
+            <Text style={styles.resultTitle}>
+              {result.passed ? 'Quiz Concluído' : 'Continue Estudando'}
+            </Text>
+            <Text style={styles.resultSubtitle}>
+              Voce acertou {result.correct} de {questions.length} ({result.score}%).
+            </Text>
+            <Text style={styles.resultSubtitle}>
+              Nota minima: {PASSING_SCORE}%.
+            </Text>
+
+            {questions.map((item, index) => {
+              const expected = normalizeAnswerIndex(item)
+              const selected = answers[index]
+              const isCorrect = selected === expected
+              return (
+                <View key={`${item.id}-${index}`} style={styles.explanationCard}>
+                  <Text style={styles.explanationQuestion}>
+                    {index + 1}. {item.question}
+                  </Text>
+                  <Text style={[styles.explanationMeta, isCorrect ? styles.correctText : styles.incorrectText]}>
+                    Sua resposta: {selected >= 0 ? `${String.fromCharCode(65 + selected)}. ${item.options[selected]}` : 'Não respondida'}
+                  </Text>
+                  <Text style={styles.explanationMeta}>
+                    Correta: {String.fromCharCode(65 + expected)}. {item.options[expected]}
+                  </Text>
+                  {item.explanation ? (
+                    <Text style={styles.explanationText}>Explicacao: {item.explanation}</Text>
+                  ) : null}
+                </View>
+              )
+            })}
+
+            <View style={styles.resultActions}>
+              {result.passed ? (
+                <TouchableOpacity
+                  style={styles.primaryButton}
+                  onPress={() => navigation.navigate('Certificate', { courseId, score: result.score })}
+                >
+                  <Text style={styles.primaryButtonText}>Ver Certificado</Text>
+                </TouchableOpacity>
+              ) : null}
+              <TouchableOpacity style={styles.secondaryButton} onPress={() => navigation.goBack()}>
+                <Text style={styles.secondaryButtonText}>Voltar</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        ) : null}
       </View>
     </ScrollView>
   )
@@ -323,6 +364,54 @@ const styles = StyleSheet.create({
     marginTop: 18,
     flexDirection: 'row',
     gap: 8
+  },
+  resultCard: {
+    marginTop: 16,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    padding: 16,
+    gap: 10
+  },
+  resultTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#1E3A8A'
+  },
+  resultSubtitle: {
+    fontSize: 13,
+    color: '#4B5563'
+  },
+  explanationCard: {
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    borderRadius: 10,
+    padding: 12,
+    marginTop: 8
+  },
+  explanationQuestion: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#111827',
+    marginBottom: 6
+  },
+  explanationMeta: {
+    fontSize: 12,
+    color: '#374151',
+    marginBottom: 4
+  },
+  explanationText: {
+    fontSize: 12,
+    color: '#6B7280'
+  },
+  correctText: {
+    color: '#16A34A'
+  },
+  incorrectText: {
+    color: '#DC2626'
+  },
+  resultActions: {
+    marginTop: 12,
+    gap: 10
   },
   primaryButton: {
     flex: 1,

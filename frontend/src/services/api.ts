@@ -245,6 +245,35 @@ class ApiService {
     }
   }
 
+  async downloadReport(endpoint: string, filename: string): Promise<void> {
+    const baseUrl = await this.resolveBaseUrl()
+    const headers: Record<string, string> = {}
+    const token = this.getToken()
+    if (token) {
+      headers.Authorization = `Bearer ${token}`
+    }
+
+    const response = await fetch(`${baseUrl}${endpoint}`, {
+      method: 'GET',
+      headers
+    })
+
+    if (!response.ok) {
+      const parsed = await this.parseResponse<ErrorPayload>(response).catch(() => ({}))
+      throw new ApiError(parsed.error ?? parsed.message ?? `HTTP ${response.status}`, response.status)
+    }
+
+    const blob = await response.blob()
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.setAttribute('download', filename)
+    document.body.appendChild(link)
+    link.click()
+    link.remove()
+    URL.revokeObjectURL(url)
+  }
+
   async authenticateUser(code: string): Promise<LoginPayload> {
     const payload = await this.request<LoginPayload>('/api/auth/login', {
       method: 'POST',

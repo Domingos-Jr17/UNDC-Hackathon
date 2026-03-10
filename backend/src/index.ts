@@ -45,6 +45,7 @@ import usersRoutes from './routes/users'
 import dashboardRoutes from './routes/dashboard'
 import jobsRoutes from './routes/jobs'
 import smsRoutes from './routes/sms'
+import reportsRoutes from './routes/reports'
 
 // Import middleware
 import {
@@ -120,6 +121,7 @@ app.use('/api/sms', authenticateToken, userRateLimit(), smsRoutes)
 app.use('/api/users', authenticateToken, userRateLimit(), usersRoutes)
 app.use('/api/dashboard', authenticateToken, userRateLimit(), dashboardRoutes)
 app.use('/api/jobs', authenticateToken, userRateLimit(), jobsRoutes)
+app.use('/api/reports', authenticateToken, userRateLimit(), reportsRoutes)
 
 // Enhanced health check endpoint
 app.get('/health', async (_req: express.Request, res: express.Response): Promise<void> => {
@@ -213,6 +215,10 @@ app.get('/api', (_req: express.Request, res: express.Response): void => {
       dashboard: {
         'GET /api/dashboard/stats': 'Estatísticas do dashboard ONG',
         'GET /api/dashboard/activity': 'Atividade recente'
+      },
+      reports: {
+        'GET /api/reports/users': 'Relatório de usuárias (xlsx/pdf)',
+        'GET /api/reports/activity': 'Relatório de atividade (xlsx/pdf)'
       },
       users: {
         'GET /api/users': 'Listar beneficiárias',

@@ -9,4 +9,5 @@ export type RootStackParamList = {
     Certificate: { courseId: string; score?: number };
     Jobs: undefined;
     Progress: undefined;
+    Support: undefined;
 };

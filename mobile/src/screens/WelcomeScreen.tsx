@@ -15,8 +15,7 @@ export default function WelcomeScreen({ navigation }: WelcomeScreenProps) {
     };
 
     const handleGetCode = () => {
-        // Simular registo (na real é via ONG)
-        alert('Para obter código, contacte sua ONG de apoio');
+        navigation.navigate('Support');
     };
 
     return (

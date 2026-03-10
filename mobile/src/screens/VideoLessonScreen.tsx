@@ -112,10 +112,12 @@ export default function VideoLessonScreen({ route, navigation }: VideoLessonScre
 
     const totalModules = progressItem?.modulesCount ?? Math.max(state.module.id, completed.size)
     const percentage = Math.min(100, Math.round((completed.size / totalModules) * 100))
+    const completedNumbers = [...completed].map(value => Number(value)).filter(value => !Number.isNaN(value))
+    const currentModule = completedNumbers.length > 0 ? Math.max(...completedNumbers) : 1
 
     try {
       setSubmitting(true)
-      await apiService.updateProgress(state.userCode, courseId, [...completed], percentage)
+      await apiService.updateProgress(state.userCode, courseId, [...completed], percentage, { currentModule })
       showAlert('Concluído', 'Módulo marcado como concluído com sucesso.', [
         { text: 'OK', onPress: () => navigation.goBack() }
       ])

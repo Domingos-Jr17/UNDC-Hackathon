@@ -95,11 +95,31 @@ class ProgressModel {
     return toProgress(row)
   }
 
-  static async updateProgress(userCode: string, courseId: string, moduleIds: string[], percentage: number): Promise<Progress> {
+  static async updateProgress(
+    userCode: string,
+    courseId: string,
+    moduleIds: string[],
+    percentage: number,
+    currentModule?: number,
+    quizAttempts?: number,
+    lastQuizScore?: number
+  ): Promise<Progress> {
     const completedModulesStr = JSON.stringify(moduleIds)
     const payload: Partial<Progress> = {
       completed_modules: completedModulesStr,
       percentage
+    }
+
+    if (currentModule !== undefined) {
+      payload.current_module = currentModule
+    }
+
+    if (quizAttempts !== undefined) {
+      payload.quiz_attempts = quizAttempts
+    }
+
+    if (lastQuizScore !== undefined) {
+      payload.last_quiz_score = lastQuizScore
     }
 
     if (percentage >= 100) {

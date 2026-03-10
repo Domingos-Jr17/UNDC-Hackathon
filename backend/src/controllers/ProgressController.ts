@@ -110,7 +110,7 @@ class ProgressController {
 
   static async updateProgress(req: AuthenticatedRequest, res: Response): Promise<void> {
     const { userCode, courseId } = req.params;
-    const { completedModules, percentage } = req.body;
+    const { completedModules, percentage, currentModule, quizAttempts, lastQuizScore } = req.body;
 
     if (!canAccessAnonymousCode(req.user, userCode)) {
       res.status(403).json({
@@ -121,7 +121,15 @@ class ProgressController {
     }
 
     try {
-      const progress = await ProgressModel.updateProgress(userCode, courseId, completedModules, percentage);
+      const progress = await ProgressModel.updateProgress(
+        userCode,
+        courseId,
+        completedModules,
+        percentage,
+        currentModule,
+        quizAttempts,
+        lastQuizScore
+      );
 
       res.json({
         success: true,

@@ -12,6 +12,7 @@ import QuizScreen from './src/screens/QuizScreen';
 import CertificateScreen from './src/screens/CertificateScreen';
 import JobsScreen from './src/screens/JobsScreen';
 import ProgressScreen from './src/screens/ProgressScreen';
+import SupportScreen from './src/screens/SupportScreen';
 import { RootStackParamList } from './src/types/navigation';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -68,6 +69,11 @@ function App() {
         <Stack.Screen
           name="Progress"
           component={ProgressScreen as any}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="Support"
+          component={SupportScreen as any}
           options={{ headerShown: false }}
         />
       </Stack.Navigator>

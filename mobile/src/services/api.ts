@@ -110,6 +110,19 @@ export interface AggregatedProgress {
   courses: ProgressCourse[]
 }
 
+export interface CourseProgress {
+  id: number
+  user_code: string
+  course_id: string
+  completed_modules: string
+  percentage: number
+  current_module: number
+  quiz_attempts: number
+  last_quiz_score?: number
+  last_activity: string
+  completed_at?: string
+}
+
 export interface CertificateRecord {
   id: string
   verificationCode: string
@@ -241,12 +254,33 @@ class ApiService {
     })
   }
 
-  async updateProgress(userCode: string, courseId: string, completedModules: string[], percentage: number): Promise<void> {
+  async getCourseProgress(userCode: string, courseId: string): Promise<CourseProgress> {
+    const response = await this.request<{ success: boolean; progress: CourseProgress }>(
+      `/api/progress/user/${userCode}/course/${courseId}`,
+      { method: 'GET' }
+    )
+    return response.progress
+  }
+
+  async updateProgress(
+    userCode: string,
+    courseId: string,
+    completedModules: string[],
+    percentage: number,
+    options?: {
+      currentModule?: number
+      quizAttempts?: number
+      lastQuizScore?: number
+    }
+  ): Promise<void> {
     await this.request<{ success: boolean }>(`/api/progress/user/${userCode}/course/${courseId}`, {
       method: 'PUT',
       body: JSON.stringify({
         completedModules,
-        percentage
+        percentage,
+        currentModule: options?.currentModule,
+        quizAttempts: options?.quizAttempts,
+        lastQuizScore: options?.lastQuizScore
       })
     })
   }
