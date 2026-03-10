@@ -14,7 +14,6 @@ import UserDetail from './components/UserDetail.tsx';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { AuthProvider } from './contexts/AuthContext';
 import { ErrorBoundary } from './components/ErrorBoundary';
-import { ApiStatusIndicator } from './components/ApiStatusIndicator';
 
 
 function App() {
@@ -24,9 +23,6 @@ function App() {
         <Router>
           <div className="min-h-screen bg-background">
             <Toaster position="top-right" />
-            <div className="pointer-events-none fixed bottom-4 right-4 z-50">
-              <ApiStatusIndicator />
-            </div>
             <Routes>
             <Route path="/" element={<StaffLoginPage />} />
             <Route path="/staff-login" element={<StaffLoginPage />} />

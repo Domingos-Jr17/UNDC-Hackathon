@@ -20,8 +20,8 @@ interface MetricCardProps {
 
 const toneStyles = {
   primary: {
-    card: 'border-sky-200/80 bg-gradient-to-br from-sky-50 via-white to-white',
-    icon: 'bg-sky-100 text-sky-700'
+    card: 'border-primary/15 bg-gradient-to-br from-primary/10 via-white to-white',
+    icon: 'bg-primary/10 text-primary'
   },
   success: {
     card: 'border-emerald-200/80 bg-gradient-to-br from-emerald-50 via-white to-white',

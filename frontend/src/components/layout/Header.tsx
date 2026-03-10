@@ -6,7 +6,6 @@ import {
   LogOut,
   Menu,
   Settings,
-  ShieldCheck,
   User,
   UserPlus
 } from 'lucide-react'
@@ -66,8 +65,8 @@ export default function Header({ onMenuClick, className }: HeaderProps) {
             <Menu className="h-5 w-5" />
           </Button>
 
-          <div className="hidden h-10 w-10 items-center justify-center rounded-2xl bg-primary/10 text-primary md:flex">
-            <ShieldCheck className="h-5 w-5" />
+          <div className="hidden h-10 w-10 items-center justify-center overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-slate-200 md:flex">
+            <img src="/esperanc.ico" alt="WIRA" className="h-7 w-7 object-contain" />
           </div>
 
           <div className="min-w-0">

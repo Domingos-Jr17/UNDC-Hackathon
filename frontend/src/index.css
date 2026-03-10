@@ -63,7 +63,7 @@ a:hover {
     --card-foreground: 214 47% 17%;
     --popover: 0 0% 100%;
     --popover-foreground: 214 47% 17%;
-    --primary: 204 79% 33%;
+    --primary: 224 64% 33%;
     --primary-foreground: 0 0% 100%;
     --secondary: 204 47% 95%;
     --secondary-foreground: 212 42% 21%;
@@ -75,8 +75,8 @@ a:hover {
     --destructive-foreground: 0 0% 100%;
     --border: 213 34% 86%;
     --input: 213 34% 86%;
-    --ring: 204 79% 33%;
-    --chart-1: 204 79% 33%;
+    --ring: 224 64% 33%;
+    --chart-1: 224 64% 33%;
     --chart-2: 157 58% 36%;
     --chart-3: 38 92% 52%;
     --chart-4: 347 77% 56%;

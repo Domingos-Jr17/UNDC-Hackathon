@@ -9,7 +9,6 @@ import { LoadingOverlay } from '@/components/ui/loading-overlay'
 import { useDashboardStats, useRecentActivity, useUsers } from '@/hooks/useApi'
 import {
   Activity,
-  AlertTriangle,
   ArrowRight,
   Award,
   Clock3,
@@ -78,8 +77,7 @@ function DashboardComponent() {
       activeUsers,
       inactiveUsers,
       priorityUsers,
-      activationRate,
-      attentionCount: inactiveUsers.length + priorityUsers.length
+      activationRate
     }
   }, [stats.activeUsers, stats.totalUsers, users])
 
@@ -107,60 +105,6 @@ function DashboardComponent() {
           <CardContent className="pt-6 text-rose-700">{error}</CardContent>
         </Card>
       ) : null}
-
-      <section className="grid gap-6 lg:grid-cols-[1.25fr_0.75fr]">
-        <Card className="overflow-hidden rounded-[32px] border-white/70 bg-blue-600 text-white shadow-2xl shadow-slate-900/10">
-          <CardContent className="flex h-full flex-col justify-between gap-6 p-8">
-            <div className="space-y-4">
-              <StatusBadge status={derived.attentionCount > 0 ? 'warning' : 'success'} className="w-fit border-0">
-                {derived.attentionCount > 0 ? `${derived.attentionCount} prioridades abertas` : 'Operação estável'}
-              </StatusBadge>
-              <div className="space-y-3">
-                <h2 className="max-w-2xl text-3xl font-semibold tracking-tight">
-                  {derived.inactiveUsers.length > 0
-                    ? `${derived.inactiveUsers.length} beneficiárias aguardam atenção imediata.`
-                    : 'A maior parte da base está ativa e em acompanhamento.'}
-                </h2>
-                <p className="max-w-2xl text-sm leading-7 text-slate-200 md:text-base">
-                  Use este painel para detetar casos parados, rever a atividade mais recente e decidir a próxima ação sem percorrer várias páginas.
-                </p>
-              </div>
-            </div>
-
-            <div className="flex flex-wrap gap-3">
-              <Button size="lg" className="rounded-2xl bg-white text-slate-950 hover:bg-slate-100" onClick={() => navigate('/active')}>
-                <UserPlus className="h-4 w-4" />
-                Iniciar ativação
-              </Button>
-              <Button size="lg" variant="outline" className="rounded-2xl border-white/30 bg-white/10 text-white hover:bg-white/15" onClick={() => navigate('/users')}>
-                <ArrowRight className="h-4 w-4" />
-                Ver beneficiárias
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="rounded-[32px] border-amber-200/80 bg-amber-50/80 shadow-sm">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-slate-950">
-              <AlertTriangle className="h-5 w-5 text-amber-600" />
-              Prioridades do dia
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="rounded-2xl bg-white p-4 shadow-sm">
-              <p className="text-sm font-medium text-slate-900">Beneficiárias inativas</p>
-              <p className="mt-1 text-3xl font-semibold text-slate-950">{derived.inactiveUsers.length}</p>
-              <p className="mt-2 text-sm text-muted-foreground">Reveja ativações em atraso e contas sem uso.</p>
-            </div>
-            <div className="rounded-2xl bg-white p-4 shadow-sm">
-              <p className="text-sm font-medium text-slate-900">Casos com risco de abandono</p>
-              <p className="mt-1 text-3xl font-semibold text-slate-950">{derived.priorityUsers.length}</p>
-              <p className="mt-2 text-sm text-muted-foreground">Sem atividade recente ou com progresso muito baixo.</p>
-            </div>
-          </CardContent>
-        </Card>
-      </section>
 
       <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
         <MetricCard

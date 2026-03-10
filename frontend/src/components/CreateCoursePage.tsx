@@ -207,10 +207,10 @@ export default function CreateCoursePage() {
           </Card>
 
           <div className="space-y-6">
-            <Card className="rounded-[32px] border-sky-200/80 bg-sky-50/80 shadow-sm">
+            <Card className="rounded-[32px] border-primary/15 bg-primary/5 shadow-sm">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-slate-950">
-                  <Sparkles className="h-5 w-5 text-sky-700" />
+                  <Sparkles className="h-5 w-5 text-primary" />
                   Antes de publicar
                 </CardTitle>
               </CardHeader>

@@ -30,7 +30,7 @@
       "package": "com.domingosjr.mobileapp"
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/esperanc.ico"
     },
     "plugins": [
       "expo-video"

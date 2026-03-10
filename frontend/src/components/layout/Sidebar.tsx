@@ -6,7 +6,6 @@ import {
   LayoutDashboard,
   Menu,
   Settings,
-  ShieldCheck,
   UserCheck,
   Users,
   X
@@ -126,7 +125,7 @@ export default function Sidebar({
           {!isCollapsed ? (
             <div className="min-w-0 flex-1">
               <div className="truncate font-medium">{item.label}</div>
-              <div className={cn('mt-1 text-xs', active ? 'text-blue-50/90' : 'text-slate-500')}>
+              <div className={cn('mt-1 text-xs', active ? 'text-white/80' : 'text-slate-500')}>
                 {item.description}
               </div>
             </div>
@@ -158,12 +157,12 @@ export default function Sidebar({
         <div className="border-b border-slate-200/80 px-4 py-5">
           <div className="flex items-start justify-between gap-3">
             <div className="flex items-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-lg shadow-primary/20">
-                <ShieldCheck className="h-5 w-5" />
+              <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-2xl bg-white shadow-lg shadow-primary/15 ring-1 ring-slate-200">
+                <img src="/esperanc.ico" alt="WIRA" className="h-8 w-8 object-contain" />
               </div>
               {!isCollapsed ? (
                 <div>
-                  <p className="text-sm font-semibold uppercase tracking-[0.18em] text-primary/70">WIRA</p>
+                 
                   <h2 className="text-lg font-semibold text-slate-950">Portal Operacional</h2>
                   <p className="text-xs text-muted-foreground">Acompanhe ativações, risco e progresso.</p>
                 </div>
@@ -201,19 +200,6 @@ export default function Sidebar({
             {!isCollapsed ? <p className="mb-3 px-2 text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Apoio</p> : null}
             <nav className="space-y-2">{renderItems(groupedItems.support)}</nav>
           </div>
-        </div>
-
-        <div className="border-t border-slate-200/80 px-4 py-4">
-          {!isCollapsed ? (
-            <div className="rounded-2xl border border-blue-100 bg-white px-4 py-3 shadow-sm">
-              <p className="text-sm font-semibold text-slate-900">Dados sensíveis protegidos</p>
-              <p className="mt-1 text-xs leading-5 text-muted-foreground">
-                Use este painel para agir sobre pendências reais, não apenas para consultar indicadores.
-              </p>
-            </div>
-          ) : (
-            <div className="mx-auto h-3 w-3 rounded-full bg-emerald-500" />
-          )}
         </div>
       </aside>
     </>
