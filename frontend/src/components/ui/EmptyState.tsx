@@ -1,19 +1,19 @@
-﻿import { LucideIcon } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { cn } from '@/lib/utils';
+﻿import { BarChart3, BookOpen, FileText, Search, Users } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { cn } from '@/lib/utils'
 
 interface EmptyStateProps {
-  icon: LucideIcon | React.ComponentType<{ className?: string }>;
-  title: string;
-  description?: string;
+  icon: React.ComponentType<{ className?: string }>
+  title: string
+  description?: string
   action?: {
-    label: string;
-    onClick: () => void;
-    variant?: 'default' | 'destructive' | 'outline' | 'secondary' | 'ghost' | 'link';
-  };
-  className?: string;
-  size?: 'sm' | 'md' | 'lg';
+    label: string
+    onClick: () => void
+    variant?: 'default' | 'destructive' | 'outline' | 'secondary' | 'ghost' | 'link'
+  }
+  className?: string
+  size?: 'sm' | 'md' | 'lg'
 }
 
 export default function EmptyState({
@@ -43,135 +43,94 @@ export default function EmptyState({
       description: 'text-lg',
       spacing: 'space-y-4'
     }
-  };
+  }
 
-  const config = sizeConfig[size];
+  const config = sizeConfig[size]
 
   return (
-    <Card className={cn("flex flex-col items-center justify-center text-center p-8", className)}>
-      <CardHeader className={cn("flex flex-col items-center", config.spacing)}>
-        <Icon className={cn("text-muted-foreground", config.icon)} />
+    <Card className={cn('rounded-3xl border border-dashed border-slate-300/90 bg-white/85 p-3 shadow-sm', className)}>
+      <CardHeader className={cn('flex flex-col items-center text-center', config.spacing)}>
+        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-100 text-slate-600">
+          <Icon className={cn(config.icon)} />
+        </div>
         <CardTitle className={cn(config.title)}>{title}</CardTitle>
-        {description && (
-          <CardDescription className={cn(config.description)}>
-            {description}
-          </CardDescription>
-        )}
+        {description ? (
+          <CardDescription className={cn('max-w-md', config.description)}>{description}</CardDescription>
+        ) : null}
       </CardHeader>
-      {action && (
-        <CardContent>
-          <Button
-            variant={action.variant || 'default'}
-            onClick={action.onClick}
-            className="min-w-[140px]"
-          >
+      {action ? (
+        <CardContent className="flex justify-center pt-0">
+          <Button variant={action.variant || 'default'} onClick={action.onClick} className="min-w-[160px]">
             {action.label}
           </Button>
         </CardContent>
-      )}
+      ) : null}
     </Card>
-  );
+  )
 }
 
-// User icon component
-const UsersIcon = ({ className }: { className?: string }) => (
-  <div className={`flex items-center justify-center h-12 w-12 rounded-full bg-muted ${className}`}>
-    <span className="text-2xl">👥</span>
-  </div>
-);
-
-// Predefined empty states for common use cases
 export const EmptyUsers = ({ onAdd }: { onAdd?: () => void }) => (
   <EmptyState
-    icon={UsersIcon}
-    title="Nenhum usuário encontrado"
-    description="Comece adicionando um novo usuário à plataforma."
+    icon={Users}
+    title="Nenhuma beneficiária encontrada"
+    description="A lista será preenchida assim que novas ativações forem concluídas ou quando filtros mais amplos forem aplicados."
     action={onAdd ? {
-      label: 'Adicionar Usuário',
+      label: 'Iniciar ativação',
       onClick: onAdd,
       variant: 'default'
     } : undefined}
   />
-);
-
-// Courses icon component
-const CoursesIcon = ({ className }: { className?: string }) => (
-  <div className={`flex items-center justify-center h-12 w-12 rounded-full bg-muted ${className}`}>
-    <span className="text-2xl">📚</span>
-  </div>
-);
+)
 
 export const EmptyCourses = ({ onAdd }: { onAdd?: () => void }) => (
   <EmptyState
-    icon={CoursesIcon}
+    icon={BookOpen}
     title="Nenhum curso disponível"
-    description="Adicione cursos profissionais para ajudar as sobreviventes."
+    description="Adicione cursos profissionais para que a equipa possa orientar novas jornadas de capacitação."
     action={onAdd ? {
-      label: 'Adicionar Curso',
+      label: 'Adicionar curso',
       onClick: onAdd,
       variant: 'default'
     } : undefined}
   />
-);
-
-// Reports icon component
-const ReportsIcon = ({ className }: { className?: string }) => (
-  <div className={`flex items-center justify-center h-12 w-12 rounded-full bg-muted ${className}`}>
-    <span className="text-2xl">📊</span>
-  </div>
-);
+)
 
 export const EmptyReports = ({ onGenerate }: { onGenerate?: () => void }) => (
   <EmptyState
-    icon={ReportsIcon}
+    icon={FileText}
     title="Nenhum relatório gerado"
-    description="Gere relatórios para analisar o progresso e impacto da plataforma."
+    description="Use filtros rápidos para preparar exportações e compartilhar indicadores com parceiros institucionais."
     action={onGenerate ? {
-      label: 'Gerar Relatório',
+      label: 'Gerar relatório',
       onClick: onGenerate,
       variant: 'default'
     } : undefined}
   />
-);
-
-// Search icon component
-const SearchIcon = ({ className }: { className?: string }) => (
-  <div className={`flex items-center justify-center h-12 w-12 rounded-full bg-muted ${className}`}>
-    <span className="text-2xl">🔍</span>
-  </div>
-);
+)
 
 export const EmptySearch = ({ query, onClear }: { query: string; onClear: () => void }) => (
   <EmptyState
-    icon={SearchIcon}
+    icon={Search}
     title={`Nenhum resultado para "${query}"`}
-    description="Tente ajustar sua busca ou limpar os filtros."
+    description="Ajuste a busca ou limpe filtros para voltar aos registros disponíveis."
     action={{
-      label: 'Limpar Busca',
+      label: 'Limpar busca',
       onClick: onClear,
       variant: 'outline'
     }}
     size="sm"
   />
-);
-
-// Progress icon component
-const ProgressIcon = ({ className }: { className?: string }) => (
-  <div className={`flex items-center justify-center h-12 w-12 rounded-full bg-muted ${className}`}>
-    <span className="text-2xl">📈</span>
-  </div>
-);
+)
 
 export const EmptyProgress = ({ onStart }: { onStart?: () => void }) => (
   <EmptyState
-    icon={ProgressIcon}
-    title="Acompanhamento de Progresso"
-    description="Monitore o progresso dos usuários nos cursos disponíveis."
+    icon={BarChart3}
+    title="Sem dados de progresso"
+    description="Assim que as beneficiárias iniciarem cursos, esta área exibirá evolução e riscos de abandono."
     action={onStart ? {
-      label: 'Começar Monitoramento',
+      label: 'Começar monitorização',
       onClick: onStart,
       variant: 'default'
     } : undefined}
   />
-);
-
+)

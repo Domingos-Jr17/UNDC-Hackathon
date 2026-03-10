@@ -1,4 +1,4 @@
-﻿import React, { useState, useMemo } from 'react';
+﻿import React, { useMemo, useState } from 'react'
 import {
   Table,
   TableBody,
@@ -6,55 +6,89 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
+} from '@/components/ui/table'
+import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { Badge } from '@/components/ui/badge';
+} from '@/components/ui/dropdown-menu'
+import { Badge } from '@/components/ui/badge'
 import {
   ChevronDownIcon,
   ChevronUpIcon,
   ChevronsUpDownIcon,
-  Search,
   Filter,
-  MoreHorizontal
-} from 'lucide-react';
-import { cn } from '@/lib/utils';
+  MoreHorizontal,
+  Search,
+} from 'lucide-react'
+import { cn } from '@/lib/utils'
 
 export interface Column<T> {
-  key: keyof T;
-  title: string;
-  sortable?: boolean;
-  filterable?: boolean;
-  width?: string;
-  render?: (value: any, row: T, index: number) => React.ReactNode;
-  filterOptions?: { value: string; label: string }[];
+  key: keyof T
+  title: string
+  sortable?: boolean
+  filterable?: boolean
+  width?: string
+  render?: (value: any, row: T, index: number) => React.ReactNode
+  filterOptions?: { value: string; label: string }[]
 }
 
-export type SortDirection = 'asc' | 'desc' | null;
+export type SortDirection = 'asc' | 'desc' | null
 
 interface DataTableProps<T> {
-  data: T[];
-  columns: Column<T>[];
-  loading?: boolean;
-  searchable?: boolean;
-  searchPlaceholder?: string;
-  pagination?: boolean;
-  pageSize?: number;
-  onRowClick?: (row: T, index: number) => void;
-  emptyMessage?: string;
-  className?: string;
+  data: T[]
+  columns: Column<T>[]
+  loading?: boolean
+  searchable?: boolean
+  searchPlaceholder?: string
+  pagination?: boolean
+  pageSize?: number
+  onRowClick?: (row: T, index: number) => void
+  emptyMessage?: string
+  className?: string
   actions?: {
-    label: string;
-    onClick: (row: T) => void;
-    variant?: 'default' | 'destructive' | 'outline' | 'secondary' | 'ghost' | 'link';
-    icon?: React.ComponentType<{ className?: string }>;
-  }[];
+    label: string
+    onClick: (row: T) => void
+    variant?: 'default' | 'destructive' | 'outline' | 'secondary' | 'ghost' | 'link'
+    icon?: React.ComponentType<{ className?: string }>
+  }[]
+}
+
+const normalizeValue = (value: unknown): string => {
+  if (value === null || value === undefined) return ''
+  return String(value).trim().toLowerCase()
+}
+
+const compareValues = (aVal: unknown, bVal: unknown): number => {
+  if (aVal === null || aVal === undefined) return 1
+  if (bVal === null || bVal === undefined) return -1
+
+  if (typeof aVal === 'number' && typeof bVal === 'number') {
+    return aVal - bVal
+  }
+
+  const aDate = new Date(String(aVal))
+  const bDate = new Date(String(bVal))
+  const aIsDate = !Number.isNaN(aDate.getTime())
+  const bIsDate = !Number.isNaN(bDate.getTime())
+
+  if (aIsDate && bIsDate) {
+    return aDate.getTime() - bDate.getTime()
+  }
+
+  const aNumber = Number(aVal)
+  const bNumber = Number(bVal)
+  const aIsNumber = !Number.isNaN(aNumber)
+  const bIsNumber = !Number.isNaN(bNumber)
+
+  if (aIsNumber && bIsNumber) {
+    return aNumber - bNumber
+  }
+
+  return String(aVal).localeCompare(String(bVal), 'pt')
 }
 
 function DataTableComponent<T extends Record<string, any>>({
@@ -62,127 +96,105 @@ function DataTableComponent<T extends Record<string, any>>({
   columns,
   loading = false,
   searchable = true,
-  searchPlaceholder = "Buscar...",
+  searchPlaceholder = 'Buscar...',
   pagination = true,
   pageSize = 10,
   onRowClick,
-  emptyMessage = "Nenhum registo encontrado",
+  emptyMessage = 'Nenhum registo encontrado',
   className,
   actions
 }: DataTableProps<T>) {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [sortColumn, setSortColumn] = useState<keyof T | null>(null);
-  const [sortDirection, setSortDirection] = useState<SortDirection>(null);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [filters, setFilters] = useState<Record<string, string>>({});
+  const [searchTerm, setSearchTerm] = useState('')
+  const [sortColumn, setSortColumn] = useState<keyof T | null>(null)
+  const [sortDirection, setSortDirection] = useState<SortDirection>(null)
+  const [currentPage, setCurrentPage] = useState(1)
+  const [filters, setFilters] = useState<Record<string, string>>({})
 
-  // Filter and sort data
   const filteredAndSortedData = useMemo(() => {
-    let result = [...data];
+    let result = [...data]
 
-    // Apply search
     if (searchTerm) {
+      const normalizedSearch = normalizeValue(searchTerm)
       result = result.filter(item =>
-        columns.some(column => {
-          const value = item[column.key];
-          return value?.toString().toLowerCase().includes(searchTerm.toLowerCase());
-        })
-      );
+        columns.some(column => normalizeValue(item[column.key]).includes(normalizedSearch))
+      )
     }
 
-    // Apply filters
     Object.entries(filters).forEach(([key, value]) => {
-      if (value) {
-        result = result.filter(item => {
-          const column = columns.find(col => col.key === key);
-          if (column?.filterOptions) {
-            const filterValue = item[key]?.toString().toLowerCase();
-            return filterValue === value.toLowerCase();
-          }
-          return item[key]?.toString().toLowerCase().includes(value.toLowerCase());
-        });
-      }
-    });
+      if (!value) return
+      result = result.filter(item => {
+        const rawValue = item[key]
+        return normalizeValue(rawValue) === normalizeValue(value) || normalizeValue(rawValue).includes(normalizeValue(value))
+      })
+    })
 
-    // Apply sorting
     if (sortColumn && sortDirection) {
       result.sort((a, b) => {
-        const aVal = a[sortColumn];
-        const bVal = b[sortColumn];
-
-        if (aVal === null || aVal === undefined) return 1;
-        if (bVal === null || bVal === undefined) return -1;
-
-        const comparison = aVal.toString().localeCompare(bVal.toString());
-        return sortDirection === 'asc' ? comparison : -comparison;
-      });
+        const comparison = compareValues(a[sortColumn], b[sortColumn])
+        return sortDirection === 'asc' ? comparison : -comparison
+      })
     }
 
-    return result;
-  }, [data, searchTerm, filters, sortColumn, sortDirection, columns]);
+    return result
+  }, [columns, data, filters, searchTerm, sortColumn, sortDirection])
 
-  // Pagination
   const paginatedData = useMemo(() => {
-    if (!pagination) return filteredAndSortedData;
+    if (!pagination) return filteredAndSortedData
 
-    const startIndex = (currentPage - 1) * pageSize;
-    const endIndex = startIndex + pageSize;
-    return filteredAndSortedData.slice(startIndex, endIndex);
-  }, [filteredAndSortedData, currentPage, pageSize, pagination]);
+    const startIndex = (currentPage - 1) * pageSize
+    const endIndex = startIndex + pageSize
+    return filteredAndSortedData.slice(startIndex, endIndex)
+  }, [currentPage, filteredAndSortedData, pageSize, pagination])
 
-  const totalPages = Math.ceil(filteredAndSortedData.length / pageSize);
+  const totalPages = Math.ceil(filteredAndSortedData.length / pageSize)
 
   const handleSort = (column: keyof T) => {
+    setCurrentPage(1)
     if (sortColumn === column) {
       if (sortDirection === 'asc') {
-        setSortDirection('desc');
+        setSortDirection('desc')
       } else if (sortDirection === 'desc') {
-        setSortColumn(null);
-        setSortDirection(null);
+        setSortColumn(null)
+        setSortDirection(null)
       } else {
-        setSortDirection('asc');
+        setSortDirection('asc')
       }
-    } else {
-      setSortColumn(column);
-      setSortDirection('asc');
+      return
     }
-  };
+
+    setSortColumn(column)
+    setSortDirection('asc')
+  }
 
   const handleFilter = (column: keyof T, value: string) => {
     setFilters(prev => ({
       ...prev,
       [column]: value
-    }));
-    setCurrentPage(1);
-  };
+    }))
+    setCurrentPage(1)
+  }
 
   const getSortIcon = (column: keyof T) => {
-    if (sortColumn !== column) {
-      return <ChevronsUpDownIcon className="h-4 w-4" />;
-    }
-    if (sortDirection === 'asc') {
-      return <ChevronUpIcon className="h-4 w-4" />;
-    }
-    if (sortDirection === 'desc') {
-      return <ChevronDownIcon className="h-4 w-4" />;
-    }
-    return <ChevronsUpDownIcon className="h-4 w-4" />;
-  };
+    if (sortColumn !== column) return <ChevronsUpDownIcon className="h-4 w-4" />
+    if (sortDirection === 'asc') return <ChevronUpIcon className="h-4 w-4" />
+    if (sortDirection === 'desc') return <ChevronDownIcon className="h-4 w-4" />
+    return <ChevronsUpDownIcon className="h-4 w-4" />
+  }
 
   if (loading) {
     return (
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <div className="h-8 w-64 bg-muted rounded animate-pulse" />
-          <div className="h-8 w-24 bg-muted rounded animate-pulse" />
+          <div className="h-8 w-64 animate-pulse rounded bg-muted" />
+          <div className="h-8 w-24 animate-pulse rounded bg-muted" />
         </div>
-        <div className="border rounded-lg">
+        <div className="overflow-hidden rounded-3xl border bg-white">
           <Table>
             <TableHeader>
               <TableRow>
                 {columns.map((column) => (
                   <TableHead key={String(column.key)} style={{ width: column.width }}>
-                    <div className="h-4 bg-muted rounded animate-pulse" />
+                    <div className="h-4 animate-pulse rounded bg-muted" />
                   </TableHead>
                 ))}
               </TableRow>
@@ -192,7 +204,7 @@ function DataTableComponent<T extends Record<string, any>>({
                 <TableRow key={index}>
                   {columns.map((column) => (
                     <TableCell key={String(column.key)}>
-                      <div className="h-4 bg-muted rounded animate-pulse" />
+                      <div className="h-4 animate-pulse rounded bg-muted" />
                     </TableCell>
                   ))}
                 </TableRow>
@@ -201,45 +213,45 @@ function DataTableComponent<T extends Record<string, any>>({
           </Table>
         </div>
       </div>
-    );
+    )
   }
 
   return (
-    <div className={cn("space-y-4", className)}>
-      {/* Search and Filters */}
-      {(searchable || columns.some(col => col.filterable)) && (
-        <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
-          {searchable && (
-            <div className="relative flex-1 max-w-sm">
+    <div className={cn('space-y-4', className)}>
+      {(searchable || columns.some(col => col.filterable)) ? (
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          {searchable ? (
+            <div className="relative w-full max-w-md">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 placeholder={searchPlaceholder}
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
+                onChange={(event) => {
+                  setSearchTerm(event.target.value)
+                  setCurrentPage(1)
+                }}
+                className="h-11 rounded-2xl border-white bg-white pl-10 shadow-sm"
               />
             </div>
-          )}
+          ) : null}
 
-          {columns.some(col => col.filterable) && (
-            <div className="flex gap-2">
+          {columns.some(col => col.filterable) ? (
+            <div className="flex flex-wrap gap-2">
               {columns.filter(col => col.filterable).map((column) => (
                 <DropdownMenu key={String(column.key)}>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="outline" size="sm" className="gap-2">
+                    <Button variant="outline" size="sm" className="gap-2 rounded-full bg-white">
                       <Filter className="h-4 w-4" />
                       {column.title}
-                      {filters[String(column.key)] && (
-                        <Badge variant="secondary" className="ml-1 h-5 w-5 p-0">
-                          •
+                      {filters[String(column.key)] ? (
+                        <Badge variant="secondary" className="ml-1 bg-primary/10 text-primary">
+                          Ativo
                         </Badge>
-                      )}
+                      ) : null}
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={() => handleFilter(column.key, '')}>
-                      Todos
-                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleFilter(column.key, '')}>Todos</DropdownMenuItem>
                     {column.filterOptions?.map((option) => (
                       <DropdownMenuItem
                         key={option.value}
@@ -252,103 +264,102 @@ function DataTableComponent<T extends Record<string, any>>({
                 </DropdownMenu>
               ))}
             </div>
-          )}
+          ) : null}
         </div>
-      )}
+      ) : null}
 
-      {/* Table */}
-      <div className="border rounded-lg">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              {columns.map((column) => (
-                <TableHead key={String(column.key)} style={{ width: column.width }}>
-                  {column.sortable ? (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-auto p-0 font-semibold"
-                      onClick={() => handleSort(column.key)}
-                    >
-                      {column.title}
-                      {getSortIcon(column.key)}
-                    </Button>
-                  ) : (
-                    <span className="font-semibold">{column.title}</span>
-                  )}
-                </TableHead>
-              ))}
-              {actions && <TableHead className="w-[70px]">Ações</TableHead>}
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {paginatedData.length === 0 ? (
+      <div className="overflow-hidden rounded-3xl border border-white/70 bg-white shadow-sm">
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader>
               <TableRow>
-                <TableCell colSpan={columns.length + (actions ? 1 : 0)} className="h-24 text-center">
-                  {emptyMessage}
-                </TableCell>
+                {columns.map((column) => (
+                  <TableHead key={String(column.key)} style={{ width: column.width }}>
+                    {column.sortable ? (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-auto p-0 font-semibold text-slate-700"
+                        onClick={() => handleSort(column.key)}
+                      >
+                        {column.title}
+                        {getSortIcon(column.key)}
+                      </Button>
+                    ) : (
+                      <span className="font-semibold text-slate-700">{column.title}</span>
+                    )}
+                  </TableHead>
+                ))}
+                {actions ? <TableHead className="w-[80px]">Ações</TableHead> : null}
               </TableRow>
-            ) : (
-              paginatedData.map((row, index) => (
-                <TableRow
-                  key={index}
-                  className={cn(
-                    onRowClick && "cursor-pointer hover:bg-muted/50"
-                  )}
-                  onClick={() => onRowClick?.(row, index)}
-                >
-                  {columns.map((column) => (
-                    <TableCell key={String(column.key)}>
-                      {column.render ? (
-                        column.render(row[column.key], row, index)
-                      ) : (
-                        row[column.key]
-                      )}
-                    </TableCell>
-                  ))}
-                  {actions && (
-                    <TableCell>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" className="h-8 w-8 p-0">
-                            <span className="sr-only">Abrir menu</span>
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          {actions.map((action, actionIndex) => (
-                            <DropdownMenuItem
-                              key={actionIndex}
-                              onClick={() => action.onClick(row)}
-                              className={cn(
-                                "cursor-pointer",
-                                action.variant === 'destructive' && "text-destructive"
-                              )}
-                            >
-                              {action.icon && <action.icon className="mr-2 h-4 w-4" />}
-                              {action.label}
-                            </DropdownMenuItem>
-                          ))}
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  )}
+            </TableHeader>
+            <TableBody>
+              {paginatedData.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={columns.length + (actions ? 1 : 0)} className="h-24 text-center text-muted-foreground">
+                    {emptyMessage}
+                  </TableCell>
                 </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
+              ) : (
+                paginatedData.map((row, index) => (
+                  <TableRow
+                    key={index}
+                    className={cn(onRowClick ? 'cursor-pointer hover:bg-slate-50' : undefined)}
+                    onClick={() => onRowClick?.(row, index)}
+                  >
+                    {columns.map((column) => (
+                      <TableCell key={String(column.key)}>
+                        {column.render ? column.render(row[column.key], row, index) : row[column.key]}
+                      </TableCell>
+                    ))}
+                    {actions ? (
+                      <TableCell>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              className="h-8 w-8 p-0"
+                              onClick={(event) => event.stopPropagation()}
+                            >
+                              <span className="sr-only">Abrir menu de ações</span>
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            {actions.map((action, actionIndex) => (
+                              <DropdownMenuItem
+                                key={actionIndex}
+                                onClick={(event) => {
+                                  event.stopPropagation()
+                                  action.onClick(row)
+                                }}
+                                className={cn(
+                                  'cursor-pointer',
+                                  action.variant === 'destructive' ? 'text-destructive' : undefined
+                                )}
+                              >
+                                {action.icon ? <action.icon className="mr-2 h-4 w-4" /> : null}
+                                {action.label}
+                              </DropdownMenuItem>
+                            ))}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    ) : null}
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </div>
       </div>
 
-      {/* Pagination */}
-      {pagination && totalPages > 1 && (
-        <div className="flex items-center justify-between">
-          <div className="text-sm text-muted-foreground">
-            Mostrando {(currentPage - 1) * pageSize + 1} a{' '}
-            {Math.min(currentPage * pageSize, filteredAndSortedData.length)} de{' '}
-            {filteredAndSortedData.length} registos
+      {pagination && totalPages > 1 ? (
+        <div className="flex flex-col gap-3 text-sm text-muted-foreground md:flex-row md:items-center md:justify-between">
+          <div>
+            Mostrando {(currentPage - 1) * pageSize + 1} a {Math.min(currentPage * pageSize, filteredAndSortedData.length)} de {filteredAndSortedData.length} registos
           </div>
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center gap-2">
             <Button
               variant="outline"
               size="sm"
@@ -357,30 +368,30 @@ function DataTableComponent<T extends Record<string, any>>({
             >
               Anterior
             </Button>
-            <div className="flex items-center space-x-1">
+            <div className="flex items-center gap-1">
               {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                let pageNumber;
+                let pageNumber
                 if (totalPages <= 5) {
-                  pageNumber = i + 1;
+                  pageNumber = i + 1
                 } else if (currentPage <= 3) {
-                  pageNumber = i + 1;
+                  pageNumber = i + 1
                 } else if (currentPage >= totalPages - 2) {
-                  pageNumber = totalPages - 4 + i;
+                  pageNumber = totalPages - 4 + i
                 } else {
-                  pageNumber = currentPage - 2 + i;
+                  pageNumber = currentPage - 2 + i
                 }
 
                 return (
                   <Button
                     key={pageNumber}
-                    variant={currentPage === pageNumber ? "default" : "outline"}
+                    variant={currentPage === pageNumber ? 'default' : 'outline'}
                     size="sm"
-                    className="w-8 h-8 p-0"
+                    className="h-8 w-8 p-0"
                     onClick={() => setCurrentPage(pageNumber)}
                   >
                     {pageNumber}
                   </Button>
-                );
+                )
               })}
             </div>
             <Button
@@ -393,11 +404,11 @@ function DataTableComponent<T extends Record<string, any>>({
             </Button>
           </div>
         </div>
-      )}
+      ) : null}
     </div>
-  );
+  )
 }
 
-const DataTable = React.memo(DataTableComponent) as typeof DataTableComponent;
+const DataTable = React.memo(DataTableComponent) as typeof DataTableComponent
 
-export default DataTable;
+export default DataTable

@@ -1,8 +1,13 @@
-import React from 'react'
-import { Linking, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+﻿import React, { useEffect, useMemo, useState } from 'react'
+import { ActivityIndicator, Linking, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import { SafeAreaView } from 'react-native-safe-area-context'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
+import { Ionicons } from '@expo/vector-icons'
+import AppShell from '../components/AppShell'
 import { RootStackParamList } from '../types/navigation'
+import sessionService from '../services/session'
 import { showAlert } from '../utils/alerts'
+import { colors, shadows } from '../theme'
 
 type SupportScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Support'>
 
@@ -11,18 +16,30 @@ interface SupportScreenProps {
 }
 
 const SUPPORT_PHONE = process.env.EXPO_PUBLIC_SUPPORT_PHONE ?? '+258840000000'
-const SUPPORT_MESSAGE = process.env.EXPO_PUBLIC_SUPPORT_MESSAGE ?? 'Ola, preciso de um codigo de acesso para a plataforma WIRA.'
+const SUPPORT_MESSAGE = process.env.EXPO_PUBLIC_SUPPORT_MESSAGE ?? 'Olá, preciso de apoio para obter um código de acesso para a plataforma WIRA.'
 
 const normalizePhone = (value: string): string => value.replace(/\D/g, '')
 
 export default function SupportScreen({ navigation }: SupportScreenProps) {
-  const phoneDigits = normalizePhone(SUPPORT_PHONE)
+  const [checkingSession, setCheckingSession] = useState(true)
+  const [hasSession, setHasSession] = useState(false)
+
+  useEffect(() => {
+    const load = async (): Promise<void> => {
+      const userCode = await sessionService.getUserCode()
+      setHasSession(!!userCode)
+      setCheckingSession(false)
+    }
+    void load()
+  }, [])
+
+  const phoneDigits = useMemo(() => normalizePhone(SUPPORT_PHONE), [])
   const whatsappUrl = phoneDigits ? `https://wa.me/${phoneDigits}?text=${encodeURIComponent(SUPPORT_MESSAGE)}` : ''
   const callUrl = phoneDigits ? `tel:${phoneDigits}` : ''
 
   const handleOpen = async (url: string): Promise<void> => {
     if (!url) {
-      showAlert('Contato indisponível', 'Configure o telefone de suporte no aplicativo.')
+      showAlert('Contacto indisponível', 'Configure o telefone de suporte no aplicativo.')
       return
     }
     try {
@@ -32,131 +49,210 @@ export default function SupportScreen({ navigation }: SupportScreenProps) {
     }
   }
 
-  return (
-    <ScrollView style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Text style={styles.backButton}>Voltar</Text>
-        </TouchableOpacity>
-        <Text style={styles.title}>Preciso de Codigo</Text>
+  if (checkingSession) {
+    return (
+      <View style={styles.loaderContainer}>
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
+    )
+  }
 
-      <View style={styles.content}>
-        <Text style={styles.subtitle}>
-          O codigo de acesso e fornecido pela ONG parceira. Se precisar de ajuda, entre em contato:
-        </Text>
+  const content = <SupportCards onWhatsApp={() => void handleOpen(whatsappUrl)} onCall={() => void handleOpen(callUrl)} />
 
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>WhatsApp</Text>
-          <Text style={styles.cardText}>Envie uma mensagem para nossa equipe.</Text>
-          <TouchableOpacity style={styles.primaryButton} onPress={() => void handleOpen(whatsappUrl)}>
-            <Text style={styles.primaryButtonText}>Abrir WhatsApp</Text>
-          </TouchableOpacity>
-        </View>
+  if (hasSession) {
+    return (
+      <AppShell
+        navigation={navigation}
+        activeRoute="Support"
+        title="Apoio e contacto"
+        subtitle="Peça ajuda rapidamente sempre que precisar de orientação, acesso ou esclarecimentos."
+      >
+        {content}
+      </AppShell>
+    )
+  }
 
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>Telefone</Text>
-          <Text style={styles.cardText}>Ligue diretamente para a ONG.</Text>
-          <TouchableOpacity style={styles.secondaryButton} onPress={() => void handleOpen(callUrl)}>
-            <Text style={styles.secondaryButtonText}>Ligar Agora</Text>
-          </TouchableOpacity>
-        </View>
-
-        <View style={styles.infoCard}>
-          <Text style={styles.infoTitle}>Numero de suporte</Text>
-          <Text style={styles.infoValue}>{SUPPORT_PHONE}</Text>
-          <Text style={styles.infoHint}>
-            Para alterar este numero, configure EXPO_PUBLIC_SUPPORT_PHONE.
+  return (
+    <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right', 'bottom']}>
+      <ScrollView style={styles.preloginContainer} contentContainerStyle={styles.preloginContent}>
+        <TouchableOpacity style={styles.preloginBack} onPress={() => navigation.goBack()}>
+          <Ionicons name="arrow-back" size={18} color={colors.primaryDark} />
+          <Text style={styles.preloginBackText}>Voltar</Text>
+        </TouchableOpacity>
+        <View style={styles.preloginHeader}>
+          <Text style={styles.preloginEyebrow}>Preciso de um código</Text>
+          <Text style={styles.preloginTitle}>A equipa parceira pode ajudar a ativar o seu acesso.</Text>
+          <Text style={styles.preloginSubtitle}>
+            Use os contactos abaixo para pedir apoio em segurança e esclarecer qualquer dúvida antes de entrar.
           </Text>
         </View>
+        {content}
+      </ScrollView>
+    </SafeAreaView>
+  )
+}
+
+function SupportCards({ onWhatsApp, onCall }: { onWhatsApp: () => void; onCall: () => void }) {
+  return (
+    <View style={styles.cardsWrap}>
+      <View style={styles.card}>
+        <View style={styles.cardIconWrap}>
+          <Ionicons name="logo-whatsapp" size={20} color={colors.primary} />
+        </View>
+        <Text style={styles.cardTitle}>WhatsApp</Text>
+        <Text style={styles.cardText}>Envie uma mensagem para a equipa e peça ajuda para obter o seu código.</Text>
+        <TouchableOpacity style={styles.primaryButton} onPress={onWhatsApp}>
+          <Text style={styles.primaryButtonText}>Abrir WhatsApp</Text>
+        </TouchableOpacity>
       </View>
-    </ScrollView>
+
+      <View style={styles.card}>
+        <View style={styles.cardIconWrap}>
+          <Ionicons name="call-outline" size={20} color={colors.primary} />
+        </View>
+        <Text style={styles.cardTitle}>Telefone</Text>
+        <Text style={styles.cardText}>Ligue diretamente para a ONG parceira se preferir contacto imediato.</Text>
+        <TouchableOpacity style={styles.secondaryButton} onPress={onCall}>
+          <Text style={styles.secondaryButtonText}>Ligar agora</Text>
+        </TouchableOpacity>
+      </View>
+
+      <View style={styles.infoCard}>
+        <Text style={styles.infoTitle}>Número de suporte</Text>
+        <Text style={styles.infoValue}>{SUPPORT_PHONE}</Text>
+        <Text style={styles.infoHint}>Pode atualizar este número através da variável EXPO_PUBLIC_SUPPORT_PHONE.</Text>
+      </View>
+    </View>
   )
 }
 
 const styles = StyleSheet.create({
-  container: {
+  loaderContainer: {
     flex: 1,
-    backgroundColor: '#F5F5F5'
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: colors.background
   },
-  header: {
-    backgroundColor: '#1E3A8A',
-    paddingTop: 56,
-    paddingHorizontal: 20,
-    paddingBottom: 18
+  safeArea: {
+    flex: 1,
+    backgroundColor: colors.background
   },
-  backButton: {
-    color: '#90CAF9',
-    marginBottom: 8,
-    fontSize: 15
+  preloginContainer: {
+    flex: 1,
+    backgroundColor: colors.background
   },
-  title: {
-    color: '#FFFFFF',
-    fontSize: 22,
+  preloginContent: {
+    padding: 20,
+    gap: 18
+  },
+  preloginBack: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 10
+  },
+  preloginBackText: {
+    color: colors.primaryDark,
+    fontSize: 15,
     fontWeight: '700'
   },
-  content: {
-    padding: 20,
+  preloginHeader: {
+    borderRadius: 28,
+    backgroundColor: colors.primary,
+    padding: 22,
+    gap: 10,
+    ...shadows.card
+  },
+  preloginEyebrow: {
+    color: '#CDE4F6',
+    fontSize: 12,
+    fontWeight: '800',
+    textTransform: 'uppercase',
+    letterSpacing: 1
+  },
+  preloginTitle: {
+    color: colors.textOnPrimary,
+    fontSize: 28,
+    fontWeight: '800',
+    lineHeight: 34
+  },
+  preloginSubtitle: {
+    color: '#DAECFA',
+    fontSize: 15,
+    lineHeight: 22
+  },
+  cardsWrap: {
     gap: 14
   },
-  subtitle: {
-    color: '#374151',
-    fontSize: 14,
-    lineHeight: 20
-  },
   card: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    padding: 16,
-    gap: 10
+    borderRadius: 26,
+    backgroundColor: colors.surface,
+    padding: 18,
+    borderWidth: 1,
+    borderColor: colors.border,
+    gap: 10,
+    ...shadows.card
+  },
+  cardIconWrap: {
+    width: 42,
+    height: 42,
+    borderRadius: 16,
+    backgroundColor: colors.primarySoft,
+    alignItems: 'center',
+    justifyContent: 'center'
   },
   cardTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#1E3A8A'
+    color: colors.text,
+    fontSize: 18,
+    fontWeight: '800'
   },
   cardText: {
-    fontSize: 13,
-    color: '#4B5563'
+    color: colors.textMuted,
+    fontSize: 14,
+    lineHeight: 21
   },
   primaryButton: {
-    backgroundColor: '#1E3A8A',
-    borderRadius: 8,
-    paddingVertical: 12,
+    borderRadius: 18,
+    backgroundColor: colors.primary,
+    paddingVertical: 14,
     alignItems: 'center'
   },
   primaryButtonText: {
-    color: '#FFFFFF',
-    fontWeight: '700'
+    color: colors.textOnPrimary,
+    fontSize: 15,
+    fontWeight: '800'
   },
   secondaryButton: {
-    backgroundColor: '#E5E7EB',
-    borderRadius: 8,
-    paddingVertical: 12,
+    borderRadius: 18,
+    backgroundColor: colors.surfaceMuted,
+    paddingVertical: 14,
     alignItems: 'center'
   },
   secondaryButtonText: {
-    color: '#111827',
-    fontWeight: '700'
+    color: colors.text,
+    fontSize: 15,
+    fontWeight: '800'
   },
   infoCard: {
-    backgroundColor: '#EEF2FF',
-    borderRadius: 12,
-    padding: 16,
-    gap: 6
+    borderRadius: 24,
+    backgroundColor: colors.accentSoft,
+    padding: 18,
+    gap: 6,
+    ...shadows.card
   },
   infoTitle: {
-    fontSize: 13,
-    color: '#1F2937',
-    fontWeight: '700'
+    color: colors.text,
+    fontSize: 14,
+    fontWeight: '800'
   },
   infoValue: {
-    fontSize: 16,
-    color: '#1E3A8A',
-    fontWeight: '700'
+    color: colors.primaryDark,
+    fontSize: 18,
+    fontWeight: '800'
   },
   infoHint: {
+    color: colors.textMuted,
     fontSize: 12,
-    color: '#4B5563'
+    lineHeight: 18
   }
 })

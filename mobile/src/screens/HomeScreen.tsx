@@ -1,11 +1,14 @@
-import React, { useCallback, useEffect, useState } from 'react'
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator } from 'react-native'
-import { NativeStackNavigationProp } from '@react-navigation/native-stack'
+﻿import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import { useFocusEffect } from '@react-navigation/native'
+import { NativeStackNavigationProp } from '@react-navigation/native-stack'
+import { Ionicons } from '@expo/vector-icons'
+import AppShell from '../components/AppShell'
 import { RootStackParamList } from '../types/navigation'
 import apiService, { AggregatedProgress, CertificateRecord, ProgressCourse } from '../services/api'
 import sessionService from '../services/session'
 import { showAlert } from '../utils/alerts'
+import { colors, shadows } from '../theme'
 
 type HomeScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Home'>
 
@@ -28,14 +31,20 @@ const emptyState: HomeState = {
 export default function HomeScreen({ navigation }: HomeScreenProps) {
   const [state, setState] = useState<HomeState>(emptyState)
   const [loading, setLoading] = useState(true)
+  const [refreshing, setRefreshing] = useState(false)
 
-  const loadHome = useCallback(async (): Promise<void> => {
-    setLoading(true)
+  const loadHome = useCallback(async (mode: 'initial' | 'refresh' = 'initial'): Promise<void> => {
+    if (mode === 'initial') {
+      setLoading(true)
+    } else {
+      setRefreshing(true)
+    }
+
     try {
       const userCode = await sessionService.getUserCode()
       if (!userCode) {
-        showAlert('Sessão expirada', 'Faça login novamente.')
-        navigation.navigate('Login')
+        showAlert('Sessão expirada', 'Faça login novamente para continuar.')
+        navigation.reset({ index: 0, routes: [{ name: 'Login' }] })
         return
       }
 
@@ -53,128 +62,144 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
       showAlert('Erro', (error as Error).message)
     } finally {
       setLoading(false)
+      setRefreshing(false)
     }
   }, [navigation])
 
   useEffect(() => {
-    void loadHome()
+    void loadHome('initial')
   }, [loadHome])
 
   useFocusEffect(
     useCallback(() => {
-      void loadHome()
-    }, [loadHome])
+      if (state.userCode) {
+        void loadHome('refresh')
+      }
+    }, [loadHome, state.userCode])
   )
 
   const currentCourse: ProgressCourse | undefined = state.progress?.courses.find(
     course => course.progress > 0 && course.progress < 100
   ) ?? state.progress?.courses[0]
 
-  const stats = {
+  const stats = useMemo(() => ({
     coursesCompleted: state.progress?.courses.filter(course => course.progress >= 100).length ?? 0,
     coursesInProgress: state.progress?.courses.filter(course => course.progress > 0 && course.progress < 100).length ?? 0,
     certificatesEarned: state.certificates.length,
     totalHours: Math.round((state.progress?.summary.averageProgress ?? 0) * 0.4)
-  }
+  }), [state.certificates.length, state.progress])
 
   if (loading) {
     return (
       <View style={styles.loaderContainer}>
-        <ActivityIndicator size="large" color="#1E3A8A" />
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     )
   }
 
   return (
-    <ScrollView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.welcomeText}>Olá, {state.userCode}!</Text>
-        <Text style={styles.subtitle}>Pronta para construir seu futuro?</Text>
-      </View>
-
-      <View style={styles.statsContainer}>
-        <View style={styles.statCard}>
-          <Text style={styles.statNumber}>{stats.coursesCompleted}</Text>
-          <Text style={styles.statLabel}>Cursos Concluídos</Text>
+    <AppShell
+      navigation={navigation}
+      activeRoute="Home"
+      headerVariant="hero"
+      title={`Olá, ${state.userCode}!`}
+      subtitle="Hoje o foco é retomar o próximo passo da sua jornada de aprendizagem."
+      refreshing={refreshing}
+      onRefresh={() => void loadHome('refresh')}
+    >
+      <View style={styles.recommendationCard}>
+        <View style={styles.recommendationHeader}>
+          <Text style={styles.sectionEyebrow}>Próximo passo</Text>
+          {currentCourse ? (
+            <View style={styles.progressBadge}>
+              <Text style={styles.progressBadgeText}>{currentCourse.progress}% concluído</Text>
+            </View>
+          ) : null}
         </View>
-
-        <View style={styles.statCard}>
-          <Text style={styles.statNumber}>{stats.coursesInProgress}</Text>
-          <Text style={styles.statLabel}>Em Progresso</Text>
-        </View>
-
-        <View style={styles.statCard}>
-          <Text style={styles.statNumber}>{stats.certificatesEarned}</Text>
-          <Text style={styles.statLabel}>Certificados</Text>
-        </View>
-
-        <View style={styles.statCard}>
-          <Text style={styles.statNumber}>{stats.totalHours}h</Text>
-          <Text style={styles.statLabel}>Horas Estudadas</Text>
-        </View>
-      </View>
-
-      <View style={styles.currentCourseContainer}>
-        <Text style={styles.sectionTitle}>Continue Aprendendo</Text>
 
         {currentCourse ? (
           <>
-            <View style={styles.courseCard}>
-              <Text style={styles.courseTitle}>{currentCourse.title}</Text>
-              <Text style={styles.courseSubtitle}>
-                Módulo {currentCourse.currentModule} de {currentCourse.modulesCount} • {currentCourse.progress}% completo
-              </Text>
-
-              <View style={styles.progressBar}>
-                <View style={[styles.progressFill, { width: `${currentCourse.progress}%` }]} />
-              </View>
+            <Text style={styles.recommendationTitle}>{currentCourse.title}</Text>
+            <Text style={styles.recommendationText}>
+              Continue no módulo {currentCourse.currentModule} de {currentCourse.modulesCount}. Cada sessão concluída aproxima-a do certificado final.
+            </Text>
+            <View style={styles.progressTrack}>
+              <View style={[styles.progressFill, { width: `${currentCourse.progress}%` }]} />
             </View>
-
             <TouchableOpacity
-              style={styles.continueButton}
+              style={styles.primaryAction}
               onPress={() => navigation.navigate('CourseDetail', { courseId: currentCourse.courseId })}
             >
-              <Text style={styles.continueButtonText}>Continuar Curso →</Text>
+              <Ionicons name="play-circle-outline" size={20} color={colors.textOnPrimary} />
+              <Text style={styles.primaryActionText}>Continuar aprendizagem</Text>
             </TouchableOpacity>
           </>
         ) : (
-          <View style={styles.emptyCard}>
-            <Text style={styles.emptyText}>Sem cursos ativos no momento.</Text>
-          </View>
+          <>
+            <Text style={styles.recommendationTitle}>Escolha o seu primeiro curso</Text>
+            <Text style={styles.recommendationText}>
+              Explore a biblioteca e inicie uma jornada de capacitação profissional ao seu ritmo.
+            </Text>
+            <TouchableOpacity style={styles.primaryAction} onPress={() => navigation.navigate('CourseLibrary')}>
+              <Ionicons name="book-outline" size={20} color={colors.textOnPrimary} />
+              <Text style={styles.primaryActionText}>Ver cursos disponíveis</Text>
+            </TouchableOpacity>
+          </>
         )}
       </View>
 
-      <View style={styles.quickActionsContainer}>
-        <Text style={styles.sectionTitle}>Ações Rápidas</Text>
-
-        <TouchableOpacity style={styles.actionButton} onPress={() => navigation.navigate('CourseLibrary')}>
-          <Text style={styles.actionIcon}>📚</Text>
-          <Text style={styles.actionText}>Biblioteca de Cursos</Text>
-          <Text style={styles.actionArrow}>›</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.actionButton}
-          onPress={() => navigation.navigate('Certificate', { courseId: currentCourse?.courseId ?? 'costura' })}
-        >
-          <Text style={styles.actionIcon}>🏆</Text>
-          <Text style={styles.actionText}>Meus Certificados</Text>
-          <Text style={styles.actionArrow}>›</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.actionButton} onPress={() => navigation.navigate('Jobs')}>
-          <Text style={styles.actionIcon}>💼</Text>
-          <Text style={styles.actionText}>Vagas Compatíveis</Text>
-          <Text style={styles.actionArrow}>›</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.actionButton} onPress={() => navigation.navigate('Progress')}>
-          <Text style={styles.actionIcon}>📈</Text>
-          <Text style={styles.actionText}>Meu Progresso</Text>
-          <Text style={styles.actionArrow}>›</Text>
-        </TouchableOpacity>
+      <View style={styles.statsGrid}>
+        <StatCard label="Concluídos" value={stats.coursesCompleted} icon="checkmark-circle" />
+        <StatCard label="Em curso" value={stats.coursesInProgress} icon="sparkles" />
+        <StatCard label="Certificados" value={stats.certificatesEarned} icon="ribbon" />
+        <StatCard label="Horas" value={`${stats.totalHours}h`} icon="time" />
       </View>
-    </ScrollView>
+
+      <View style={styles.sectionCard}>
+        <Text style={styles.sectionTitle}>Atalhos úteis</Text>
+        <View style={styles.quickActions}>
+          <QuickAction
+            icon="ribbon-outline"
+            title="Os meus certificados"
+            subtitle="Veja certificados emitidos e validações."
+            onPress={() => navigation.navigate('Certificate', { courseId: currentCourse?.courseId ?? 'costura' })}
+          />
+          <QuickAction
+            icon="chatbubble-ellipses-outline"
+            title="Falar com apoio"
+            subtitle="Peça ajuda se tiver dúvidas sobre acesso ou percurso."
+            onPress={() => navigation.navigate('Support')}
+          />
+        </View>
+      </View>
+    </AppShell>
+  )
+}
+
+function StatCard({ label, value, icon }: { label: string; value: string | number; icon: keyof typeof Ionicons.glyphMap }) {
+  return (
+    <View style={styles.statCard}>
+      <View style={styles.statIconWrap}>
+        <Ionicons name={icon} size={18} color={colors.primary} />
+      </View>
+      <Text style={styles.statValue}>{value}</Text>
+      <Text style={styles.statLabel}>{label}</Text>
+    </View>
+  )
+}
+
+function QuickAction({ title, subtitle, icon, onPress }: { title: string; subtitle: string; icon: keyof typeof Ionicons.glyphMap; onPress: () => void }) {
+  return (
+    <TouchableOpacity style={styles.quickActionCard} onPress={onPress}>
+      <View style={styles.quickActionIconWrap}>
+        <Ionicons name={icon} size={20} color={colors.primary} />
+      </View>
+      <View style={styles.quickActionCopy}>
+        <Text style={styles.quickActionTitle}>{title}</Text>
+        <Text style={styles.quickActionSubtitle}>{subtitle}</Text>
+      </View>
+      <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
+    </TouchableOpacity>
   )
 }
 
@@ -183,134 +208,156 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#F5F5F5'
+    backgroundColor: colors.background
   },
-  container: {
-    flex: 1,
-    backgroundColor: '#F5F5F5'
-  },
-  header: {
-    backgroundColor: '#1E3A8A',
+  recommendationCard: {
+    borderRadius: 28,
+    backgroundColor: colors.surface,
     padding: 20,
-    paddingTop: 60,
-    paddingBottom: 30
+    borderWidth: 1,
+    borderColor: colors.border,
+    gap: 12,
+    ...shadows.card
   },
-  welcomeText: {
-    color: '#FFFFFF',
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 4
-  },
-  subtitle: {
-    color: '#90CAF9',
-    fontSize: 16
-  },
-  statsContainer: {
+  recommendationHeader: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
+    alignItems: 'center',
     justifyContent: 'space-between',
-    padding: 20,
-    backgroundColor: '#FFFFFF'
+    gap: 12
   },
-  statCard: {
-    width: '48%',
-    backgroundColor: '#F8F9FA',
-    padding: 16,
-    borderRadius: 8,
-    marginBottom: 12,
-    alignItems: 'center'
-  },
-  statNumber: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#1E3A8A',
-    marginBottom: 4
-  },
-  statLabel: {
+  sectionEyebrow: {
+    color: colors.primary,
     fontSize: 12,
-    color: '#666666',
-    textAlign: 'center'
+    fontWeight: '800',
+    letterSpacing: 1,
+    textTransform: 'uppercase'
   },
-  currentCourseContainer: {
-    padding: 20
+  progressBadge: {
+    borderRadius: 999,
+    backgroundColor: colors.primarySoft,
+    paddingHorizontal: 10,
+    paddingVertical: 6
   },
-  sectionTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#1E3A8A',
-    marginBottom: 16
+  progressBadgeText: {
+    color: colors.primary,
+    fontSize: 12,
+    fontWeight: '700'
   },
-  courseCard: {
-    backgroundColor: '#FFFFFF',
-    padding: 20,
-    borderRadius: 12,
-    marginBottom: 16
+  recommendationTitle: {
+    color: colors.text,
+    fontSize: 24,
+    fontWeight: '800'
   },
-  emptyCard: {
-    backgroundColor: '#FFFFFF',
-    padding: 20,
-    borderRadius: 12
-  },
-  emptyText: {
-    color: '#666666',
-    fontSize: 14
-  },
-  courseTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#1E3A8A',
-    marginBottom: 8
-  },
-  courseSubtitle: {
+  recommendationText: {
+    color: colors.textMuted,
     fontSize: 14,
-    color: '#666666',
-    marginBottom: 12
+    lineHeight: 21
   },
-  progressBar: {
-    height: 8,
-    backgroundColor: '#E3F2FD',
-    borderRadius: 4,
-    marginBottom: 8
+  progressTrack: {
+    height: 10,
+    borderRadius: 999,
+    backgroundColor: colors.surfaceMuted,
+    overflow: 'hidden'
   },
   progressFill: {
     height: '100%',
-    backgroundColor: '#1E3A8A',
-    borderRadius: 4
+    borderRadius: 999,
+    backgroundColor: colors.primary
   },
-  continueButton: {
-    backgroundColor: '#1E3A8A',
-    paddingVertical: 16,
-    borderRadius: 8,
-    alignItems: 'center'
-  },
-  continueButtonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: 'bold'
-  },
-  quickActionsContainer: {
-    padding: 20
-  },
-  actionButton: {
-    backgroundColor: '#FFFFFF',
+  primaryAction: {
+    marginTop: 6,
+    borderRadius: 18,
+    backgroundColor: colors.primary,
+    paddingVertical: 15,
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8
+  },
+  primaryActionText: {
+    color: colors.textOnPrimary,
+    fontSize: 15,
+    fontWeight: '800'
+  },
+  statsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    gap: 12
+  },
+  statCard: {
+    width: '48%',
+    borderRadius: 22,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
     padding: 16,
-    borderRadius: 8,
-    marginBottom: 12
+    ...shadows.card
   },
-  actionIcon: {
+  statIconWrap: {
+    width: 36,
+    height: 36,
+    borderRadius: 14,
+    backgroundColor: colors.primarySoft,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 10
+  },
+  statValue: {
+    color: colors.text,
+    fontSize: 24,
+    fontWeight: '800'
+  },
+  statLabel: {
+    color: colors.textMuted,
+    fontSize: 13,
+    marginTop: 4
+  },
+  sectionCard: {
+    borderRadius: 28,
+    backgroundColor: colors.surface,
+    padding: 20,
+    borderWidth: 1,
+    borderColor: colors.border,
+    gap: 14,
+    ...shadows.card
+  },
+  sectionTitle: {
+    color: colors.text,
     fontSize: 20,
-    marginRight: 12
+    fontWeight: '800'
   },
-  actionText: {
+  quickActions: {
+    gap: 12
+  },
+  quickActionCard: {
+    borderRadius: 22,
+    backgroundColor: colors.surfaceMuted,
+    padding: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14
+  },
+  quickActionIconWrap: {
+    width: 40,
+    height: 40,
+    borderRadius: 16,
+    backgroundColor: colors.surface,
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  quickActionCopy: {
     flex: 1,
-    fontSize: 16,
-    color: '#1E3A8A',
-    fontWeight: '500'
+    gap: 3
   },
-  actionArrow: {
-    fontSize: 18,
-    color: '#90CAF9'
+  quickActionTitle: {
+    color: colors.text,
+    fontSize: 15,
+    fontWeight: '800'
+  },
+  quickActionSubtitle: {
+    color: colors.textMuted,
+    fontSize: 13,
+    lineHeight: 18
   }
 })

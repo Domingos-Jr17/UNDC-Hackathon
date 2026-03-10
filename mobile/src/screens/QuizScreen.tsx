@@ -246,18 +246,20 @@ export default function QuizScreen({ route, navigation }: QuizScreenProps) {
 
             {questions.map((item, index) => {
               const expected = normalizeAnswerIndex(item)
-              const selected = answers[index]
+              const selected = answers[index] ?? -1
               const isCorrect = selected === expected
+              const selectedOption = selected >= 0 && selected < item.options.length ? item.options[selected] : undefined
+              const expectedOption = item.options[expected] ?? ''
               return (
                 <View key={`${item.id}-${index}`} style={styles.explanationCard}>
                   <Text style={styles.explanationQuestion}>
                     {index + 1}. {item.question}
                   </Text>
                   <Text style={[styles.explanationMeta, isCorrect ? styles.correctText : styles.incorrectText]}>
-                    Sua resposta: {selected >= 0 ? `${String.fromCharCode(65 + selected)}. ${item.options[selected]}` : 'Não respondida'}
+                    Sua resposta: {selectedOption ? `${String.fromCharCode(65 + selected)}. ${selectedOption}` : 'Não respondida'}
                   </Text>
                   <Text style={styles.explanationMeta}>
-                    Correta: {String.fromCharCode(65 + expected)}. {item.options[expected]}
+                    Correta: {String.fromCharCode(65 + expected)}. {expectedOption}
                   </Text>
                   {item.explanation ? (
                     <Text style={styles.explanationText}>Explicacao: {item.explanation}</Text>

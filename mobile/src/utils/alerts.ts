@@ -14,14 +14,20 @@ export const showAlert = (title: string, message?: string, buttons?: AlertButton
       return
     }
 
+    const firstButton = buttons[0]
+    if (!firstButton) {
+      window.alert(`${title}${safeMessage}`)
+      return
+    }
+
     if (buttons.length === 1) {
       window.alert(`${title}${safeMessage}`)
-      buttons[0].onPress?.()
+      firstButton.onPress?.()
       return
     }
 
     const confirmed = window.confirm(`${title}${safeMessage}`)
-    const primary = buttons[0]
+    const primary = firstButton
     const secondary = buttons[1]
     if (confirmed) {
       primary.onPress?.()

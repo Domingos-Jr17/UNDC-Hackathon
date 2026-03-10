@@ -1,19 +1,14 @@
-import React, { useCallback, useEffect, useState } from 'react'
-import {
-  View,
-  Text,
-  ScrollView,
-  StyleSheet,
-  TouchableOpacity,
-  RefreshControl,
-  ActivityIndicator
-} from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
+﻿import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import { Ionicons } from '@expo/vector-icons'
 import { useNavigation } from '@react-navigation/native'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
+import AppShell from '../components/AppShell'
 import { RootStackParamList } from '../types/navigation'
 import apiService, { AggregatedProgress } from '../services/api'
 import sessionService from '../services/session'
+import { showAlert } from '../utils/alerts'
+import { colors, shadows } from '../theme'
 
 export default function ProgressScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>()
@@ -21,81 +16,86 @@ export default function ProgressScreen() {
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
 
-  const loadProgress = useCallback(async (): Promise<void> => {
-    const userCode = await sessionService.getUserCode()
-    if (!userCode) {
-      navigation.navigate('Login')
-      return
+  const loadProgress = useCallback(async (mode: 'initial' | 'refresh' = 'initial'): Promise<void> => {
+    if (mode === 'initial') {
+      setLoading(true)
+    } else {
+      setRefreshing(true)
     }
 
-    const aggregated = await apiService.getAggregatedProgress(userCode)
-    setProgress(aggregated)
+    try {
+      const userCode = await sessionService.getUserCode()
+      if (!userCode) {
+        navigation.reset({ index: 0, routes: [{ name: 'Login' }] })
+        return
+      }
+
+      const aggregated = await apiService.getAggregatedProgress(userCode)
+      setProgress(aggregated)
+    } catch (error) {
+      showAlert('Erro', (error as Error).message)
+    } finally {
+      setLoading(false)
+      setRefreshing(false)
+    }
   }, [navigation])
 
   useEffect(() => {
-    const run = async (): Promise<void> => {
-      try {
-        setLoading(true)
-        await loadProgress()
-      } finally {
-        setLoading(false)
-      }
-    }
-    void run()
+    void loadProgress('initial')
   }, [loadProgress])
 
-  const onRefresh = useCallback(() => {
-    const run = async (): Promise<void> => {
-      try {
-        setRefreshing(true)
-        await loadProgress()
-      } finally {
-        setRefreshing(false)
-      }
-    }
-    void run()
-  }, [loadProgress])
+  const nextCourse = useMemo(
+    () => progress?.courses.find(course => course.progress > 0 && course.progress < 100),
+    [progress]
+  )
 
   if (loading) {
     return (
       <View style={styles.loaderContainer}>
-        <ActivityIndicator size="large" color="#1E3A8A" />
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     )
   }
 
   return (
-    <SafeAreaView style={styles.container}>
-      <ScrollView
-        style={styles.scrollView}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
-      >
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => navigation.goBack()}>
-            <Text style={styles.backButton}>←</Text>
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>Meu Progresso</Text>
-          <View style={styles.placeholder} />
-        </View>
+    <AppShell
+      navigation={navigation}
+      activeRoute="Progress"
+      title="O seu progresso"
+      subtitle="Veja o que já avançou e qual curso merece a sua atenção agora."
+      refreshing={refreshing}
+      onRefresh={() => void loadProgress('refresh')}
+    >
+      {nextCourse ? (
+        <TouchableOpacity
+          style={styles.recommendationCard}
+          onPress={() => navigation.navigate('CourseDetail', { courseId: nextCourse.courseId })}
+        >
+          <View style={styles.recommendationIconWrap}>
+            <Ionicons name="trending-up-outline" size={20} color={colors.primary} />
+          </View>
+          <View style={styles.recommendationCopy}>
+            <Text style={styles.recommendationTitle}>Melhor próximo passo</Text>
+            <Text style={styles.recommendationText}>
+              Retome {nextCourse.title}: está em {nextCourse.progress}% e no módulo {nextCourse.currentModule}.
+            </Text>
+          </View>
+          <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
+        </TouchableOpacity>
+      ) : null}
 
-        <View style={styles.statsContainer}>
-          <View style={styles.statCard}>
-            <Text style={styles.statNumber}>{progress?.summary.totalCourses ?? 0}</Text>
-            <Text style={styles.statLabel}>Cursos</Text>
-          </View>
-          <View style={styles.statCard}>
-            <Text style={styles.statNumber}>{progress?.summary.activeCourses ?? 0}</Text>
-            <Text style={styles.statLabel}>Ativos</Text>
-          </View>
-          <View style={styles.statCard}>
-            <Text style={styles.statNumber}>{progress?.summary.averageProgress ?? 0}%</Text>
-            <Text style={styles.statLabel}>Média</Text>
-          </View>
-        </View>
+      <View style={styles.statsRow}>
+        <ProgressStat label="Cursos" value={progress?.summary.totalCourses ?? 0} />
+        <ProgressStat label="Ativos" value={progress?.summary.activeCourses ?? 0} />
+        <ProgressStat label="Média" value={`${progress?.summary.averageProgress ?? 0}%`} />
+      </View>
 
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Detalhes por Curso</Text>
-          {(progress?.courses ?? []).map(course => (
+      <View style={styles.sectionCard}>
+        <Text style={styles.sectionTitle}>Detalhes por curso</Text>
+        {(progress?.courses ?? []).length === 0 ? (
+          <Text style={styles.emptyText}>Ainda não há cursos em progresso. Explore a biblioteca para começar.</Text>
+        ) : (
+          (progress?.courses ?? []).map(course => (
             <TouchableOpacity
               key={course.courseId}
               style={styles.courseCard}
@@ -110,20 +110,25 @@ export default function ProgressScreen() {
                 <View style={[styles.progressFill, { width: `${course.progress}%` }]} />
               </View>
 
+              <Text style={styles.courseMeta}>Módulo atual: {course.currentModule}/{course.modulesCount}</Text>
+              <Text style={styles.courseMeta}>Módulos concluídos: {course.completedModules.length}</Text>
               <Text style={styles.courseMeta}>
-                Módulo atual: {course.currentModule}/{course.modulesCount}
-              </Text>
-              <Text style={styles.courseMeta}>
-                Módulos concluídos: {course.completedModules.length}
-              </Text>
-              <Text style={styles.courseMeta}>
-                Última atividade: {course.lastActivity ? new Date(course.lastActivity).toLocaleDateString() : 'Sem atividade'}
+                Última atividade: {course.lastActivity ? new Date(course.lastActivity).toLocaleDateString('pt-PT') : 'Sem atividade'}
               </Text>
             </TouchableOpacity>
-          ))}
-        </View>
-      </ScrollView>
-    </SafeAreaView>
+          ))
+        )}
+      </View>
+    </AppShell>
+  )
+}
+
+function ProgressStat({ label, value }: { label: string; value: string | number }) {
+  return (
+    <View style={styles.statCard}>
+      <Text style={styles.statValue}>{value}</Text>
+      <Text style={styles.statLabel}>{label}</Text>
+    </View>
   )
 }
 
@@ -132,106 +137,121 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#F9FAFB'
+    backgroundColor: colors.background
   },
-  container: {
-    flex: 1,
-    backgroundColor: '#F9FAFB'
-  },
-  scrollView: {
-    flex: 1
-  },
-  header: {
+  recommendationCard: {
+    borderRadius: 24,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    padding: 18,
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    backgroundColor: '#FFFFFF',
-    borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB'
+    gap: 14,
+    ...shadows.card
   },
-  backButton: {
-    fontSize: 24,
-    color: '#374151'
+  recommendationIconWrap: {
+    width: 42,
+    height: 42,
+    borderRadius: 16,
+    backgroundColor: colors.primarySoft,
+    alignItems: 'center',
+    justifyContent: 'center'
   },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#111827'
+  recommendationCopy: {
+    flex: 1,
+    gap: 4
   },
-  placeholder: {
-    width: 24
+  recommendationTitle: {
+    color: colors.text,
+    fontSize: 16,
+    fontWeight: '800'
   },
-  statsContainer: {
+  recommendationText: {
+    color: colors.textMuted,
+    fontSize: 13,
+    lineHeight: 19
+  },
+  statsRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    padding: 20,
     gap: 12
   },
   statCard: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    borderRadius: 22,
+    backgroundColor: colors.surface,
     padding: 16,
-    borderRadius: 12,
-    alignItems: 'center'
+    borderWidth: 1,
+    borderColor: colors.border,
+    alignItems: 'center',
+    ...shadows.card
   },
-  statNumber: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#1E3A8A'
+  statValue: {
+    color: colors.text,
+    fontSize: 22,
+    fontWeight: '800'
   },
   statLabel: {
-    fontSize: 12,
-    color: '#6B7280',
+    color: colors.textMuted,
+    fontSize: 13,
     marginTop: 4
   },
-  section: {
-    padding: 20
+  sectionCard: {
+    borderRadius: 28,
+    backgroundColor: colors.surface,
+    padding: 20,
+    borderWidth: 1,
+    borderColor: colors.border,
+    gap: 14,
+    ...shadows.card
   },
   sectionTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#111827',
-    marginBottom: 16
+    color: colors.text,
+    fontSize: 20,
+    fontWeight: '800'
+  },
+  emptyText: {
+    color: colors.textMuted,
+    fontSize: 14,
+    lineHeight: 21
   },
   courseCard: {
-    backgroundColor: '#FFFFFF',
+    borderRadius: 22,
+    backgroundColor: colors.surfaceMuted,
     padding: 16,
-    borderRadius: 12,
-    marginBottom: 12
+    gap: 8
   },
   courseHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 10
+    gap: 12
   },
   courseTitle: {
+    flex: 1,
+    color: colors.text,
     fontSize: 16,
-    fontWeight: '600',
-    color: '#111827',
-    flex: 1
+    fontWeight: '800'
   },
   coursePercentage: {
+    color: colors.primary,
     fontSize: 16,
-    fontWeight: '700',
-    color: '#1E3A8A'
+    fontWeight: '800'
   },
   progressTrack: {
     height: 8,
-    backgroundColor: '#E5E7EB',
-    borderRadius: 4,
+    borderRadius: 999,
     overflow: 'hidden',
-    marginBottom: 8
+    backgroundColor: colors.surface
   },
   progressFill: {
     height: '100%',
-    borderRadius: 4,
-    backgroundColor: '#1E3A8A'
+    borderRadius: 999,
+    backgroundColor: colors.primary
   },
   courseMeta: {
-    fontSize: 12,
-    color: '#6B7280',
-    marginTop: 2
+    color: colors.textMuted,
+    fontSize: 13,
+    lineHeight: 18
   }
 })

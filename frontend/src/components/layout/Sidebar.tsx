@@ -1,28 +1,26 @@
-﻿import React, { useState } from 'react';
-import { NavLink, useLocation } from 'react-router-dom';
+﻿import React, { useEffect, useMemo, useState } from 'react'
+import { NavLink, useLocation } from 'react-router-dom'
 import {
-  LayoutDashboard,
-  Users,
   BookOpen,
   FileText,
-  Settings,
+  LayoutDashboard,
   Menu,
-  X,
-  Home,
+  Settings,
+  ShieldCheck,
   UserCheck,
-  // BarChart3
-} from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { cn } from '@/lib/utils';
+  Users,
+  X
+} from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { cn } from '@/lib/utils'
 
 interface SidebarItem {
-  id: string;
-  label: string;
-  icon: React.ComponentType<{ className?: string }>;
-  path: string;
-  badge?: number;
-  description?: string;
+  id: string
+  label: string
+  icon: React.ComponentType<{ className?: string }>
+  path: string
+  description: string
+  group: 'core' | 'support'
 }
 
 const sidebarItems: SidebarItem[] = [
@@ -31,180 +29,193 @@ const sidebarItems: SidebarItem[] = [
     label: 'Dashboard',
     icon: LayoutDashboard,
     path: '/dashboard',
-    description: 'Visão geral da plataforma'
+    description: 'Visão operacional e prioridades do dia.',
+    group: 'core'
+  },
+  {
+    id: 'users',
+    label: 'Beneficiárias',
+    icon: Users,
+    path: '/users',
+    description: 'Pesquisar, acompanhar e revisar perfis.',
+    group: 'core'
   },
   {
     id: 'active',
-    label: 'Activar Usuários',
+    label: 'Nova ativação',
     icon: UserCheck,
     path: '/active',
-    description: 'Activação de novos usuários'
-  },
-  // {
-  //   id: 'monitor',
-  //   label: 'Monitorar Progresso',
-  //   icon: BarChart3,
-  //   path: '/monitor',
-  //   description: 'Acompanhamento de progresso'
-  // },
-  {
-    id: 'users',
-    label: 'Usuários',
-    icon: Users,
-    path: '/users',
-    badge: 42,
-    description: 'Gestão de usuários'
+    description: 'Ativar beneficiárias e distribuir códigos.',
+    group: 'core'
   },
   {
     id: 'courses',
     label: 'Cursos',
     icon: BookOpen,
     path: '/courses',
-    description: 'Gerenciamento de cursos'
+    description: 'Gerenciar o catálogo de cursos.',
+    group: 'core'
   },
   {
     id: 'reports',
     label: 'Relatórios',
     icon: FileText,
     path: '/reports',
-    description: 'Relatórios e analytics'
+    description: 'Exportações e indicadores institucionais.',
+    group: 'support'
   },
   {
     id: 'settings',
     label: 'Configurações',
     icon: Settings,
     path: '/settings',
-    description: 'Configurações da plataforma'
+    description: 'Preferências da equipa e da plataforma.',
+    group: 'support'
   }
-];
+]
 
 interface SidebarProps {
-  className?: string;
+  className?: string
+  mobileOpen?: boolean
+  onMobileOpenChange?: (open: boolean) => void
 }
 
-export default function Sidebar({ className }: SidebarProps) {
-  const [isCollapsed, setIsCollapsed] = useState(false);
-  const [isMobileOpen, setIsMobileOpen] = useState(false);
-  const location = useLocation();
+export default function Sidebar({
+  className,
+  mobileOpen = false,
+  onMobileOpenChange
+}: SidebarProps) {
+  const [isCollapsed, setIsCollapsed] = useState(false)
+  const location = useLocation()
 
-  const toggleCollapse = () => {
-    setIsCollapsed(!isCollapsed);
-  };
+  useEffect(() => {
+    onMobileOpenChange?.(false)
+  }, [location.pathname, onMobileOpenChange])
 
-  const toggleMobile = () => {
-    setIsMobileOpen(!isMobileOpen);
-  };
+  const groupedItems = useMemo(() => ({
+    core: sidebarItems.filter(item => item.group === 'core'),
+    support: sidebarItems.filter(item => item.group === 'support')
+  }), [])
 
-  const isActive = (path: string) => {
-    return location.pathname === path || location.pathname.startsWith(path + '/');
-  };
+  const renderItems = (items: SidebarItem[]) => (
+    items.map((item) => {
+      const Icon = item.icon
+      const active = location.pathname === item.path || location.pathname.startsWith(`${item.path}/`)
+
+      return (
+        <NavLink
+          key={item.id}
+          to={item.path}
+          className={cn(
+            'group flex items-start gap-3 rounded-2xl border border-transparent px-3 py-3 text-sm transition-all duration-200',
+            active
+              ? 'border-primary/15 bg-primary text-primary-foreground shadow-lg shadow-primary/15'
+              : 'text-slate-600 hover:border-slate-200 hover:bg-white hover:text-slate-900'
+          )}
+          title={isCollapsed ? item.label : item.description}
+        >
+          <div
+            className={cn(
+              'mt-0.5 flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl',
+              active ? 'bg-white/15 text-white' : 'bg-slate-100 text-slate-700 group-hover:bg-slate-200'
+            )}
+          >
+            <Icon className="h-4 w-4" />
+          </div>
+
+          {!isCollapsed ? (
+            <div className="min-w-0 flex-1">
+              <div className="truncate font-medium">{item.label}</div>
+              <div className={cn('mt-1 text-xs', active ? 'text-blue-50/90' : 'text-slate-500')}>
+                {item.description}
+              </div>
+            </div>
+          ) : null}
+        </NavLink>
+      )
+    })
+  )
 
   return (
     <>
-      {/* Mobile menu button */}
-      <Button
-        variant="ghost"
-        size="icon"
-        className="lg:hidden fixed top-4 left-4 z-50"
-        onClick={toggleMobile}
-        aria-label="Toggle menu"
-      >
-        {isMobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-      </Button>
-
-      {/* Mobile overlay */}
-      {isMobileOpen && (
-        <div
-          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
-          onClick={toggleMobile}
-          aria-hidden="true"
+      {mobileOpen ? (
+        <button
+          type="button"
+          className="fixed inset-0 z-40 bg-slate-950/40 lg:hidden"
+          onClick={() => onMobileOpenChange?.(false)}
+          aria-label="Fechar menu lateral"
         />
-      )}
+      ) : null}
 
-      {/* Sidebar */}
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-50 flex flex-col bg-card border-r transition-all duration-300 ease-in-out",
-          isCollapsed ? "w-16" : "w-64",
-          "lg:relative lg:translate-x-0",
-          isMobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0",
+          'fixed inset-y-0 left-0 z-50 flex w-[310px] max-w-[88vw] flex-col border-r border-white/60 bg-[#f7fbff]/95 backdrop-blur-xl transition-transform duration-300 lg:sticky lg:top-0 lg:h-screen',
+          mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0',
+          isCollapsed ? 'lg:w-24' : 'lg:w-80',
           className
         )}
       >
-        {/* Sidebar Header */}
-        <div className="flex items-center justify-between p-4 border-b">
-          {!isCollapsed && (
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-                <Home className="h-4 w-4 text-primary-foreground" />
+        <div className="border-b border-slate-200/80 px-4 py-5">
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-lg shadow-primary/20">
+                <ShieldCheck className="h-5 w-5" />
               </div>
-              <span className="font-semibold text-lg">WIRA</span>
+              {!isCollapsed ? (
+                <div>
+                  <p className="text-sm font-semibold uppercase tracking-[0.18em] text-primary/70">WIRA</p>
+                  <h2 className="text-lg font-semibold text-slate-950">Portal Operacional</h2>
+                  <p className="text-xs text-muted-foreground">Acompanhe ativações, risco e progresso.</p>
+                </div>
+              ) : null}
             </div>
-          )}
 
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={toggleCollapse}
-            className="hidden lg:flex"
-            aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-          >
-            <Menu className="h-4 w-4" />
-          </Button>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="hidden lg:inline-flex"
+                onClick={() => setIsCollapsed(prev => !prev)}
+                aria-label={isCollapsed ? 'Expandir menu lateral' : 'Recolher menu lateral'}
+              >
+                <Menu className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="lg:hidden"
+                onClick={() => onMobileOpenChange?.(false)}
+                aria-label="Fechar menu lateral"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
         </div>
 
-        {/* Navigation */}
-        <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
-          {sidebarItems.map((item) => {
-            const Icon = item.icon;
-            const active = isActive(item.path);
+        <div className="flex-1 overflow-y-auto px-4 py-5">
+          {!isCollapsed ? <p className="mb-3 px-2 text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Operação</p> : null}
+          <nav className="space-y-2">{renderItems(groupedItems.core)}</nav>
 
-            return (
-              <NavLink
-                key={item.id}
-                to={item.path}
-                onClick={() => setIsMobileOpen(false)}
-                className={cn(
-                  "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200",
-                  "hover:bg-accent hover:text-accent-foreground",
-                  active
-                    ? "bg-primary text-primary-foreground hover:bg-primary/90"
-                    : "text-muted-foreground"
-                )}
-                title={isCollapsed ? item.label : item.description}
-              >
-                <Icon className="h-4 w-4 flex-shrink-0" />
+          <div className="mt-6 border-t border-slate-200/80 pt-5">
+            {!isCollapsed ? <p className="mb-3 px-2 text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Apoio</p> : null}
+            <nav className="space-y-2">{renderItems(groupedItems.support)}</nav>
+          </div>
+        </div>
 
-                {!isCollapsed && (
-                  <>
-                    <span className="flex-1 truncate">{item.label}</span>
-                    {item.badge && (
-                      <Badge variant="secondary" className="ml-auto">
-                        {item.badge}
-                      </Badge>
-                    )}
-                  </>
-                )}
-              </NavLink>
-            );
-          })}
-        </nav>
-
-        {/* Sidebar Footer */}
-        <div className="p-4 border-t">
+        <div className="border-t border-slate-200/80 px-4 py-4">
           {!isCollapsed ? (
-            <div className="text-xs text-muted-foreground">
-              <p>WIRA Platform v1.0</p>
-              <p>© 2024 UNODC</p>
+            <div className="rounded-2xl border border-blue-100 bg-white px-4 py-3 shadow-sm">
+              <p className="text-sm font-semibold text-slate-900">Dados sensíveis protegidos</p>
+              <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                Use este painel para agir sobre pendências reais, não apenas para consultar indicadores.
+              </p>
             </div>
           ) : (
-            <div className="flex justify-center">
-              <div className="w-2 h-2 bg-primary rounded-full" />
-            </div>
+            <div className="mx-auto h-3 w-3 rounded-full bg-emerald-500" />
           )}
         </div>
       </aside>
     </>
-  );
+  )
 }
-

@@ -1,10 +1,13 @@
-import React, { useCallback, useEffect, useState } from 'react'
-import { ActivityIndicator, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+﻿import React, { useCallback, useEffect, useState } from 'react'
+import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import { Ionicons } from '@expo/vector-icons'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
+import AppShell from '../components/AppShell'
 import { RootStackParamList } from '../types/navigation'
 import apiService, { JobRecord } from '../services/api'
 import sessionService from '../services/session'
 import { showAlert } from '../utils/alerts'
+import { colors, shadows } from '../theme'
 
 type JobsScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Jobs'>
 
@@ -44,31 +47,27 @@ export default function JobsScreen({ navigation }: JobsScreenProps) {
   const [refreshing, setRefreshing] = useState(false)
   const [applyingJobId, setApplyingJobId] = useState<string | null>(null)
 
-  const loadJobs = useCallback(async (): Promise<void> => {
+  const loadJobs = useCallback(async (mode: 'initial' | 'refresh' = 'initial'): Promise<void> => {
+    if (mode === 'initial') {
+      setLoading(true)
+    } else {
+      setRefreshing(true)
+    }
+
     try {
       const userCode = await sessionService.getUserCode()
       if (!userCode) {
-        showAlert('Sessao expirada', 'Faca login novamente.')
-        navigation.navigate('Login')
+        showAlert('Sessão expirada', 'Faça login novamente.')
+        navigation.reset({ index: 0, routes: [{ name: 'Login' }] })
         return
       }
 
       try {
         const jobs = await apiService.getJobMatching(userCode)
-        setState({
-          userCode,
-          jobs,
-          source: 'matching',
-          error: null
-        })
+        setState({ userCode, jobs, source: 'matching', error: null })
       } catch {
         const jobs = await apiService.getJobs()
-        setState({
-          userCode,
-          jobs,
-          source: 'all',
-          error: null
-        })
+        setState({ userCode, jobs, source: 'all', error: null })
       }
     } catch (error) {
       setState(prev => ({
@@ -84,31 +83,23 @@ export default function JobsScreen({ navigation }: JobsScreenProps) {
   }, [navigation])
 
   useEffect(() => {
-    void loadJobs()
-  }, [loadJobs])
-
-  const onRefresh = useCallback((): void => {
-    setRefreshing(true)
-    void loadJobs()
+    void loadJobs('initial')
   }, [loadJobs])
 
   const handleApply = useCallback(
     async (jobId: string): Promise<void> => {
       if (!state.userCode) {
-        showAlert('Sessao expirada', 'Faca login novamente.')
-        navigation.navigate('Login')
+        showAlert('Sessão expirada', 'Faça login novamente.')
+        navigation.reset({ index: 0, routes: [{ name: 'Login' }] })
         return
       }
 
       setApplyingJobId(jobId)
       try {
         await apiService.applyToJob(jobId, state.userCode)
-        showAlert('Candidatura enviada', 'Sua candidatura foi registrada com sucesso.')
+        showAlert('Candidatura enviada', 'A sua candidatura foi registada com sucesso.')
       } catch (error) {
-        showAlert(
-          'Erro ao candidatar',
-          normalizeErrorMessage(error, 'Não foi possível enviar a candidatura.')
-        )
+        showAlert('Erro ao candidatar', normalizeErrorMessage(error, 'Não foi possível enviar a candidatura.'))
       } finally {
         setApplyingJobId(null)
       }
@@ -117,207 +108,205 @@ export default function JobsScreen({ navigation }: JobsScreenProps) {
   )
 
   return (
-    <ScrollView
-      style={styles.container}
-      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+    <AppShell
+      navigation={navigation}
+      activeRoute="Jobs"
+      title="Vagas compatíveis"
+      subtitle="Veja oportunidades que combinam com a sua formação e candidate-se com confiança."
+      refreshing={refreshing}
+      onRefresh={() => void loadJobs('refresh')}
     >
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Text style={styles.backButton}>Voltar</Text>
-        </TouchableOpacity>
-        <Text style={styles.title}>Vagas Compativeis</Text>
-      </View>
-
       {state.source === 'all' ? (
         <View style={styles.infoBanner}>
-          <Text style={styles.infoBannerText}>Mostrando vagas gerais (matching indisponivel no momento).</Text>
+          <Ionicons name="information-circle-outline" size={18} color={colors.warning} />
+          <Text style={styles.infoBannerText}>Mostramos vagas gerais porque o matching automático não esteve disponível agora.</Text>
         </View>
       ) : null}
 
       {state.error ? (
         <View style={styles.errorBanner}>
+          <Ionicons name="alert-circle-outline" size={18} color={colors.danger} />
           <Text style={styles.errorText}>{state.error}</Text>
         </View>
       ) : null}
 
       {loading ? (
         <View style={styles.loaderContainer}>
-          <ActivityIndicator size="large" color="#1E3A8A" />
+          <ActivityIndicator size="large" color={colors.primary} />
         </View>
       ) : state.jobs.length === 0 ? (
-        <View style={styles.emptyContainer}>
-          <Text style={styles.emptyTitle}>Sem vagas disponiveis</Text>
-          <Text style={styles.emptySubtitle}>Tente novamente mais tarde.</Text>
+        <View style={styles.emptyCard}>
+          <Text style={styles.emptyTitle}>Ainda não existem vagas disponíveis</Text>
+          <Text style={styles.emptySubtitle}>Volte mais tarde ou use a área de apoio se precisar de orientação.</Text>
         </View>
       ) : (
-        <View style={styles.jobsContainer}>
-          {state.jobs.map(job => {
-            const sharedSkills = job.matching?.sharedSkills.join(', ') ?? ''
-            const isApplying = applyingJobId === job.id
-
-            return (
-              <View key={job.id} style={styles.jobCard}>
+        state.jobs.map(job => {
+          const sharedSkills = job.matching?.sharedSkills.join(', ') ?? ''
+          const isApplying = applyingJobId === job.id
+          return (
+            <View key={job.id} style={styles.jobCard}>
+              <View style={styles.jobHeader}>
                 <Text style={styles.jobTitle}>{job.title}</Text>
-                <Text style={styles.jobCompany}>{job.employer?.name ?? 'Empresa não informada'}</Text>
-                <Text style={styles.jobMeta}>Local: {job.location}</Text>
-                <Text style={styles.jobMeta}>Contrato: {job.contract_type}</Text>
-
-                {job.salary_range ? <Text style={styles.jobMeta}>Salario: {job.salary_range}</Text> : null}
-                {job.schedule ? <Text style={styles.jobMeta}>Horario: {job.schedule}</Text> : null}
-
                 {typeof job.matching?.score === 'number' ? (
-                  <Text style={styles.matchText}>Matching: {job.matching.score}%</Text>
+                  <View style={styles.matchPill}>
+                    <Text style={styles.matchPillText}>{job.matching.score}% fit</Text>
+                  </View>
                 ) : null}
-
-                {sharedSkills.length > 0 ? (
-                  <Text style={styles.skillsText}>Skills em comum: {sharedSkills}</Text>
-                ) : null}
-
-                <Text style={styles.description}>{job.description}</Text>
-
-                <TouchableOpacity
-                  style={[styles.applyButton, isApplying && styles.applyButtonDisabled]}
-                  onPress={() => {
-                    void handleApply(job.id)
-                  }}
-                  disabled={isApplying}
-                >
-                  <Text style={styles.applyButtonText}>{isApplying ? 'Enviando...' : 'Candidatar-se'}</Text>
-                </TouchableOpacity>
               </View>
-            )
-          })}
-        </View>
+
+              <Text style={styles.jobCompany}>{job.employer?.name ?? 'Empresa não informada'}</Text>
+              <Text style={styles.jobMeta}>Local: {job.location}</Text>
+              <Text style={styles.jobMeta}>Contrato: {job.contract_type}</Text>
+              {job.salary_range ? <Text style={styles.jobMeta}>Salário: {job.salary_range}</Text> : null}
+              {job.schedule ? <Text style={styles.jobMeta}>Horário: {job.schedule}</Text> : null}
+              {sharedSkills.length > 0 ? <Text style={styles.skillsText}>Competências em comum: {sharedSkills}</Text> : null}
+              <Text style={styles.description}>{job.description}</Text>
+
+              <TouchableOpacity
+                style={[styles.applyButton, isApplying && styles.applyButtonDisabled]}
+                onPress={() => {
+                  void handleApply(job.id)
+                }}
+                disabled={isApplying}
+              >
+                <Ionicons name="send-outline" size={18} color={colors.textOnPrimary} />
+                <Text style={styles.applyButtonText}>{isApplying ? 'A enviar...' : 'Candidatar-me'}</Text>
+              </TouchableOpacity>
+            </View>
+          )
+        })
       )}
-    </ScrollView>
+    </AppShell>
   )
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#F5F5F5'
-  },
-  header: {
-    backgroundColor: '#1E3A8A',
-    paddingTop: 60,
-    paddingHorizontal: 20,
-    paddingBottom: 24
-  },
-  backButton: {
-    color: '#90CAF9',
-    fontSize: 16,
-    marginBottom: 8
-  },
-  title: {
-    color: '#FFFFFF',
-    fontSize: 24,
-    fontWeight: 'bold'
-  },
   infoBanner: {
-    backgroundColor: '#FFF8E1',
-    borderColor: '#FFB300',
+    borderRadius: 22,
+    backgroundColor: colors.warningSoft,
     borderWidth: 1,
-    marginHorizontal: 20,
-    marginTop: 16,
-    borderRadius: 8,
-    padding: 12
+    borderColor: '#F2D29A',
+    padding: 16,
+    flexDirection: 'row',
+    gap: 10,
+    ...shadows.card
   },
   infoBannerText: {
-    color: '#8D6E63',
-    fontSize: 13
+    flex: 1,
+    color: colors.text,
+    fontSize: 13,
+    lineHeight: 19
   },
   errorBanner: {
-    backgroundColor: '#FFEBEE',
-    borderColor: '#E53935',
+    borderRadius: 22,
+    backgroundColor: colors.dangerSoft,
     borderWidth: 1,
-    marginHorizontal: 20,
-    marginTop: 16,
-    borderRadius: 8,
-    padding: 12
+    borderColor: '#F5C0C0',
+    padding: 16,
+    flexDirection: 'row',
+    gap: 10,
+    ...shadows.card
   },
   errorText: {
-    color: '#B71C1C',
-    fontSize: 13
+    flex: 1,
+    color: colors.danger,
+    fontSize: 13,
+    lineHeight: 19
   },
   loaderContainer: {
     justifyContent: 'center',
     alignItems: 'center',
     paddingVertical: 48
   },
-  emptyContainer: {
-    marginHorizontal: 20,
-    marginTop: 24,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    padding: 20
+  emptyCard: {
+    borderRadius: 26,
+    backgroundColor: colors.surface,
+    padding: 22,
+    borderWidth: 1,
+    borderColor: colors.border,
+    ...shadows.card
   },
   emptyTitle: {
-    color: '#1E3A8A',
+    color: colors.text,
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: '800',
     marginBottom: 6
   },
   emptySubtitle: {
-    color: '#616161',
-    fontSize: 14
-  },
-  jobsContainer: {
-    padding: 20,
-    gap: 12
+    color: colors.textMuted,
+    fontSize: 14,
+    lineHeight: 21
   },
   jobCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    padding: 16
+    borderRadius: 26,
+    backgroundColor: colors.surface,
+    padding: 18,
+    borderWidth: 1,
+    borderColor: colors.border,
+    gap: 7,
+    ...shadows.card
+  },
+  jobHeader: {
+    flexDirection: 'row',
+    gap: 12,
+    justifyContent: 'space-between',
+    alignItems: 'flex-start'
   },
   jobTitle: {
-    color: '#1E3A8A',
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 6
+    flex: 1,
+    color: colors.text,
+    fontSize: 19,
+    fontWeight: '800'
+  },
+  matchPill: {
+    borderRadius: 999,
+    backgroundColor: colors.successSoft,
+    paddingHorizontal: 10,
+    paddingVertical: 6
+  },
+  matchPillText: {
+    color: colors.success,
+    fontSize: 12,
+    fontWeight: '800'
   },
   jobCompany: {
-    color: '#374151',
+    color: colors.text,
     fontSize: 14,
-    marginBottom: 8,
-    fontWeight: '600'
+    fontWeight: '700'
   },
   jobMeta: {
-    color: '#4B5563',
-    fontSize: 13,
-    marginBottom: 4
-  },
-  matchText: {
-    color: '#0D9488',
-    fontSize: 13,
-    fontWeight: '700',
-    marginTop: 6
+    color: colors.textMuted,
+    fontSize: 13
   },
   skillsText: {
-    color: '#4338CA',
+    marginTop: 4,
+    color: colors.info,
     fontSize: 13,
-    marginTop: 4
+    lineHeight: 19,
+    fontWeight: '600'
   },
   description: {
-    color: '#374151',
+    marginTop: 6,
+    color: colors.textMuted,
     fontSize: 13,
-    lineHeight: 18,
-    marginTop: 8
+    lineHeight: 20
   },
   applyButton: {
-    marginTop: 14,
-    backgroundColor: '#1E3A8A',
-    borderRadius: 8,
-    paddingVertical: 12,
-    alignItems: 'center'
+    marginTop: 10,
+    borderRadius: 18,
+    backgroundColor: colors.primary,
+    paddingVertical: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexDirection: 'row',
+    gap: 8
   },
   applyButtonDisabled: {
     opacity: 0.65
   },
   applyButtonText: {
-    color: '#FFFFFF',
-    fontSize: 14,
-    fontWeight: '700'
+    color: colors.textOnPrimary,
+    fontSize: 15,
+    fontWeight: '800'
   }
 })

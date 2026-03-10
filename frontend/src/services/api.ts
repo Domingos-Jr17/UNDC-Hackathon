@@ -259,8 +259,8 @@ class ApiService {
     })
 
     if (!response.ok) {
-      const parsed = await this.parseResponse<ErrorPayload>(response).catch(() => ({}))
-      throw new ApiError(parsed.error ?? parsed.message ?? `HTTP ${response.status}`, response.status)
+      const parsed = await this.parseResponse<ErrorPayload>(response).catch(() => undefined)
+      throw new ApiError(parsed?.error ?? parsed?.message ?? `HTTP ${response.status}`, response.status)
     }
 
     const blob = await response.blob()
