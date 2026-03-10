@@ -17,14 +17,14 @@ interface BreadcrumbsProps {
 
 const resolveLabel = (pathname: string, segment: string): string => {
   if (pathname === '/dashboard') return 'Dashboard'
-  if (pathname === '/active') return 'Nova ativação'
-  if (pathname === '/users') return 'Beneficiárias'
-  if (/^\/users\/[^/]+$/.test(pathname)) return 'Detalhe da beneficiária'
+  if (pathname === '/active') return 'Nova ativacao'
+  if (pathname === '/users') return 'Beneficiarias'
+  if (/^\/users\/[^/]+$/.test(pathname)) return 'Detalhe da beneficiaria'
   if (pathname === '/courses') return 'Cursos'
   if (pathname === '/courses/create') return 'Criar curso'
   if (/^\/courses\/[^/]+$/.test(pathname)) return 'Detalhe do curso'
-  if (pathname === '/reports') return 'Relatórios'
-  if (pathname === '/settings') return 'Configurações'
+  if (pathname === '/reports') return 'Relatorios'
+  if (pathname === '/settings') return 'Configuracoes'
   if (pathname === '/settings/profile') return 'Perfil'
   return segment.charAt(0).toUpperCase() + segment.slice(1)
 }
@@ -63,14 +63,14 @@ export default function Breadcrumbs({
   return (
     <nav
       className={cn('flex items-center space-x-1 text-sm text-muted-foreground', className)}
-      aria-label="Navegação estrutural"
+      aria-label="Navegacao estrutural"
     >
       {showHome ? (
         <>
           <Link
             to="/dashboard"
             className="flex items-center hover:text-foreground transition-colors"
-            aria-label="Página inicial"
+            aria-label="Pagina inicial"
           >
             <Home className="h-4 w-4" />
           </Link>
