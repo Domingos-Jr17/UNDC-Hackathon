@@ -63,7 +63,7 @@ const createRateLimit = (windowMs: number, max: number, message: string): expres
 // Different rate limits for different endpoints
 export const authLimiter = createRateLimit(
   15 * 60 * 1000, // 15 minutes
-  5, // 5 requests per 15 minutes
+  10, // 10 requests per 15 minutes
   'Muitas tentativas de login. Tente novamente em 15 minutos.'
 )
 

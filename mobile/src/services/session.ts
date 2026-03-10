@@ -6,29 +6,38 @@ const USER_CODE_KEY = 'wira_user_code'
 
 let secureStoreAvailable: boolean | null = null
 
-const ensureSecureStore = async (): Promise<void> => {
+const isSecureStoreAvailable = async (): Promise<boolean> => {
   if (secureStoreAvailable === null) {
     secureStoreAvailable = await SecureStore.isAvailableAsync()
   }
 
-  if (!secureStoreAvailable) {
-    throw new Error('SecureStore indisponivel neste dispositivo')
-  }
+  return secureStoreAvailable
 }
 
 const setToken = async (token: string): Promise<void> => {
-  await ensureSecureStore()
-  await SecureStore.setItemAsync(TOKEN_KEY, token)
+  if (await isSecureStoreAvailable()) {
+    await SecureStore.setItemAsync(TOKEN_KEY, token)
+    return
+  }
+
+  await AsyncStorage.setItem(TOKEN_KEY, token)
 }
 
 const getToken = async (): Promise<string | null> => {
-  await ensureSecureStore()
-  return SecureStore.getItemAsync(TOKEN_KEY)
+  if (await isSecureStoreAvailable()) {
+    return SecureStore.getItemAsync(TOKEN_KEY)
+  }
+
+  return AsyncStorage.getItem(TOKEN_KEY)
 }
 
 const clearToken = async (): Promise<void> => {
-  await ensureSecureStore()
-  await SecureStore.deleteItemAsync(TOKEN_KEY)
+  if (await isSecureStoreAvailable()) {
+    await SecureStore.deleteItemAsync(TOKEN_KEY)
+    return
+  }
+
+  await AsyncStorage.removeItem(TOKEN_KEY)
 }
 
 export const sessionService = {
