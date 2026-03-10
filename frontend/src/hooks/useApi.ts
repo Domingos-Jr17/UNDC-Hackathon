@@ -130,7 +130,7 @@ export function useAuth() {
     localStorage.removeItem('wira_token')
     setUser(null)
     setIsAuthenticated(false)
-    toast.info('Sessao encerrada')
+    toast.info('Sessão encerrada')
   }, [])
 
   return {
@@ -182,7 +182,7 @@ export function useUserActivation() {
       toast.success('Beneficiária activada com sucesso')
       return user
     } catch (error) {
-      toast.error(error instanceof ApiError ? error.message : 'Falha ao activar beneficiaria')
+      toast.error(error instanceof ApiError ? error.message : 'Falha ao activar beneficiária')
       throw error
     } finally {
       setLoading(false)

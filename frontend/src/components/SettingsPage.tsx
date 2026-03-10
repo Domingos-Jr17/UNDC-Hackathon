@@ -346,11 +346,11 @@ export default function SettingsPage() {
                         <p className="mt-1 text-sm text-muted-foreground">{notificationDescriptions[key]}</p>
                       </div>
                       <Badge variant={notifications[key] ? 'default' : 'outline'}>
-                        {notifications[key] ? 'Ativo' : 'Desativo'}
+                        {notifications[key] ? 'Activo' : 'Desactivo'}
                       </Badge>
                     </div>
                     <Button variant="outline" className="mt-4 w-full" onClick={() => handleNotificationToggle(key)}>
-                      {notifications[key] ? 'Desativar' : 'Ativar'}
+                      {notifications[key] ? 'Desactivar' : 'Activar'}
                     </Button>
                   </div>
                 ))}
@@ -373,6 +373,6 @@ const notificationLabels: Record<keyof NotificationSettings, string> = {
 const notificationDescriptions: Record<keyof NotificationSettings, string> = {
   emailUpdates: 'Use quando quiser lembrar a equipa de novidades relevantes no portal.',
   securityAlerts: 'Mantém avisos importantes sobre acesso e falhas de autenticação.',
-  weeklyDigest: 'Resume atividade operacional para revisão periódica.',
+  weeklyDigest: 'Resume actividade operacional para revisão periódica.',
   reportReady: 'Informa quando uma exportação foi iniciada e concluída com sucesso.'
 }

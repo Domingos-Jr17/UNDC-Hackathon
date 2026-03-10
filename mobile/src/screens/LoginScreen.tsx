@@ -22,7 +22,7 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
   const handleLogin = async (): Promise<void> => {
     const normalizedCode = accessCode.trim().toUpperCase()
     if (!normalizedCode) {
-      showAlert('Codigo em falta', 'Por favor, introduza o seu codigo de acesso.')
+      showAlert('Código em falta', 'Por favor, introduza o seu código de acesso.')
       return
     }
 
@@ -58,22 +58,22 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
                 <Text style={styles.badgeText}>Anonimo</Text>
               </View>
             </View>
-            <Text style={styles.title}>Entre com o seu codigo anonimo</Text>
+            <Text style={styles.title}>Entre com o seu código anónimo</Text>
             <Text style={styles.subtitle}>
-              O codigo protege a sua identidade e permite retomar a jornada exatamente de onde ficou.
+              O código protege a sua identidade e permite retomar a jornada exactamente de onde ficou.
             </Text>
           </View>
 
           <View style={styles.helperInfo}>
             <Ionicons name="information-circle-outline" size={18} color={colors.primary} />
-            <Text style={styles.helperInfoText}>Introduza o codigo como recebeu. O app faz a normalizacao automaticamente.</Text>
+            <Text style={styles.helperInfoText}>Introduza o código como recebeu. A aplicação faz a normalização automaticamente.</Text>
           </View>
 
           <View style={styles.inputWrap}>
             <Ionicons name="key-outline" size={18} color={colors.textMuted} style={styles.inputIcon} />
             <TextInput
               style={styles.input}
-              placeholder="Codigo (ex: V0042)"
+              placeholder="Código (ex.: V0042)"
               placeholderTextColor={colors.textMuted}
               value={accessCode}
               onChangeText={setAccessCode}
@@ -98,8 +98,8 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
           </TouchableOpacity>
 
           <View style={styles.helperCard}>
-            <Text style={styles.helperTitle}>Ainda nao recebeu codigo?</Text>
-            <Text style={styles.helperText}>Fale com a ONG parceira para ativar o seu acesso em seguranca.</Text>
+            <Text style={styles.helperTitle}>Ainda não recebeu código?</Text>
+            <Text style={styles.helperText}>Fale com a ONG parceira para activar o seu acesso em segurança.</Text>
             <TouchableOpacity style={styles.helperButton} onPress={() => navigation.navigate('Support')}>
               <Text style={styles.helperButtonText}>Preciso de ajuda</Text>
             </TouchableOpacity>

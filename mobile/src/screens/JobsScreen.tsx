@@ -57,7 +57,7 @@ export default function JobsScreen({ navigation }: JobsScreenProps) {
     try {
       const userCode = await sessionService.getUserCode()
       if (!userCode) {
-        showAlert('Sessao expirada', 'Faca login novamente.')
+        showAlert('Sessão expirada', 'Faça login novamente.')
         navigation.reset({ index: 0, routes: [{ name: 'Login' }] })
         return
       }
@@ -74,7 +74,7 @@ export default function JobsScreen({ navigation }: JobsScreenProps) {
         ...prev,
         jobs: [],
         source: 'all',
-        error: normalizeErrorMessage(error, 'Nao foi possivel carregar vagas agora.')
+        error: normalizeErrorMessage(error, 'Não foi possível carregar vagas agora.')
       }))
     } finally {
       setLoading(false)
@@ -89,7 +89,7 @@ export default function JobsScreen({ navigation }: JobsScreenProps) {
   const handleApply = useCallback(
     async (jobId: string): Promise<void> => {
       if (!state.userCode) {
-        showAlert('Sessao expirada', 'Faca login novamente.')
+        showAlert('Sessão expirada', 'Faça login novamente.')
         navigation.reset({ index: 0, routes: [{ name: 'Login' }] })
         return
       }
@@ -99,7 +99,7 @@ export default function JobsScreen({ navigation }: JobsScreenProps) {
         await apiService.applyToJob(jobId, state.userCode)
         showAlert('Candidatura enviada', 'A sua candidatura foi registada com sucesso.')
       } catch (error) {
-        showAlert('Erro ao candidatar', normalizeErrorMessage(error, 'Nao foi possivel enviar a candidatura.'))
+        showAlert('Erro ao candidatar', normalizeErrorMessage(error, 'Não foi possível enviar a candidatura.'))
       } finally {
         setApplyingJobId(null)
       }
@@ -109,22 +109,22 @@ export default function JobsScreen({ navigation }: JobsScreenProps) {
 
   const summaryText = useMemo(() => {
     if (state.jobs.length === 0) {
-      return 'Ainda nao ha vagas disponiveis. Vale a pena voltar mais tarde e manter o seu percurso atualizado.'
+      return 'Ainda não há vagas disponíveis. Vale a pena voltar mais tarde e manter o seu percurso actualizado.'
     }
 
     if (state.source === 'matching') {
-      return `${state.jobs.length} oportunidade${state.jobs.length > 1 ? 's' : ''} com melhor afinidade para o seu perfil e percurso atual.`
+      return `${state.jobs.length} oportunidade${state.jobs.length > 1 ? 's' : ''} com melhor afinidade para o seu perfil e percurso actual.`
     }
 
-    return `${state.jobs.length} vaga${state.jobs.length > 1 ? 's' : ''} geral${state.jobs.length > 1 ? 'is' : ''} exibida${state.jobs.length > 1 ? 's' : ''} enquanto o matching automatico nao estiver disponivel.`
+    return `${state.jobs.length} vaga${state.jobs.length > 1 ? 's' : ''} geral${state.jobs.length > 1 ? 'is' : ''} exibida${state.jobs.length > 1 ? 's' : ''} enquanto o matching automático não estiver disponível.`
   }, [state.jobs.length, state.source])
 
   return (
     <AppShell
       navigation={navigation}
       activeRoute="Jobs"
-      title="Vagas compativeis"
-      subtitle="Veja oportunidades que combinam com a sua formacao e candidate-se com confianca."
+      title="Vagas compatíveis"
+      subtitle="Veja oportunidades que combinam com a sua formação e candidate-se com confiança."
       refreshing={refreshing}
       onRefresh={() => void loadJobs('refresh')}
     >
@@ -133,7 +133,7 @@ export default function JobsScreen({ navigation }: JobsScreenProps) {
           <Ionicons name="briefcase-outline" size={20} color={colors.primary} />
         </View>
         <View style={styles.summaryCopy}>
-          <Text style={styles.summaryTitle}>Leitura rapida</Text>
+          <Text style={styles.summaryTitle}>Leitura rápida</Text>
           <Text style={styles.summaryText}>{summaryText}</Text>
         </View>
       </View>
@@ -141,7 +141,7 @@ export default function JobsScreen({ navigation }: JobsScreenProps) {
       {state.source === 'all' ? (
         <View style={styles.infoBanner}>
           <Ionicons name="information-circle-outline" size={18} color={colors.warning} />
-          <Text style={styles.infoBannerText}>Mostramos vagas gerais porque o matching automatico nao esteve disponivel agora.</Text>
+          <Text style={styles.infoBannerText}>Mostramos vagas gerais porque o matching automático não esteve disponível agora.</Text>
         </View>
       ) : null}
 
@@ -158,8 +158,8 @@ export default function JobsScreen({ navigation }: JobsScreenProps) {
         </View>
       ) : state.jobs.length === 0 ? (
         <View style={styles.emptyCard}>
-          <Text style={styles.emptyTitle}>Ainda nao existem vagas disponiveis</Text>
-          <Text style={styles.emptySubtitle}>Volte mais tarde ou use a area de apoio se precisar de orientacao sobre os proximos passos.</Text>
+          <Text style={styles.emptyTitle}>Ainda não existem vagas disponíveis</Text>
+          <Text style={styles.emptySubtitle}>Volte mais tarde ou use a área de apoio se precisar de orientação sobre os próximos passos.</Text>
         </View>
       ) : (
         state.jobs.map(job => {
@@ -177,7 +177,7 @@ export default function JobsScreen({ navigation }: JobsScreenProps) {
                 ) : null}
               </View>
 
-              <Text style={styles.jobCompany}>{job.employer?.name ?? 'Empresa nao informada'}</Text>
+              <Text style={styles.jobCompany}>{job.employer?.name ?? 'Empresa não informada'}</Text>
 
               <View style={styles.metaChips}>
                 <MetaChip icon="location-outline" label={job.location} />

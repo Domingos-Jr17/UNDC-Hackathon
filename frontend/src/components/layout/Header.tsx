@@ -34,7 +34,7 @@ export default function Header({ onMenuClick, className, showBreadcrumbs = true 
 
   const handleLogout = () => {
     logout()
-    announceToScreenReader('Sessao terminada com sucesso')
+    announceToScreenReader('Sessão terminada com sucesso')
     navigate('/')
   }
 
@@ -62,11 +62,11 @@ export default function Header({ onMenuClick, className, showBreadcrumbs = true 
           <div className="flex items-center gap-2">
             <Button variant="outline" size="sm" className="hidden sm:inline-flex" onClick={() => navigate('/reports')}>
               <FileText className="h-4 w-4" />
-              Relatorios
+              Relatórios
             </Button>
             <Button size="sm" className="hidden sm:inline-flex" onClick={() => navigate('/active')}>
               <UserPlus className="h-4 w-4" />
-              Nova ativacao
+              Nova activação
             </Button>
 
             <DropdownMenu>
@@ -91,7 +91,7 @@ export default function Header({ onMenuClick, className, showBreadcrumbs = true 
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => navigate('/settings')}>
                   <Settings className="mr-2 h-4 w-4" />
-                  <span>Configuracoes</span>
+                  <span>Configurações</span>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleLogout}>

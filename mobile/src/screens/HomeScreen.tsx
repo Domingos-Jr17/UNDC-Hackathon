@@ -43,7 +43,7 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
     try {
       const userCode = await sessionService.getUserCode()
       if (!userCode) {
-        showAlert('Sessao expirada', 'Faca login novamente para continuar.')
+        showAlert('Sessão expirada', 'Faça login novamente para continuar.')
         navigation.reset({ index: 0, routes: [{ name: 'Login' }] })
         return
       }
@@ -95,10 +95,10 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
 
     const remainingModules = Math.max(0, currentCourse.modulesCount - currentCourse.currentModule)
     if (remainingModules === 0) {
-      return 'Conclua a avaliacao final deste curso para se aproximar do certificado.'
+      return 'Conclua a avaliação final deste curso para se aproximar do certificado.'
     }
 
-    return `Foque-se em concluir o modulo ${currentCourse.currentModule} e depois avance para mais ${remainingModules} modulo${remainingModules > 1 ? 's' : ''}.`
+    return `Foque-se em concluir o módulo ${currentCourse.currentModule} e depois avance para mais ${remainingModules} módulo${remainingModules > 1 ? 's' : ''}.`
   }, [currentCourse])
 
   if (loading) {
@@ -114,17 +114,17 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
       navigation={navigation}
       activeRoute="Home"
       headerVariant="hero"
-      title={`Ola, ${state.userCode}!`}
-      subtitle="Hoje o foco e retomar o passo mais importante da sua aprendizagem."
+      title={`Olá, ${state.userCode}!`}
+      subtitle="Hoje o foco é retomar o passo mais importante da sua aprendizagem."
       refreshing={refreshing}
       onRefresh={() => void loadHome('refresh')}
     >
       <View style={styles.recommendationCard}>
         <View style={styles.recommendationHeader}>
-          <Text style={styles.sectionEyebrow}>Proximo passo</Text>
+          <Text style={styles.sectionEyebrow}>Próximo passo</Text>
           {currentCourse ? (
             <View style={styles.progressBadge}>
-              <Text style={styles.progressBadgeText}>{currentCourse.progress}% concluido</Text>
+              <Text style={styles.progressBadgeText}>{currentCourse.progress}% concluído</Text>
             </View>
           ) : null}
         </View>
@@ -133,7 +133,7 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
           <>
             <Text style={styles.recommendationTitle}>{currentCourse.title}</Text>
             <Text style={styles.recommendationText}>
-              Continue no modulo {currentCourse.currentModule} de {currentCourse.modulesCount}. Cada sessao concluida aproxima-a do certificado.
+              Continue no módulo {currentCourse.currentModule} de {currentCourse.modulesCount}. Cada sessão concluída aproxima-a do certificado.
             </Text>
             <View style={styles.progressTrack}>
               <View style={[styles.progressFill, { width: `${currentCourse.progress}%` }]} />
@@ -150,11 +150,11 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
           <>
             <Text style={styles.recommendationTitle}>Escolha o seu primeiro curso</Text>
             <Text style={styles.recommendationText}>
-              Explore a biblioteca e inicie uma jornada de capacitacao profissional ao seu ritmo.
+              Explore a biblioteca e inicie uma jornada de capacitação profissional ao seu ritmo.
             </Text>
             <TouchableOpacity style={styles.primaryAction} onPress={() => navigation.navigate('CourseLibrary')}>
               <Ionicons name="book-outline" size={20} color={colors.textOnPrimary} />
-              <Text style={styles.primaryActionText}>Ver cursos disponiveis</Text>
+              <Text style={styles.primaryActionText}>Ver cursos disponíveis</Text>
             </TouchableOpacity>
           </>
         )}
@@ -171,24 +171,24 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
       </View>
 
       <View style={styles.statsStrip}>
-        <MiniStat label="Concluidos" value={stats.completed} />
+        <MiniStat label="Concluídos" value={stats.completed} />
         <MiniStat label="Em curso" value={stats.active} />
         <MiniStat label="Certificados" value={stats.certificates} />
       </View>
 
       <View style={styles.sectionCard}>
-        <Text style={styles.sectionTitle}>Atalhos uteis</Text>
+        <Text style={styles.sectionTitle}>Atalhos úteis</Text>
         <View style={styles.quickActions}>
           <QuickAction
             icon="book-outline"
             title="Explorar biblioteca"
-            subtitle="Descubra novos percursos e volte aos cursos que ja iniciou."
+            subtitle="Descubra novos percursos e volte aos cursos que já iniciou."
             onPress={() => navigation.navigate('CourseLibrary')}
           />
           <QuickAction
             icon="ribbon-outline"
             title="Os meus certificados"
-            subtitle="Veja certificados emitidos e acompanhe conquistas ja desbloqueadas."
+            subtitle="Veja certificados emitidos e acompanhe conquistas já desbloqueadas."
             onPress={() => navigation.navigate('Certificate', { courseId: currentCourse?.courseId ?? 'costura' })}
           />
           <QuickAction

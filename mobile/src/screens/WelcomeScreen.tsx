@@ -13,9 +13,9 @@ interface WelcomeScreenProps {
 }
 
 const trustPoints = [
-  'Acesso por codigo anonimo e seguro',
+  'Acesso por código anónimo e seguro',
   'Cursos profissionais com acompanhamento',
-  'Apoio e oportunidades no mesmo aplicativo'
+  'Apoio e oportunidades na mesma aplicação'
 ]
 
 export default function WelcomeScreen({ navigation }: WelcomeScreenProps) {
@@ -26,7 +26,7 @@ export default function WelcomeScreen({ navigation }: WelcomeScreenProps) {
           <View style={styles.brandRow}>
             <View style={styles.logoWrap}>
               <Image
-                source={require('../../assets/icon.png')}
+                source={require('../../assets/wira-icon.png')}
                 style={styles.logo}
                 resizeMode="contain"
               />
@@ -37,10 +37,9 @@ export default function WelcomeScreen({ navigation }: WelcomeScreenProps) {
             </View>
           </View>
 
-          <Text style={styles.eyebrow}>WIRA</Text>
           <Text style={styles.title}>Aprenda, avance e volte a decidir o seu futuro.</Text>
           <Text style={styles.subtitle}>
-            Uma experiencia segura para capacitacao profissional, apoio e acesso a novas oportunidades.
+            Uma experiência segura para capacitação profissional, apoio e acesso a novas oportunidades.
           </Text>
         </View>
 
@@ -51,7 +50,7 @@ export default function WelcomeScreen({ navigation }: WelcomeScreenProps) {
           <View style={styles.guidanceCopy}>
             <Text style={styles.guidanceTitle}>Como funciona</Text>
             <Text style={styles.guidanceText}>
-              Entre com o seu codigo ou fale com a equipa parceira para ativar o acesso em seguranca.
+              Entre com o seu código ou fale com a equipa parceira para activar o acesso em segurança.
             </Text>
           </View>
         </View>
@@ -69,11 +68,11 @@ export default function WelcomeScreen({ navigation }: WelcomeScreenProps) {
 
         <View style={styles.actions}>
           <TouchableOpacity style={styles.primaryButton} onPress={() => navigation.navigate('Login')}>
-            <Text style={styles.primaryButtonText}>Ja tenho codigo de acesso</Text>
+            <Text style={styles.primaryButtonText}>Já tenho código de acesso</Text>
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.secondaryButton} onPress={() => navigation.navigate('Support')}>
-            <Text style={styles.secondaryButtonText}>Preciso de ajuda para obter um codigo</Text>
+            <Text style={styles.secondaryButtonText}>Preciso de ajuda para obter um código</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -100,25 +99,29 @@ const styles = StyleSheet.create({
     ...shadows.card
   },
   brandRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    gap: 12,
+    position: 'relative',
+    justifyContent: 'center',
+    alignItems: 'center',
     marginBottom: 20
   },
   logoWrap: {
     width: 84,
     height: 84,
     borderRadius: 28,
-    backgroundColor: 'rgba(255,255,255,0.12)',
+    backgroundColor: 'transparent',
+    overflow: 'hidden',
     alignItems: 'center',
     justifyContent: 'center'
   },
   logo: {
-    width: 54,
-    height: 54
+    width: 84,
+    height: 84,
+    transform: [{ scale: 1.18 }]
   },
   brandBadge: {
+    position: 'absolute',
+    right: 0,
+    top: 0,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
@@ -131,14 +134,6 @@ const styles = StyleSheet.create({
     color: colors.textOnPrimary,
     fontSize: 12,
     fontWeight: '700'
-  },
-  eyebrow: {
-    color: '#CDE4F6',
-    fontSize: 12,
-    fontWeight: '700',
-    letterSpacing: 1.3,
-    textTransform: 'uppercase',
-    marginBottom: 10
   },
   title: {
     color: colors.textOnPrimary,

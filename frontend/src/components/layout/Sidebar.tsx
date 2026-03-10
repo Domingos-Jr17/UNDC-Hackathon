@@ -44,7 +44,7 @@ const sidebarItems: SidebarItem[] = [
     label: 'Nova ativação',
     icon: UserCheck,
     path: '/active',
-    description: 'Ativar beneficiárias e distribuir códigos.',
+    description: 'Activar beneficiárias e distribuir códigos.',
     group: 'core'
   },
   {

@@ -81,7 +81,7 @@ export default function VideoLessonScreen({ route, navigation }: VideoLessonScre
 
   const togglePlayPause = (): void => {
     if (!state.module?.videoUrl) {
-      showAlert('Video indisponivel', 'Este modulo ainda nao possui video publicado.')
+      showAlert('Vídeo indisponível', 'Este módulo ainda não possui vídeo publicado.')
       return
     }
 
@@ -95,13 +95,13 @@ export default function VideoLessonScreen({ route, navigation }: VideoLessonScre
 
   const handleDownload = (): void => {
     if (!state.module?.downloadable || !state.module?.videoUrl) {
-      showAlert('Offline indisponivel', 'Este conteudo nao possui pacote offline no momento.')
+      showAlert('Offline indisponível', 'Este conteúdo não possui pacote offline no momento.')
       return
     }
 
     showAlert(
-      'Offline indisponivel',
-      'O pacote offline ainda nao esta disponivel no backend atual.'
+      'Offline indisponível',
+      'O pacote offline ainda não está disponível no backend actual.'
     )
   }
 
@@ -121,7 +121,7 @@ export default function VideoLessonScreen({ route, navigation }: VideoLessonScre
     try {
       setSubmitting(true)
       await apiService.updateProgress(state.userCode, courseId, [...completed], percentage, { currentModule })
-      showAlert('Concluido', 'Modulo marcado como concluido com sucesso.', [
+      showAlert('Concluído', 'Módulo marcado como concluído com sucesso.', [
         { text: 'OK', onPress: () => navigation.goBack() }
       ])
     } catch (error) {
@@ -142,7 +142,7 @@ export default function VideoLessonScreen({ route, navigation }: VideoLessonScre
   if (!state.module) {
     return (
       <View style={styles.loaderContainer}>
-        <Text style={styles.errorText}>Modulo nao encontrado.</Text>
+        <Text style={styles.errorText}>Módulo não encontrado.</Text>
       </View>
     )
   }
@@ -153,8 +153,8 @@ export default function VideoLessonScreen({ route, navigation }: VideoLessonScre
     <AppShell
       navigation={navigation}
       activeRoute="CourseLibrary"
-      title={`Modulo ${moduleId}`}
-      subtitle="Assista com calma, conclua o passo atual e avance para a avaliacao quando fizer sentido."
+      title={`Módulo ${moduleId}`}
+      subtitle="Assista com calma, conclua o passo actual e avance para a avaliação quando fizer sentido."
       showBottomNav={false}
       showLogout={false}
     >
@@ -175,20 +175,20 @@ export default function VideoLessonScreen({ route, navigation }: VideoLessonScre
           />
         ) : (
           <View style={styles.videoUnavailable}>
-            <Text style={styles.videoUnavailableText}>Video ainda nao publicado para este modulo.</Text>
+            <Text style={styles.videoUnavailableText}>Vídeo ainda não publicado para este módulo.</Text>
           </View>
         )}
       </View>
 
       <View style={styles.contentCard}>
         <Text style={styles.moduleTitle}>{state.module.title}</Text>
-        <Text style={styles.moduleMeta}>Duracao: {state.module.duration}</Text>
-        <Text style={styles.moduleDescription}>{state.module.description ?? 'Sem descricao adicional.'}</Text>
+        <Text style={styles.moduleMeta}>Duração: {state.module.duration}</Text>
+        <Text style={styles.moduleDescription}>{state.module.description ?? 'Sem descrição adicional.'}</Text>
 
         <View style={styles.guidanceCard}>
           <Ionicons name="bulb-outline" size={18} color={colors.primary} />
           <Text style={styles.guidanceText}>
-            Assista primeiro ao conteudo principal e marque como concluido apenas quando terminar este passo com seguranca.
+            Assista primeiro ao conteúdo principal e marque como concluído apenas quando terminar este passo com segurança.
           </Text>
         </View>
 
@@ -209,7 +209,7 @@ export default function VideoLessonScreen({ route, navigation }: VideoLessonScre
           disabled={submitting || isCompleted}
         >
           <Text style={styles.primaryButtonText}>
-            {isCompleted ? 'Modulo ja concluido' : submitting ? 'A guardar...' : 'Marcar como concluido'}
+            {isCompleted ? 'Módulo já concluído' : submitting ? 'A guardar...' : 'Marcar como concluído'}
           </Text>
         </TouchableOpacity>
 
@@ -217,7 +217,7 @@ export default function VideoLessonScreen({ route, navigation }: VideoLessonScre
           style={styles.quizButton}
           onPress={() => navigation.navigate('Quiz', { courseId, moduleId: String(state.module?.id ?? moduleId) })}
         >
-          <Text style={styles.quizButtonText}>Fazer quiz deste modulo</Text>
+          <Text style={styles.quizButtonText}>Fazer quiz deste módulo</Text>
         </TouchableOpacity>
       </View>
     </AppShell>

@@ -83,7 +83,7 @@ function DashboardComponent() {
 
   const actionCards = [
     {
-      title: 'Ativar novas beneficiárias',
+      title: 'Activar novas beneficiárias',
       description: 'Conclua códigos pendentes e entregue acesso ao app.',
       icon: UserPlus,
       onClick: () => navigate('/active')
@@ -110,7 +110,7 @@ function DashboardComponent() {
         <MetricCard
           title="Beneficiárias ativas"
           value={`${stats.activeUsers}/${stats.totalUsers}`}
-          description={`${derived.activationRate}% da base com acesso ativo`}
+          description={`${derived.activationRate}% da base com acesso activo`}
           icon={Users}
           tone="primary"
         />

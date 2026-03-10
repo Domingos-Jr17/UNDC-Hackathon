@@ -245,7 +245,7 @@ function DataTableComponent<T extends Record<string, any>>({
                       {column.title}
                       {filters[String(column.key)] ? (
                         <Badge variant="secondary" className="ml-1 bg-primary/10 text-primary">
-                          Ativo
+                          Activo
                         </Badge>
                       ) : null}
                     </Button>

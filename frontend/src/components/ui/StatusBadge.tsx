@@ -23,12 +23,12 @@ interface StatusBadgeProps {
 
 const statusConfig = {
   active: {
-    label: 'Ativo',
+    label: 'Activo',
     className: 'bg-emerald-100 text-emerald-800 hover:bg-emerald-200',
     variant: 'secondary' as const
   },
   inactive: {
-    label: 'Inativo',
+    label: 'Inactivo',
     className: 'bg-slate-100 text-slate-700 hover:bg-slate-200',
     variant: 'secondary' as const
   },

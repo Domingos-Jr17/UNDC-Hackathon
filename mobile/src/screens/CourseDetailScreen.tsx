@@ -94,13 +94,13 @@ export default function CourseDetailScreen({ route, navigation }: CourseDetailSc
 
   const courseGuidance = useMemo(() => {
     if (!progressItem) {
-      return 'Comece pelo primeiro modulo e avance de forma sequencial para construir uma base solida.'
+      return 'Comece pelo primeiro módulo e avance de forma sequencial para construir uma base sólida.'
     }
 
     const remaining = Math.max(0, progressItem.modulesCount - progressItem.currentModule)
     return remaining > 0
-      ? `A recomendacao agora e concluir o modulo ${progressItem.currentModule}. Depois faltarao ${remaining} modulo${remaining > 1 ? 's' : ''}.`
-      : 'Esta muito perto de concluir este curso. Termine os ultimos passos e avance para a avaliacao.'
+      ? `A recomendação agora é concluir o módulo ${progressItem.currentModule}. Depois faltarão ${remaining} módulo${remaining > 1 ? 's' : ''}.`
+      : 'Está muito perto de concluir este curso. Termine os últimos passos e avance para a avaliação.'
   }, [progressItem])
 
   if (loading) {
@@ -114,7 +114,7 @@ export default function CourseDetailScreen({ route, navigation }: CourseDetailSc
   if (!state.course) {
     return (
       <View style={styles.loaderContainer}>
-        <Text style={styles.errorText}>Curso nao encontrado.</Text>
+        <Text style={styles.errorText}>Curso não encontrado.</Text>
       </View>
     )
   }
@@ -124,7 +124,7 @@ export default function CourseDetailScreen({ route, navigation }: CourseDetailSc
       navigation={navigation}
       activeRoute="CourseLibrary"
       title={state.course.title}
-      subtitle="Siga a recomendacao abaixo para manter uma progressao clara e consistente."
+      subtitle="Siga a recomendação abaixo para manter uma progressão clara e consistente."
       refreshing={refreshing}
       onRefresh={() => void loadData('refresh')}
       showBottomNav={false}
@@ -138,18 +138,18 @@ export default function CourseDetailScreen({ route, navigation }: CourseDetailSc
       <View style={styles.summaryCard}>
         <Text style={styles.summaryEyebrow}>Plano de aprendizagem</Text>
         <Text style={styles.summaryTitle}>{state.course.title}</Text>
-        <Text style={styles.summaryInstructor}>{state.course.instructor ?? 'Equipa tecnica WIRA'}</Text>
-        <Text style={styles.summaryMeta}>{state.course.duration_hours}h · {state.course.modules_count} modulos · {state.course.level}</Text>
-        <Text style={styles.summaryDescription}>{state.course.description ?? 'Formacao profissional com certificado.'}</Text>
+        <Text style={styles.summaryInstructor}>{state.course.instructor ?? 'Equipa técnica WIRA'}</Text>
+        <Text style={styles.summaryMeta}>{state.course.duration_hours}h · {state.course.modules_count} módulos · {state.course.level}</Text>
+        <Text style={styles.summaryDescription}>{state.course.description ?? 'Formação profissional com certificado.'}</Text>
 
         <View style={styles.progressTrack}>
           <View style={[styles.progressFill, { width: `${progressItem?.progress ?? 0}%` }]} />
         </View>
-        <Text style={styles.progressText}>{progressItem?.progress ?? 0}% concluido · modulo atual {progressItem?.currentModule ?? 1}</Text>
+        <Text style={styles.progressText}>{progressItem?.progress ?? 0}% concluído · módulo actual {progressItem?.currentModule ?? 1}</Text>
 
         <TouchableOpacity style={styles.primaryButton} onPress={() => openModule(currentModule)}>
           <Ionicons name="play-circle-outline" size={20} color={colors.textOnPrimary} />
-          <Text style={styles.primaryButtonText}>Continuar no modulo recomendado</Text>
+          <Text style={styles.primaryButtonText}>Continuar no módulo recomendado</Text>
         </TouchableOpacity>
       </View>
 
@@ -158,13 +158,13 @@ export default function CourseDetailScreen({ route, navigation }: CourseDetailSc
           <Ionicons name="compass-outline" size={18} color={colors.primary} />
         </View>
         <View style={styles.guidanceCopy}>
-          <Text style={styles.guidanceTitle}>Como avancar melhor</Text>
+          <Text style={styles.guidanceTitle}>Como avançar melhor</Text>
           <Text style={styles.guidanceText}>{courseGuidance}</Text>
         </View>
       </View>
 
       <View style={styles.sectionCard}>
-        <Text style={styles.sectionTitle}>Modulos</Text>
+        <Text style={styles.sectionTitle}>Módulos</Text>
         {state.modules.map(module => {
           const status: ModuleStatus = completed.has(String(module.id))
             ? 'completed'
@@ -178,17 +178,17 @@ export default function CourseDetailScreen({ route, navigation }: CourseDetailSc
           return (
             <View key={module.id} style={[styles.moduleCard, status === 'current' && styles.moduleCardCurrent]}>
               <View style={styles.moduleHeader}>
-                <Text style={styles.moduleTitle}>Modulo {module.id}: {module.title}</Text>
+                <Text style={styles.moduleTitle}>Módulo {module.id}: {module.title}</Text>
                 <View style={[styles.statusPill, status === 'completed' ? styles.statusPillDone : status === 'current' ? styles.statusPillCurrent : styles.statusPillUpcoming]}>
                   <Text style={[styles.statusPillText, status === 'completed' ? styles.statusPillTextDone : status === 'current' ? styles.statusPillTextCurrent : styles.statusPillTextUpcoming]}>
-                    {status === 'completed' ? 'Concluido' : status === 'current' ? 'Recomendado' : 'Depois deste'}
+                    {status === 'completed' ? 'Concluído' : status === 'current' ? 'Recomendado' : 'Depois deste'}
                   </Text>
                 </View>
               </View>
 
-              <Text style={styles.moduleDescription}>{module.description ?? 'Sem descricao detalhada.'}</Text>
-              <Text style={styles.moduleMeta}>Duracao: {module.duration}</Text>
-              {status === 'upcoming' ? <Text style={styles.moduleHint}>Conclua o modulo recomendado antes de avancar para este passo.</Text> : null}
+              <Text style={styles.moduleDescription}>{module.description ?? 'Sem descrição detalhada.'}</Text>
+              <Text style={styles.moduleMeta}>Duração: {module.duration}</Text>
+              {status === 'upcoming' ? <Text style={styles.moduleHint}>Conclua o módulo recomendado antes de avançar para este passo.</Text> : null}
 
               <View style={styles.moduleActions}>
                 <TouchableOpacity

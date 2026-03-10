@@ -43,8 +43,8 @@ export default function UsersPage() {
       sortable: true,
       filterable: true,
       filterOptions: [
-        { value: 'Ativo', label: 'Ativo' },
-        { value: 'Inativo', label: 'Inativo' }
+        { value: 'Ativo', label: 'Activo' },
+        { value: 'Inativo', label: 'Inactivo' }
       ],
       render: (value: string) => (
         <StatusBadge status={value === 'Ativo' ? 'active' : 'inactive'} />
@@ -110,8 +110,8 @@ export default function UsersPage() {
 
       <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
         <MetricCard title="Base total" value={stats.total} description="Perfis registados na plataforma" icon={Users} tone="primary" />
-        <MetricCard title="Ativas" value={stats.active} description="Com acesso e participação em dia" icon={TrendingUp} tone="success" />
-        <MetricCard title="Inativas" value={stats.inactive} description="Requerem revisão ou reativação" icon={AlertTriangle} tone="warning" />
+        <MetricCard title="Activas" value={stats.active} description="Com acesso e participação em dia" icon={TrendingUp} tone="success" />
+        <MetricCard title="Inactivas" value={stats.inactive} description="Requerem revisão ou reactivação" icon={AlertTriangle} tone="warning" />
         <MetricCard title="Progresso médio" value={`${stats.avgProgress}%`} description="Ritmo agregado da jornada de capacitação" icon={ArrowRight} tone="neutral" />
       </section>
 
@@ -132,7 +132,7 @@ export default function UsersPage() {
             </Button>
             <Button onClick={() => navigate('/active')}>
               <UserPlus className="mr-2 h-4 w-4" />
-              Nova ativação
+              Nova activação
             </Button>
           </div>
         </CardContent>

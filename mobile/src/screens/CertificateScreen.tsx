@@ -54,7 +54,7 @@ export default function CertificateScreen({ route, navigation }: CertificateScre
     try {
       await Linking.openURL(certificate.qrCode)
     } catch {
-      showAlert('Verificacao', `Codigo: ${certificate.verificationCode}`)
+      showAlert('Verificação', `Código: ${certificate.verificationCode}`)
     }
   }
 
@@ -71,7 +71,7 @@ export default function CertificateScreen({ route, navigation }: CertificateScre
       navigation={navigation}
       activeRoute="Progress"
       title="Certificado"
-      subtitle="Guarde esta conquista e use o codigo de verificacao sempre que precisar confirmar o resultado."
+      subtitle="Guarde esta conquista e use o código de verificação sempre que precisar de confirmar o resultado."
       showBottomNav={false}
       showLogout={false}
     >
@@ -82,8 +82,8 @@ export default function CertificateScreen({ route, navigation }: CertificateScre
 
       {!certificate ? (
         <View style={styles.emptyCard}>
-          <Text style={styles.emptyTitle}>Certificado ainda nao disponivel</Text>
-          <Text style={styles.emptyText}>Conclua o curso e atinja o resultado minimo no quiz para gerar o certificado.</Text>
+          <Text style={styles.emptyTitle}>Certificado ainda não disponível</Text>
+          <Text style={styles.emptyText}>Conclua o curso e atinja o resultado mínimo no quiz para gerar o certificado.</Text>
         </View>
       ) : (
         <>
@@ -93,23 +93,23 @@ export default function CertificateScreen({ route, navigation }: CertificateScre
               <Text style={styles.certificateBadgeText}>Conquista desbloqueada</Text>
             </View>
 
-            <Text style={styles.certificateTitle}>Certificado de competencia</Text>
+            <Text style={styles.certificateTitle}>Certificado de competência</Text>
             <Text style={styles.label}>Curso</Text>
             <Text style={styles.value}>{certificate.courseTitle}</Text>
 
-            <Text style={styles.label}>Codigo de verificacao</Text>
+            <Text style={styles.label}>Código de verificação</Text>
             <Text style={styles.value}>{certificate.verificationCode}</Text>
 
             <View style={styles.infoRow}>
-              <InfoBlock label="Emissao" value={new Date(certificate.issueDate).toLocaleDateString('pt-PT')} />
-              <InfoBlock label="Pontuacao" value={`${certificate.score}%`} />
+              <InfoBlock label="Emissão" value={new Date(certificate.issueDate).toLocaleDateString('pt-PT')} />
+              <InfoBlock label="Pontuação" value={`${certificate.score}%`} />
             </View>
           </View>
 
           <View style={styles.helperCard}>
             <Text style={styles.helperTitle}>Como usar este certificado</Text>
             <Text style={styles.helperText}>
-              Use o codigo de verificacao para confirmar autenticidade e partilhe esta conquista quando fizer sentido para oportunidades futuras.
+              Use o código de verificação para confirmar a autenticidade e partilhe esta conquista quando fizer sentido para oportunidades futuras.
             </Text>
             <TouchableOpacity style={styles.verifyButton} onPress={() => void handleOpenVerification()}>
               <Text style={styles.verifyButtonText}>Verificar certificado</Text>

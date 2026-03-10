@@ -53,13 +53,13 @@ export default function ProgressScreen() {
 
   const guidanceText = useMemo(() => {
     if (!nextCourse) {
-      return 'Ainda nao existe um curso em andamento. Explore a biblioteca e comece um percurso que faca sentido para si.'
+      return 'Ainda não existe um curso em andamento. Explore a biblioteca e comece um percurso que faça sentido para si.'
     }
 
     const remainingModules = Math.max(0, nextCourse.modulesCount - nextCourse.currentModule)
     return remainingModules > 0
-      ? `Retome ${nextCourse.title}. Faltam ${remainingModules} modulo${remainingModules > 1 ? 's' : ''} apos o modulo atual para concluir este percurso.`
-      : `Esta muito perto de concluir ${nextCourse.title}. Falta validar os ultimos passos para desbloquear o certificado.`
+      ? `Retome ${nextCourse.title}. Faltam ${remainingModules} módulo${remainingModules > 1 ? 's' : ''} após o módulo actual para concluir este percurso.`
+      : `Está muito perto de concluir ${nextCourse.title}. Falta validar os últimos passos para desbloquear o certificado.`
   }, [nextCourse])
 
   if (loading) {
@@ -75,7 +75,7 @@ export default function ProgressScreen() {
       navigation={navigation}
       activeRoute="Progress"
       title="O seu progresso"
-      subtitle="Veja o que ja avancou e qual curso merece a sua atencao agora."
+      subtitle="Veja o que já avançou e qual curso merece a sua atenção agora."
       refreshing={refreshing}
       onRefresh={() => void loadProgress('refresh')}
     >
@@ -84,7 +84,7 @@ export default function ProgressScreen() {
           <Ionicons name="trail-sign-outline" size={20} color={colors.primary} />
         </View>
         <View style={styles.guidanceCopy}>
-          <Text style={styles.guidanceTitle}>Leitura rapida</Text>
+          <Text style={styles.guidanceTitle}>Leitura rápida</Text>
           <Text style={styles.guidanceText}>{guidanceText}</Text>
         </View>
       </View>
@@ -98,9 +98,9 @@ export default function ProgressScreen() {
             <Ionicons name="trending-up-outline" size={20} color={colors.primary} />
           </View>
           <View style={styles.recommendationCopy}>
-            <Text style={styles.recommendationTitle}>Melhor proximo passo</Text>
+            <Text style={styles.recommendationTitle}>Melhor próximo passo</Text>
             <Text style={styles.recommendationText}>
-              Retome {nextCourse.title}: esta em {nextCourse.progress}% e no modulo {nextCourse.currentModule}.
+              Retome {nextCourse.title}: está em {nextCourse.progress}% e no módulo {nextCourse.currentModule}.
             </Text>
           </View>
           <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
@@ -109,14 +109,14 @@ export default function ProgressScreen() {
 
       <View style={styles.statsRow}>
         <ProgressStat label="Cursos" value={progress?.summary.totalCourses ?? 0} />
-        <ProgressStat label="Ativos" value={progress?.summary.activeCourses ?? 0} />
+        <ProgressStat label="Activos" value={progress?.summary.activeCourses ?? 0} />
         <ProgressStat label="Concluidos" value={completedCourses} />
       </View>
 
       <View style={styles.sectionCard}>
         <Text style={styles.sectionTitle}>Detalhes por curso</Text>
         {(progress?.courses ?? []).length === 0 ? (
-          <Text style={styles.emptyText}>Ainda nao ha cursos em progresso. Explore a biblioteca para comecar.</Text>
+          <Text style={styles.emptyText}>Ainda não há cursos em progresso. Explore a biblioteca para começar.</Text>
         ) : (
           (progress?.courses ?? []).map(course => {
             const needsAttention = course.progress > 0 && course.progress < 35
@@ -136,14 +136,14 @@ export default function ProgressScreen() {
                   <View style={[styles.progressFill, { width: `${course.progress}%` }]} />
                 </View>
 
-                <Text style={styles.courseMeta}>Modulo atual: {course.currentModule}/{course.modulesCount}</Text>
-                <Text style={styles.courseMeta}>Modulos concluidos: {course.completedModules.length}</Text>
+                <Text style={styles.courseMeta}>Módulo actual: {course.currentModule}/{course.modulesCount}</Text>
+                <Text style={styles.courseMeta}>Módulos concluídos: {course.completedModules.length}</Text>
                 <Text style={styles.courseMeta}>
-                  Ultima atividade: {course.lastActivity ? new Date(course.lastActivity).toLocaleDateString('pt-PT') : 'Sem atividade'}
+                  Última actividade: {course.lastActivity ? new Date(course.lastActivity).toLocaleDateString('pt-PT') : 'Sem atividade'}
                 </Text>
                 <View style={[styles.courseHintPill, needsAttention ? styles.courseHintAttention : styles.courseHintNormal]}>
                   <Text style={[styles.courseHintText, needsAttention ? styles.courseHintAttentionText : styles.courseHintNormalText]}>
-                    {needsAttention ? 'Precisa de retoma' : course.progress >= 100 ? 'Percurso concluido' : 'Ritmo consistente'}
+                    {needsAttention ? 'Precisa de retoma' : course.progress >= 100 ? 'Percurso concluído' : 'Ritmo consistente'}
                   </Text>
                 </View>
               </TouchableOpacity>
