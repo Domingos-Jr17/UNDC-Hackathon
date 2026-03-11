@@ -25,96 +25,546 @@
         --sans: "Aptos", "Segoe UI", sans-serif;
       }
 
-      * { box-sizing: border-box; }
+      * {
+        box-sizing: border-box;
+      }
       body {
         margin: 0;
         font-family: var(--sans);
         color: var(--text);
         min-height: 100vh;
         background:
-          radial-gradient(circle at top left, rgba(217, 119, 6, 0.16), transparent 24%),
-          radial-gradient(circle at top right, rgba(30, 58, 138, 0.18), transparent 26%),
+          radial-gradient(
+            circle at top left,
+            rgba(217, 119, 6, 0.16),
+            transparent 24%
+          ),
+          radial-gradient(
+            circle at top right,
+            rgba(30, 58, 138, 0.18),
+            transparent 26%
+          ),
           linear-gradient(180deg, #f9f4e8 0%, #edf3fb 54%, #e7eef9 100%);
       }
 
-      .page { max-width: 1380px; margin: 0 auto; padding: 28px 20px 40px; }
-      .panel { background: var(--surface); backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,.7); border-radius: var(--radius-xl); box-shadow: var(--shadow); }
-      .hero { display: flex; align-items: end; justify-content: space-between; gap: 18px; padding: 24px; margin-bottom: 22px; }
-      .eyebrow { display: inline-flex; align-items: center; gap: 8px; border-radius: 999px; padding: 8px 14px; background: rgba(30,58,138,.08); color: var(--primary); font-size: 12px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
-      h1 { margin: 14px 0 8px; font-size: clamp(28px, 4vw, 48px); line-height: 1; letter-spacing: -.04em; }
-      .hero p, .section-head p, .status-note, .muted, .timeline-item p { color: var(--muted); line-height: 1.55; }
-      .hero-meta, .status-row, .phone-fields, .mini-actions, .keypad, .footer-actions, .message-shortcuts { display: grid; gap: 10px; }
-      .hero-meta { grid-template-columns: repeat(3, minmax(0, 1fr)); margin-top: 16px; }
-      .chip, .status-box, .field, .timeline-item, .shortcut { border: 1px solid var(--line); background: var(--surface-strong); border-radius: var(--radius-md); }
-      .chip { padding: 10px 14px; border-radius: 999px; font-size: 13px; }
-      .layout { display: grid; grid-template-columns: minmax(420px,560px) minmax(380px,1fr); gap: 20px; align-items: start; }
-      .phone-card, .message-card { padding: 24px; }
-      .section-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 18px; }
-      .section-head h2, .section-head h3 { margin: 0; font-size: 24px; letter-spacing: -.03em; }
-      .service-pill { display: inline-flex; align-items: center; justify-content: center; min-height: 42px; padding: 0 14px; border-radius: 999px; background: var(--primary); color: #fff; font-family: var(--mono); font-size: 13px; font-weight: 700; white-space: nowrap; }
-      .phone-fields, .status-row, .message-shortcuts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-      .field, .status-box, .timeline-item, .shortcut { padding: 14px 16px; }
-      .field label, .status-box label { display: block; margin-bottom: 8px; color: var(--muted); font-size: 12px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
-      .field input, .composer textarea { width: 100%; border: 0; background: transparent; outline: none; color: var(--text); font-family: var(--mono); font-size: 15px; }
-      .status-pill { display: inline-flex; align-items: center; gap: 8px; border-radius: 999px; padding: 7px 10px; font-size: 12px; font-weight: 700; }
-      .status-pill.ok { background: rgba(4,120,87,.12); color: var(--success); }
-      .status-pill.waiting { background: rgba(217,119,6,.12); color: var(--accent); }
-      .status-pill.offline { background: rgba(180,35,24,.12); color: var(--danger); }
-      .dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
-      .status-meta { margin-top: 8px; font-size: 13px; color: var(--muted); }
-      .status-note { margin-top: 14px; font-size: 13px; }
-      .phone { max-width: 380px; margin: 18px auto 0; border-radius: 38px; background: linear-gradient(180deg,#132347 0%,#0d1731 100%); padding: 18px; box-shadow: var(--phone-shadow); }
-      .notch { width: 130px; height: 28px; border-radius: 0 0 18px 18px; background: #091122; margin: 0 auto 14px; }
-      .phone-body { border-radius: 30px; background: linear-gradient(180deg,#1d2f57 0%,#172747 100%); padding: 16px; min-height: 720px; display: grid; gap: 14px; }
-      .phone-status { display: flex; justify-content: space-between; color: rgba(255,255,255,.84); font-size: 12px; font-weight: 600; }
-      .ussd-screen { border-radius: 24px; background: #08101d; border: 1px solid rgba(116,227,169,.18); padding: 14px; min-height: 240px; display: grid; gap: 10px; }
-      .ussd-top { display: flex; justify-content: space-between; color: #74e3a9; font-size: 11px; text-transform: uppercase; letter-spacing: .08em; }
-      #ussdScreen { color: #87f5ba; font-family: var(--mono); font-size: 14px; line-height: 1.55; white-space: pre-wrap; word-break: break-word; }
-      .placeholder { display: flex; align-items: center; gap: 8px; color: rgba(135,245,186,.76); }
-      .cursor { width: 8px; height: 16px; background: #87f5ba; display: inline-block; animation: blink 1s steps(1) infinite; }
-      @keyframes blink { 0%, 50% { opacity: 1; } 51%, 100% { opacity: 0; } }
-      .dialer { border-radius: 24px; background: rgba(7,14,29,.56); padding: 14px; display: grid; gap: 12px; }
-      .dial-preview { min-height: 54px; border-radius: 16px; background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.08); padding: 0 14px; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
-      #ussdInput { font-family: var(--mono); font-size: 16px; color: #fff; word-break: break-all; }
-      .mini-actions { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-      .keypad { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-      .footer-actions { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-      button { border: 0; cursor: pointer; font: inherit; transition: transform .14s ease, box-shadow .14s ease, background .14s ease; }
-      button:hover { transform: translateY(-1px); }
-      button:active { transform: translateY(0); }
-      .btn, .key, .composer button, .shortcut { border-radius: 16px; }
-      .btn, .composer button, .shortcut { min-height: 48px; padding: 0 16px; border: 1px solid var(--line); background: rgba(255,255,255,.9); color: var(--text); font-weight: 700; }
-      .btn.primary, .composer .primary, .shortcut.primary { background: linear-gradient(180deg,var(--primary),var(--primary-strong)); color: #fff; border-color: transparent; box-shadow: 0 12px 24px rgba(30,58,138,.24); }
-      .btn.warning { background: rgba(217,119,6,.12); color: #9a5b07; border-color: rgba(217,119,6,.18); }
-      .key { min-height: 60px; border: 1px solid rgba(255,255,255,.08); background: linear-gradient(180deg,rgba(255,255,255,.18),rgba(255,255,255,.08)); color: #fff; font-size: 18px; font-weight: 700; }
-      .key.special { background: linear-gradient(180deg,rgba(30,58,138,.95),rgba(16,39,95,.95)); }
-      .message-card { display: grid; gap: 18px; }
-      .messages-shell { border-radius: 24px; background: linear-gradient(180deg,#fdfefe 0%,#eef3fb 100%); border: 1px solid var(--line); overflow: hidden; }
-      .messages-header { padding: 16px 18px; border-bottom: 1px solid var(--line); display: flex; align-items: center; justify-content: space-between; gap: 12px; background: rgba(255,255,255,.72); }
-      .contact { display: flex; align-items: center; gap: 12px; }
-      .avatar { width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; background: rgba(30,58,138,.12); color: var(--primary); font-weight: 800; }
-      .contact strong { display: block; }
-      .contact span { color: var(--muted); font-size: 13px; }
-      .messages-body { min-height: 440px; max-height: 440px; overflow: auto; padding: 18px; display: grid; gap: 12px; background: linear-gradient(180deg,rgba(255,255,255,.55),rgba(238,243,251,.7)); }
-      .bubble { max-width: 82%; padding: 12px 14px; border-radius: 18px; font-size: 14px; line-height: 1.5; box-shadow: 0 10px 20px rgba(20,33,61,.06); }
-      .bubble.system { background: #fff; color: var(--text); border-bottom-left-radius: 6px; }
-      .bubble.user { margin-left: auto; background: linear-gradient(180deg,var(--primary),var(--primary-strong)); color: #fff; border-bottom-right-radius: 6px; }
-      .bubble-time { display: block; margin-top: 8px; font-size: 12px; opacity: .72; }
-      .composer { padding: 16px 18px 18px; border-top: 1px solid var(--line); background: rgba(255,255,255,.9); }
-      .composer textarea { min-height: 84px; resize: vertical; font-family: var(--sans); line-height: 1.5; }
-      .composer-shell { border: 1px solid var(--line); border-radius: 18px; background: #fff; padding: 14px 14px 10px; }
-      .composer-actions { display: flex; justify-content: space-between; gap: 10px; margin-top: 12px; }
-      .message-shortcuts .shortcut { display: flex; align-items: center; justify-content: center; text-align: center; min-height: 44px; }
-      .timeline { display: grid; gap: 10px; }
-      .timeline-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-      .timeline-head h3 { margin: 0; font-size: 18px; }
-      .timeline-list { display: grid; gap: 10px; max-height: 220px; overflow: auto; }
-      .timeline-item strong { display: block; font-size: 14px; }
-      .timeline-item span { display: block; margin-top: 4px; font-size: 12px; color: var(--muted); }
-      .timeline-item p { margin: 8px 0 0; font-size: 13px; }
-      .mono { font-family: var(--mono); }
-      @media (max-width: 1120px) { .hero, .layout { grid-template-columns: 1fr; } .hero-meta, .phone-fields, .status-row, .message-shortcuts { grid-template-columns: 1fr; } }
-      @media (max-width: 720px) { .page { padding: 18px 14px 30px; } .hero, .phone-card, .message-card { padding: 18px; } .mini-actions, .keypad, .footer-actions { grid-template-columns: 1fr; } .section-head, .messages-header, .composer-actions, .timeline-head { flex-direction: column; align-items: stretch; } }
+      .page {
+        max-width: 1280px;
+        margin: 0 auto;
+        padding: 18px 16px 24px;
+      }
+      .panel {
+        background: var(--surface);
+        backdrop-filter: blur(16px);
+        border: 1px solid rgba(255, 255, 255, 0.7);
+        border-radius: var(--radius-xl);
+        box-shadow: var(--shadow);
+      }
+      .hero {
+        display: flex;
+        align-items: end;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 16px 18px;
+        margin-bottom: 14px;
+      }
+      .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        border-radius: 999px;
+        padding: 8px 14px;
+        background: rgba(30, 58, 138, 0.08);
+        color: var(--primary);
+        font-size: 12px;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+      h1 {
+        margin: 10px 0 6px;
+        font-size: clamp(28px, 4vw, 48px);
+        line-height: 1;
+        letter-spacing: -0.04em;
+      }
+      .hero p,
+      .section-head p,
+      .muted,
+      .timeline-item p {
+        color: var(--muted);
+        line-height: 1.42;
+      }
+      .hero-meta,
+      .phone-fields,
+      .mini-actions,
+      .keypad,
+      .footer-actions,
+      .message-shortcuts {
+        display: grid;
+        gap: 8px;
+      }
+      .hero-meta {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        margin-top: 10px;
+      }
+      .chip,
+      .status-box,
+      .field,
+      .timeline-item,
+      .shortcut {
+        border: 1px solid var(--line);
+        background: var(--surface-strong);
+        border-radius: var(--radius-md);
+      }
+      .chip {
+        padding: 10px 14px;
+        border-radius: 999px;
+        font-size: 13px;
+      }
+      .layout {
+        display: grid;
+        grid-template-columns: minmax(330px, 392px) minmax(340px, 1fr);
+        gap: 14px;
+        align-items: start;
+      }
+      .phone-card,
+      .message-card {
+        padding: 16px;
+      }
+      .section-head {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 12px;
+      }
+      .section-head h2,
+      .section-head h3 {
+        margin: 0;
+        font-size: 22px;
+        letter-spacing: -0.03em;
+      }
+      .service-pill {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 42px;
+        padding: 0 14px;
+        border-radius: 999px;
+        background: var(--primary);
+        color: #fff;
+        font-family: var(--mono);
+        font-size: 13px;
+        font-weight: 700;
+        white-space: nowrap;
+      }
+      .phone-fields,
+      .message-shortcuts {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+      .field,
+      .status-box,
+      .timeline-item,
+      .shortcut {
+        padding: 12px 14px;
+      }
+      .field label,
+      .status-box label {
+        display: block;
+        margin-bottom: 8px;
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 800;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+      }
+      .field input,
+      .composer textarea {
+        width: 100%;
+        border: 0;
+        background: transparent;
+        outline: none;
+        color: var(--text);
+        font-family: var(--mono);
+        font-size: 15px;
+      }
+      .status-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        border-radius: 999px;
+        padding: 7px 10px;
+        font-size: 12px;
+        font-weight: 700;
+      }
+      .status-pill.ok {
+        background: rgba(4, 120, 87, 0.12);
+        color: var(--success);
+      }
+      .status-pill.waiting {
+        background: rgba(217, 119, 6, 0.12);
+        color: var(--accent);
+      }
+      .status-pill.offline {
+        background: rgba(180, 35, 24, 0.12);
+        color: var(--danger);
+      }
+      .dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: currentColor;
+      }
+      .status-meta {
+        margin-top: 8px;
+        font-size: 13px;
+        color: var(--muted);
+      }
+      .phone {
+        max-width: 286px;
+        margin: 12px auto 0;
+        border-radius: 30px;
+        background: linear-gradient(180deg, #132347 0%, #0d1731 100%);
+        padding: 12px;
+        box-shadow: var(--phone-shadow);
+      }
+      .notch {
+        width: 84px;
+        height: 18px;
+        border-radius: 0 0 12px 12px;
+        background: #091122;
+        margin: 0 auto 8px;
+      }
+      .phone-body {
+        border-radius: 24px;
+        background: linear-gradient(180deg, #1d2f57 0%, #172747 100%);
+        padding: 10px;
+        min-height: 442px;
+        display: grid;
+        gap: 8px;
+      }
+      .phone-status {
+        display: flex;
+        justify-content: space-between;
+        color: rgba(255, 255, 255, 0.84);
+        font-size: 12px;
+        font-weight: 600;
+      }
+      .ussd-screen {
+        border-radius: 18px;
+        background: #08101d;
+        border: 1px solid rgba(116, 227, 169, 0.18);
+        padding: 9px;
+        min-height: 146px;
+        display: grid;
+        gap: 6px;
+      }
+      .ussd-top {
+        display: flex;
+        justify-content: space-between;
+        color: #74e3a9;
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+      }
+      #ussdScreen {
+        color: #87f5ba;
+        font-family: var(--mono);
+        font-size: 13px;
+        line-height: 1.5;
+        white-space: pre-wrap;
+        word-break: break-word;
+      }
+      .placeholder {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: rgba(135, 245, 186, 0.76);
+      }
+      .cursor {
+        width: 8px;
+        height: 16px;
+        background: #87f5ba;
+        display: inline-block;
+        animation: blink 1s steps(1) infinite;
+      }
+      @keyframes blink {
+        0%,
+        50% {
+          opacity: 1;
+        }
+        51%,
+        100% {
+          opacity: 0;
+        }
+      }
+      .softkeys {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 9px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        padding: 0 2px;
+      }
+      .dialer {
+        border-radius: 18px;
+        background: rgba(7, 14, 29, 0.56);
+        padding: 8px;
+        display: grid;
+        gap: 6px;
+      }
+      .dial-preview {
+        min-height: 38px;
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        padding: 0 8px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 6px;
+      }
+      #ussdInput {
+        font-family: var(--mono);
+        font-size: 13px;
+        color: #fff;
+        word-break: break-all;
+      }
+      .mini-actions {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+      .keypad {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+      .footer-actions {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+      button {
+        border: 0;
+        cursor: pointer;
+        font: inherit;
+        transition:
+          transform 0.14s ease,
+          box-shadow 0.14s ease,
+          background 0.14s ease;
+      }
+      button:hover {
+        transform: translateY(-1px);
+      }
+      button:active {
+        transform: translateY(0);
+      }
+      .btn,
+      .key,
+      .composer button,
+      .shortcut {
+        border-radius: 16px;
+      }
+      .btn,
+      .composer button,
+      .shortcut {
+        min-height: 36px;
+        padding: 0 12px;
+        border: 1px solid var(--line);
+        background: rgba(255, 255, 255, 0.9);
+        color: var(--text);
+        font-weight: 700;
+      }
+      .btn.primary,
+      .composer .primary,
+      .shortcut.primary {
+        background: linear-gradient(
+          180deg,
+          var(--primary),
+          var(--primary-strong)
+        );
+        color: #fff;
+        border-color: transparent;
+        box-shadow: 0 12px 24px rgba(30, 58, 138, 0.24);
+      }
+      .btn.warning {
+        background: rgba(217, 119, 6, 0.12);
+        color: #9a5b07;
+        border-color: rgba(217, 119, 6, 0.18);
+      }
+      .key {
+        min-height: 38px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        background: linear-gradient(
+          180deg,
+          rgba(255, 255, 255, 0.18),
+          rgba(255, 255, 255, 0.08)
+        );
+        color: #fff;
+        font-size: 15px;
+        font-weight: 700;
+      }
+      .key.special {
+        background: linear-gradient(
+          180deg,
+          rgba(30, 58, 138, 0.95),
+          rgba(16, 39, 95, 0.95)
+        );
+      }
+      .message-card {
+        display: grid;
+        gap: 12px;
+      }
+      .messages-shell {
+        border-radius: 24px;
+        background: linear-gradient(180deg, #fdfefe 0%, #eef3fb 100%);
+        border: 1px solid var(--line);
+        overflow: hidden;
+      }
+      .messages-header {
+        padding: 12px 14px;
+        border-bottom: 1px solid var(--line);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        background: rgba(255, 255, 255, 0.72);
+      }
+      .contact {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      .avatar {
+        width: 38px;
+        height: 38px;
+        border-radius: 50%;
+        display: grid;
+        place-items: center;
+        background: rgba(30, 58, 138, 0.12);
+        color: var(--primary);
+        font-weight: 800;
+      }
+      .contact strong {
+        display: block;
+      }
+      .contact span {
+        color: var(--muted);
+        font-size: 13px;
+      }
+      .messages-body {
+        min-height: 258px;
+        max-height: 258px;
+        overflow: auto;
+        padding: 12px;
+        display: grid;
+        gap: 8px;
+        background: linear-gradient(
+          180deg,
+          rgba(255, 255, 255, 0.55),
+          rgba(238, 243, 251, 0.7)
+        );
+      }
+      .bubble {
+        max-width: 82%;
+        padding: 10px 12px;
+        border-radius: 16px;
+        font-size: 13px;
+        line-height: 1.4;
+        box-shadow: 0 8px 16px rgba(20, 33, 61, 0.06);
+      }
+      .bubble.system {
+        background: #fff;
+        color: var(--text);
+        border-bottom-left-radius: 6px;
+      }
+      .bubble.user {
+        margin-left: auto;
+        background: linear-gradient(
+          180deg,
+          var(--primary),
+          var(--primary-strong)
+        );
+        color: #fff;
+        border-bottom-right-radius: 6px;
+      }
+      .bubble-time {
+        display: block;
+        margin-top: 8px;
+        font-size: 12px;
+        opacity: 0.72;
+      }
+      .composer {
+        padding: 10px 12px 12px;
+        border-top: 1px solid var(--line);
+        background: rgba(255, 255, 255, 0.9);
+      }
+      .composer textarea {
+        min-height: 54px;
+        resize: vertical;
+        font-family: var(--sans);
+        line-height: 1.35;
+      }
+      .composer-shell {
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        background: #fff;
+        padding: 10px 10px 6px;
+      }
+      .composer-actions {
+        display: flex;
+        justify-content: space-between;
+        gap: 8px;
+        margin-top: 8px;
+      }
+      .message-shortcuts .shortcut {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        min-height: 38px;
+      }
+      .timeline,
+      .timeline-head,
+      .timeline-list {
+        display: none;
+      }
+      .timeline-item p {
+        margin: 8px 0 0;
+        font-size: 13px;
+      }
+      .mono {
+        font-family: var(--mono);
+      }
+      @media (max-width: 1120px) {
+        .hero,
+        .layout {
+          grid-template-columns: 1fr;
+        }
+        .hero-meta,
+        .phone-fields,
+        .message-shortcuts {
+          grid-template-columns: 1fr;
+        }
+      }
+      @media (max-width: 720px) {
+        .page {
+          padding: 18px 14px 30px;
+        }
+        .hero,
+        .phone-card,
+        .message-card {
+          padding: 18px;
+        }
+        .mini-actions,
+        .keypad,
+        .footer-actions {
+          grid-template-columns: 1fr;
+        }
+        .section-head,
+        .messages-header,
+        .composer-actions,
+        .timeline-head {
+          flex-direction: column;
+          align-items: stretch;
+        }
+      }
     </style>
   </head>
   <body>
@@ -122,16 +572,23 @@
       <section class="panel hero">
         <div>
           <div class="eyebrow">WIRA USSD Lab</div>
-          <h1>USSD no telefone. SMS ao lado para o contexto longo.</h1>
+          <h1>simulador de ussd e sms</h1>
           <p>
-            O projecto ja assume que o USSD deve ficar curto e objectivo. Esta interface
-            simula o telemovel da beneficiaria e, ao lado, o canal de mensagens onde o sistema
-            envia detalhes, apoio e seguimento que nao cabem no menu USSD.
+            Esta interface simula o telemovel da beneficiaria e, ao lado, o
+            canal de mensagens onde o sistema envia detalhes, apoio e seguimento
+            que nao cabem no menu USSD.
           </p>
           <div class="hero-meta">
-            <div class="chip">Codigo activo: <strong class="mono">*384*36224#</strong></div>
-            <div class="chip">Numero de teste: <strong class="mono" id="heroPhone">+258855735760</strong></div>
-            <div class="chip">Fluxo real: <strong>USSD + SMS complementar</strong></div>
+            <div class="chip">
+              Codigo activo: <strong class="mono">*384*36224#</strong>
+            </div>
+            <div class="chip">
+              Numero de teste:
+              <strong class="mono" id="heroPhone">+258855735760</strong>
+            </div>
+            <div class="chip">
+              Fluxo real: <strong>USSD + SMS complementar</strong>
+            </div>
           </div>
         </div>
       </section>
@@ -141,20 +598,8 @@
           <div class="section-head">
             <div>
               <h2>Telefone da beneficiaria</h2>
-              <p>Marque o codigo, introduza o acesso e navegue no menu como num telemovel basico.</p>
             </div>
             <div class="service-pill">*384*36224#</div>
-          </div>
-
-          <div class="phone-fields">
-            <div class="field">
-              <label for="phoneNumberInput">Numero da beneficiaria</label>
-              <input id="phoneNumberInput" value="+258855735760" oninput="updatePhoneNumber(this.value)" />
-            </div>
-            <div class="field">
-              <label for="sessionLabel">Sessao actual</label>
-              <input id="sessionLabel" value="Sem sessao" readonly />
-            </div>
           </div>
 
           <div class="phone">
@@ -172,23 +617,49 @@
                   <span id="displayServiceCode">*384*36224#</span>
                 </div>
                 <div id="ussdScreen">
-                  <div class="placeholder">Aguardando marcacao do servico<span class="cursor"></span></div>
+                  <div class="placeholder">
+                    Aguardando marcacao do servico<span class="cursor"></span>
+                  </div>
                 </div>
+              </div>
+
+              <div class="softkeys">
+                <span>Opcoes</span>
+                <span>Seleccionar</span>
+                <span>Voltar</span>
               </div>
 
               <div class="dialer">
                 <div class="dial-preview">
                   <div>
-                    <div class="muted" style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.08em">Entrada actual</div>
+                    <div
+                      class="muted"
+                      style="
+                        font-size: 12px;
+                        font-weight: 700;
+                        text-transform: uppercase;
+                        letter-spacing: 0.08em;
+                      "
+                    >
+                      Entrada actual
+                    </div>
                     <div id="ussdInput">-</div>
                   </div>
-                  <button class="btn warning" onclick="clearUSSD()">Apagar</button>
+                  <button class="btn warning" onclick="clearUSSD()">
+                    Apagar
+                  </button>
                 </div>
 
                 <div class="mini-actions">
-                  <button class="btn primary" onclick="dialServiceCode()">Marcar codigo</button>
-                  <button class="btn" onclick="pasteAccessCode('V0042')">Inserir V0042</button>
-                  <button class="btn" onclick="runShortcut('progress')">Demo curta</button>
+                  <button class="btn primary" onclick="dialServiceCode()">
+                    Marcar codigo
+                  </button>
+                  <button class="btn" onclick="pasteAccessCode('V0042')">
+                    Inserir V0042
+                  </button>
+                  <button class="btn" onclick="runShortcut('progress')">
+                    Demo curta
+                  </button>
                 </div>
 
                 <div class="keypad">
@@ -201,14 +672,22 @@
                   <button class="key" onclick="appendDigit('7')">7</button>
                   <button class="key" onclick="appendDigit('8')">8</button>
                   <button class="key" onclick="appendDigit('9')">9</button>
-                  <button class="key special" onclick="appendDigit('V')">V</button>
+                  <button class="key special" onclick="appendDigit('V')">
+                    V
+                  </button>
                   <button class="key" onclick="appendDigit('0')">0</button>
-                  <button class="key special" onclick="appendDigit('#')">#</button>
+                  <button class="key special" onclick="appendDigit('#')">
+                    #
+                  </button>
                 </div>
 
                 <div class="footer-actions">
-                  <button class="btn primary" onclick="sendUSSD()">Enviar para USSD</button>
-                  <button class="btn" onclick="resetUSSD()">Reiniciar sessao</button>
+                  <button class="btn primary" onclick="sendUSSD()">
+                    Enviar para USSD
+                  </button>
+                  <button class="btn" onclick="resetUSSD()">
+                    Reiniciar sessao
+                  </button>
                 </div>
               </div>
             </div>
@@ -218,26 +697,11 @@
           <div class="section-head">
             <div>
               <h2>Mensagens do sistema</h2>
-              <p>Canal complementar para explicar progresso, cursos, apoio e seguimento apos o menu USSD.</p>
+              <p>
+                Canal complementar para progresso detalhado, lembretes,
+                certificacao e apoio seguro.
+              </p>
             </div>
-            <button class="btn" onclick="updateSystemStatus()">Actualizar estado</button>
-          </div>
-
-          <div class="status-row">
-            <div class="status-box">
-              <label>Backend</label>
-              <div id="backendStatus" class="status-pill waiting"><span class="dot"></span>A detectar</div>
-              <div id="backendMeta" class="status-meta">Ainda sem porta detectada.</div>
-            </div>
-            <div class="status-box">
-              <label>USSD / SMS</label>
-              <div id="ussdStatus" class="status-pill waiting"><span class="dot"></span>A verificar</div>
-              <div id="ussdMeta" class="status-meta">Sem leitura do callback ainda.</div>
-            </div>
-          </div>
-
-          <div class="status-note">
-            O simulador usa o backend real para USSD e simula o encadeamento SMS do produto, conforme a documentacao do projecto.
           </div>
 
           <div class="messages-shell">
@@ -256,110 +720,163 @@
 
             <div class="composer">
               <div class="composer-shell">
-                <textarea id="messageInput" placeholder="Escreva como se fosse a beneficiaria. Ex.: Nao entendi o meu progresso."></textarea>
+                <textarea
+                  id="messageInput"
+                  placeholder="Escreva como se fosse a beneficiaria. Ex.: Nao entendi o meu progresso."
+                ></textarea>
                 <div class="composer-actions">
                   <div class="message-shortcuts">
-                    <button class="shortcut" onclick="useMessageShortcut('ajuda')">Pedir ajuda</button>
-                    <button class="shortcut" onclick="useMessageShortcut('progresso')">Pedir progresso</button>
+                    <button
+                      class="shortcut"
+                      onclick="useMessageShortcut('ajuda')"
+                    >
+                      Pedir ajuda
+                    </button>
+                    <button
+                      class="shortcut"
+                      onclick="useMessageShortcut('progresso')"
+                    >
+                      Pedir progresso
+                    </button>
+                    <button
+                      class="shortcut"
+                      onclick="useMessageShortcut('curso')"
+                    >
+                      Pedir curso
+                    </button>
+                    <button
+                      class="shortcut"
+                      onclick="useMessageShortcut('certificado')"
+                    >
+                      Pedir certificado
+                    </button>
                   </div>
-                  <button class="primary" onclick="sendMessage()">Enviar mensagem</button>
+                  <button class="primary" onclick="sendMessage()">
+                    Enviar mensagem
+                  </button>
                 </div>
               </div>
             </div>
           </div>
 
-          <div class="timeline">
-            <div class="timeline-head">
-              <h3>Actividade da sessao</h3>
-              <button class="btn" onclick="clearTimeline()">Limpar registo</button>
-            </div>
-            <div id="timelineList" class="timeline-list"></div>
-          </div>
         </div>
       </section>
     </div>
 
     <script>
-      const SERVICE_CODE = '*384*36224#';
-      const DEFAULT_PHONE_NUMBER = '+258855735760';
-      let ussdInput = '';
+      const SERVICE_CODE = "*384*36224#";
+      const DEFAULT_PHONE_NUMBER = "+258855735760";
+      let ussdInput = "";
       let sessionId = null;
       let phoneNumber = DEFAULT_PHONE_NUMBER;
       let backendPort = 3000;
 
       function escapeHtml(value) {
         return String(value)
-          .replace(/&/g, '&amp;')
-          .replace(/</g, '&lt;')
-          .replace(/>/g, '&gt;')
-          .replace(/"/g, '&quot;')
-          .replace(/'/g, '&#039;');
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#039;");
       }
 
       function updatePhoneTime() {
         const now = new Date();
-        document.getElementById('phoneTime').textContent = now.toLocaleTimeString('pt-MZ', {
-          hour: '2-digit',
-          minute: '2-digit'
-        });
+        document.getElementById("phoneTime").textContent =
+          now.toLocaleTimeString("pt-MZ", {
+            hour: "2-digit",
+            minute: "2-digit",
+          });
       }
 
       function updateDialedPreview() {
-        document.getElementById('ussdInput').textContent = ussdInput || '-';
+        document.getElementById("ussdInput").textContent = ussdInput || "-";
       }
 
       function updateSessionLabel() {
-        document.getElementById('sessionLabel').value = sessionId || 'Sem sessao';
+        const element = document.getElementById("sessionLabel");
+        if (element) element.value = sessionId || "Sem sessao";
       }
 
       function setScreenContent(message, options = {}) {
-        const screen = document.getElementById('ussdScreen');
+        const screen = document.getElementById("ussdScreen");
         const sending = options.sending || false;
         const ended = options.ended || false;
         if (!message) {
-          screen.innerHTML = '<div class="placeholder">Aguardando marcacao do servico<span class="cursor"></span></div>';
+          screen.innerHTML =
+            '<div class="placeholder">Aguardando marcacao do servico<span class="cursor"></span></div>';
           return;
         }
         if (sending) {
-          screen.innerHTML = '<div style="color:#ffd166;">A enviar:</div><div>' + escapeHtml(message) + '</div><div class="placeholder" style="margin-top:8px;">A processar<span class="cursor"></span></div>';
+          screen.innerHTML =
+            '<div style="color:#ffd166;">A enviar:</div><div>' +
+            escapeHtml(message) +
+            '</div><div class="placeholder" style="margin-top:8px;">A processar<span class="cursor"></span></div>';
           return;
         }
-        screen.textContent = message + (ended ? '\n\n[FIM DA SESSAO]' : '');
+        screen.textContent = message + (ended ? "\n\n[FIM DA SESSAO]" : "");
       }
 
       function addTimeline(title, description) {
-        const list = document.getElementById('timelineList');
-        const item = document.createElement('div');
-        item.className = 'timeline-item';
-        item.innerHTML = '<strong>' + escapeHtml(title) + '</strong><span>' + new Date().toLocaleTimeString('pt-MZ', { hour: '2-digit', minute: '2-digit' }) + '</span><p>' + escapeHtml(description) + '</p>';
+        const list = document.getElementById("timelineList");
+        if (!list) return;
+        const item = document.createElement("div");
+        item.className = "timeline-item";
+        item.innerHTML =
+          "<strong>" +
+          escapeHtml(title) +
+          "</strong><span>" +
+          new Date().toLocaleTimeString("pt-MZ", {
+            hour: "2-digit",
+            minute: "2-digit",
+          }) +
+          "</span><p>" +
+          escapeHtml(description) +
+          "</p>";
         list.prepend(item);
       }
 
       function clearTimeline() {
-        document.getElementById('timelineList').innerHTML = '';
-        addTimeline('Sessao', 'Registo tecnico limpo.');
+        const list = document.getElementById("timelineList");
+        if (!list) return;
+        list.innerHTML = "";
+        addTimeline("Sessao", "Registo tecnico limpo.");
       }
 
       function addMessageBubble(sender, text) {
-        const thread = document.getElementById('messageThread');
-        const bubble = document.createElement('div');
-        bubble.className = 'bubble ' + sender;
-        bubble.innerHTML = escapeHtml(text).replace(/\n/g, '<br>') + '<span class="bubble-time">' + new Date().toLocaleTimeString('pt-MZ', { hour: '2-digit', minute: '2-digit' }) + '</span>';
+        const thread = document.getElementById("messageThread");
+        const bubble = document.createElement("div");
+        bubble.className = "bubble " + sender;
+        bubble.innerHTML =
+          escapeHtml(text).replace(/\n/g, "<br>") +
+          '<span class="bubble-time">' +
+          new Date().toLocaleTimeString("pt-MZ", {
+            hour: "2-digit",
+            minute: "2-digit",
+          }) +
+          "</span>";
         thread.appendChild(bubble);
         thread.scrollTop = thread.scrollHeight;
       }
 
       function setStatus(id, state, label) {
         const element = document.getElementById(id);
-        element.className = 'status-pill ' + state;
+        if (!element) return;
+        element.className = "status-pill " + state;
         element.innerHTML = '<span class="dot"></span>' + label;
       }
 
       function updatePhoneNumber(value) {
         phoneNumber = value.trim() || DEFAULT_PHONE_NUMBER;
-        document.getElementById('heroPhone').textContent = phoneNumber;
-        document.getElementById('messageHeaderPhone').textContent = phoneNumber;
-        addTimeline('Configuracao', 'Numero de teste actualizado para ' + phoneNumber + '.');
+        const heroPhone = document.getElementById("heroPhone");
+        const messageHeaderPhone =
+          document.getElementById("messageHeaderPhone");
+        if (heroPhone) heroPhone.textContent = phoneNumber;
+        if (messageHeaderPhone) messageHeaderPhone.textContent = phoneNumber;
+        addTimeline(
+          "Configuracao",
+          "Numero de teste actualizado para " + phoneNumber + ".",
+        );
       }
 
       function appendDigit(value) {
@@ -370,13 +887,16 @@
       function dialServiceCode() {
         ussdInput = SERVICE_CODE;
         updateDialedPreview();
-        addTimeline('USSD', 'Codigo ' + SERVICE_CODE + ' preparado no marcador.');
+        addTimeline(
+          "USSD",
+          "Codigo " + SERVICE_CODE + " preparado no marcador.",
+        );
       }
 
       function pasteAccessCode(code) {
         ussdInput = code;
         updateDialedPreview();
-        addTimeline('USSD', 'Codigo de acesso ' + code + ' preparado.');
+        addTimeline("USSD", "Codigo de acesso " + code + " preparado.");
       }
 
       function clearUSSD() {
@@ -385,135 +905,194 @@
         updateDialedPreview();
       }
       function resetUSSD() {
-        ussdInput = '';
+        ussdInput = "";
         sessionId = null;
         updateDialedPreview();
         updateSessionLabel();
-        setScreenContent('');
-        addTimeline('Sessao', 'Simulador reiniciado.');
-        addMessageBubble('system', 'Nova sessao pronta. Marque ' + SERVICE_CODE + ' para recomecar.');
+        setScreenContent("");
+        addTimeline("Sessao", "Simulador reiniciado.");
+        addMessageBubble(
+          "system",
+          "Nova sessao pronta. Marque " + SERVICE_CODE + " para recomecar.",
+        );
       }
 
       function normalizeInputForBackend(value) {
         const trimmed = value.trim();
-        if (!trimmed) return '';
-        if (trimmed === SERVICE_CODE) return '';
-        if (trimmed.startsWith(SERVICE_CODE + '*')) return trimmed.slice((SERVICE_CODE + '*').length);
+        if (!trimmed) return "";
+        if (trimmed === SERVICE_CODE) return "";
+        if (trimmed.startsWith(SERVICE_CODE + "*"))
+          return trimmed.slice((SERVICE_CODE + "*").length);
         return trimmed;
       }
 
       function parseUssdPayload(raw) {
-        const normalized = String(raw || '').trim();
-        if (normalized.startsWith('CON ')) return { action: 'CON', message: normalized.slice(4) };
-        if (normalized.startsWith('END ')) return { action: 'END', message: normalized.slice(4) };
-        return { action: 'CON', message: normalized };
+        const normalized = String(raw || "").trim();
+        if (normalized.startsWith("CON "))
+          return { action: "CON", message: normalized.slice(4) };
+        if (normalized.startsWith("END "))
+          return { action: "END", message: normalized.slice(4) };
+        return { action: "CON", message: normalized };
       }
 
       function buildSystemFollowUp(text, ussdMessage) {
-        const normalized = (text || '').trim().toUpperCase();
+        const normalized = (text || "").trim().toUpperCase();
         if (!normalized) {
-          return 'WIRA: bem-vinda. Introduza o seu codigo V#### no menu USSD. Quando a resposta precisar de mais detalhe, continuaremos por mensagem.';
+          return "WIRA: bem-vinda. Introduza o seu codigo V#### no menu USSD. Quando o conteudo for longo, continuaremos por mensagem com mais detalhe e seguranca.";
         }
         if (/^V\d{4}$/.test(normalized)) {
-          return 'WIRA: codigo validado com sucesso. Use o USSD para escolher a opcao desejada. Por mensagem, enviaremos resumos mais completos quando necessario.';
+          return "WIRA: codigo validado com sucesso. O seu acesso continua anonimo. Use o USSD para escolher a opcao desejada e recebera aqui os detalhes que nao cabem no menu.";
         }
-        if (normalized === '1') {
-          return 'WIRA: resumo dos cursos\n- Costura Avancada: 37%\n- Culinaria Profissional: 12%\nProxima accao recomendada: retomar o modulo pendente ainda hoje.';
+        if (normalized === "1") {
+          return "WIRA: cursos e proxima accao\n- Costura Avancada: 37%\n- Culinaria Profissional: 12%\n- Meta sugerida: concluir 1 modulo esta semana\nLembrete: retome o modulo pendente ainda hoje.";
         }
-        if (normalized === '2') {
-          return 'WIRA: progresso detalhado\n- 2 cursos activos\n- 3 modulos concluidos\n- meta da semana: concluir mais 1 modulo\nSe precisar, responda PROGRESSO.';
+        if (normalized === "2") {
+          return "WIRA: progresso detalhado\n- 2 cursos activos\n- 3 modulos concluidos\n- assiduidade recente: boa\n- meta da semana: concluir mais 1 modulo\nSe precisar, responda PROGRESSO.";
         }
-        if (normalized === '3') {
-          return 'WIRA: apoio disponivel\nTelefone: +258 84 123 4567\nEmail: ajuda@wira.org\nTambem pode responder a esta mensagem com a sua duvida.';
+        if (normalized === "3") {
+          return "WIRA: apoio disponivel\nTelefone: +258 84 123 4567\nEmail: ajuda@wira.org\nHorario: dias uteis, 08h00-17h00\nTambem pode responder a esta mensagem com a sua duvida.";
         }
-        if (normalized === '4') {
-          return 'WIRA: sessao terminada. Guarde o seu codigo V#### para entrar novamente quando precisar.';
+        if (normalized === "4") {
+          return "WIRA: sessao terminada. Guarde o seu codigo V#### para entrar novamente quando precisar.";
         }
-        if (normalized === '0') {
-          return 'WIRA: regressou ao menu principal. Escolha a proxima opcao no USSD.';
+        if (normalized === "0") {
+          return "WIRA: regressou ao menu principal. Escolha a proxima opcao no USSD.";
         }
-        if (/OPCAO INVALIDA|CODIGO INVALIDO|SESSAO SEM AUTENTICACAO/i.test(ussdMessage)) {
-          return 'WIRA: nao conseguimos concluir o pedido no USSD. Verifique o codigo ou responda a esta mensagem para receber apoio.';
+        if (normalized === "CERT") {
+          return "WIRA: o certificado fica disponivel quando o curso estiver concluido. Quando isso acontecer, enviaremos uma mensagem com a confirmacao e os proximos passos.";
         }
-        return 'WIRA: o seu pedido foi registado. Continue no USSD para navegar ou responda por mensagem para receber apoio.';
+        if (
+          /OPCAO INVALIDA|CODIGO INVALIDO|SESSAO SEM AUTENTICACAO/i.test(
+            ussdMessage,
+          )
+        ) {
+          return "WIRA: nao conseguimos concluir o pedido no USSD. Verifique o codigo ou responda a esta mensagem para receber apoio.";
+        }
+        return "WIRA: o seu pedido foi registado. Continue no USSD para navegar ou responda por mensagem para receber apoio.";
       }
 
       function replyToUserMessage(text) {
         const normalized = text.trim().toLowerCase();
         if (!normalized) {
-          return 'WIRA: escreva a sua duvida para que possamos ajudar.';
+          return "WIRA: escreva a sua duvida para que possamos ajudar.";
         }
-        if (normalized.includes('progresso')) {
-          return 'WIRA: para um resumo rapido, marque *384*36224#, entre com o seu codigo e escolha a opcao 2. Se preferir, podemos continuar o apoio por mensagem.';
+        if (normalized.includes("progresso")) {
+          return "WIRA: para um resumo rapido, marque *384*36224#, entre com o seu codigo e escolha a opcao 2. Se preferir, podemos continuar o apoio por mensagem.";
         }
-        if (normalized.includes('curso')) {
-          return 'WIRA: os seus cursos aparecem na opcao 1 do USSD. Por mensagem, podemos explicar o proximo modulo ou a meta da semana.';
+        if (normalized.includes("curso")) {
+          return "WIRA: os seus cursos aparecem na opcao 1 do USSD. Por mensagem, podemos explicar o proximo modulo ou a meta da semana.";
         }
-        if (normalized.includes('ajuda') || normalized.includes('suporte')) {
-          return 'WIRA: apoio disponivel. Responda com o problema exacto ou contacte +258 84 123 4567.';
+        if (normalized.includes("certificado")) {
+          return "WIRA: quando concluir o curso, o certificado fica disponivel. Se precisar, podemos indicar o que ainda falta concluir.";
         }
-        if (normalized.includes('codigo')) {
-          return 'WIRA: o formato correcto e V####. Se perdeu o codigo, fale com a ONG parceira para recuperacao segura.';
+        if (normalized.includes("vaga") || normalized.includes("emprego")) {
+          return "WIRA: as oportunidades de trabalho chegam depois do progresso minimo definido para cada percurso. Continue no curso e responderemos com orientacao adicional.";
         }
-        return 'WIRA: recebemos a sua mensagem. Para accoes rapidas, continue pelo USSD. Para explicacoes longas, responderemos por este canal.';
+        if (normalized.includes("ajuda") || normalized.includes("suporte")) {
+          return "WIRA: apoio disponivel. Responda com o problema exacto ou contacte +258 84 123 4567.";
+        }
+        if (normalized.includes("codigo")) {
+          return "WIRA: o formato correcto e V####. Se perdeu o codigo, fale com a ONG parceira para recuperacao segura.";
+        }
+        return "WIRA: recebemos a sua mensagem. Para accoes rapidas, continue pelo USSD. Para explicacoes longas, responderemos por este canal.";
       }
 
       async function detectBackendPort() {
         const ports = [3000, 3001, 3002, 3003, 3004, 3005];
         for (const port of ports) {
           try {
-            const response = await fetch('http://localhost:' + port + '/health', {
-              method: 'GET',
-              headers: { 'Content-Type': 'application/json' },
-              signal: AbortSignal.timeout(2000)
-            });
+            const response = await fetch(
+              "http://localhost:" + port + "/health",
+              {
+                method: "GET",
+                headers: { "Content-Type": "application/json" },
+                signal: AbortSignal.timeout(2000),
+              },
+            );
             if (response.ok) {
               backendPort = port;
-              setStatus('backendStatus', 'ok', 'Ligado');
-              document.getElementById('backendMeta').textContent = 'Backend detectado em http://localhost:' + port;
-              addTimeline('Backend', 'Porta ' + port + ' detectada com sucesso.');
+              setStatus("backendStatus", "ok", "Ligado");
+              const backendMeta = document.getElementById("backendMeta");
+              if (backendMeta)
+                backendMeta.textContent =
+                  "Backend detectado em http://localhost:" + port;
+              addTimeline(
+                "Backend",
+                "Porta " + port + " detectada com sucesso.",
+              );
               return port;
             }
           } catch (_error) {}
         }
-        setStatus('backendStatus', 'offline', 'Offline');
-        document.getElementById('backendMeta').textContent = 'Nao foi possivel detectar o backend local.';
-        throw new Error('Nao foi possivel detectar o backend WIRA');
+        setStatus("backendStatus", "offline", "Offline");
+        const backendMeta = document.getElementById("backendMeta");
+        if (backendMeta)
+          backendMeta.textContent =
+            "Nao foi possivel detectar o backend local.";
+        throw new Error("Nao foi possivel detectar o backend WIRA");
       }
 
       async function updateSystemStatus() {
         try {
-          const [healthResponse, ussdResponse, smsResponse] = await Promise.allSettled([
-            fetch('http://localhost:' + backendPort + '/health', { signal: AbortSignal.timeout(2000) }),
-            fetch('http://localhost:' + backendPort + '/api/ussd/status', { signal: AbortSignal.timeout(2500) }),
-            fetch('http://localhost:' + backendPort + '/api/ussd/sms/status', { signal: AbortSignal.timeout(2500) })
-          ]);
+          const [healthResponse, ussdResponse, smsResponse] =
+            await Promise.allSettled([
+              fetch("http://localhost:" + backendPort + "/health", {
+                signal: AbortSignal.timeout(2000),
+              }),
+              fetch("http://localhost:" + backendPort + "/api/ussd/status", {
+                signal: AbortSignal.timeout(2500),
+              }),
+              fetch(
+                "http://localhost:" + backendPort + "/api/ussd/sms/status",
+                { signal: AbortSignal.timeout(2500) },
+              ),
+            ]);
 
-          if (healthResponse.status === 'fulfilled' && healthResponse.value.ok) {
-            setStatus('backendStatus', 'ok', 'Ligado');
-            document.getElementById('backendMeta').textContent = 'Backend detectado em http://localhost:' + backendPort;
+          if (
+            healthResponse.status === "fulfilled" &&
+            healthResponse.value.ok
+          ) {
+            setStatus("backendStatus", "ok", "Ligado");
+            const backendMeta = document.getElementById("backendMeta");
+            if (backendMeta)
+              backendMeta.textContent =
+                "Backend detectado em http://localhost:" + backendPort;
           } else {
-            setStatus('backendStatus', 'offline', 'Offline');
-            document.getElementById('backendMeta').textContent = 'Sem resposta do endpoint /health.';
+            setStatus("backendStatus", "offline", "Offline");
+            const backendMeta = document.getElementById("backendMeta");
+            if (backendMeta)
+              backendMeta.textContent = "Sem resposta do endpoint /health.";
           }
-          if (ussdResponse.status === 'fulfilled' && ussdResponse.value.ok) {
+          if (ussdResponse.status === "fulfilled" && ussdResponse.value.ok) {
             const ussdData = await ussdResponse.value.json();
-            let smsInfo = 'SMS sem leitura';
-            if (smsResponse.status === 'fulfilled' && smsResponse.value.ok) {
+            let smsInfo = "SMS sem leitura";
+            if (smsResponse.status === "fulfilled" && smsResponse.value.ok) {
               const smsData = await smsResponse.value.json();
-              smsInfo = 'SMS ' + (smsData.provider || 'n/d');
+              smsInfo = "SMS " + (smsData.provider || "n/d");
             }
-            setStatus('ussdStatus', 'ok', 'Activo');
-            document.getElementById('ussdMeta').textContent = 'Callback: ' + (ussdData.callbackUrl || 'nao definido') + ' | ' + smsInfo;
+            setStatus("ussdStatus", "ok", "Activo");
+            const ussdMeta = document.getElementById("ussdMeta");
+            if (ussdMeta)
+              ussdMeta.textContent =
+                "Callback: " +
+                (ussdData.callbackUrl || "nao definido") +
+                " | " +
+                smsInfo;
           } else {
-            setStatus('ussdStatus', 'waiting', 'Parcial');
-            document.getElementById('ussdMeta').textContent = 'USSD detectado sem leitura completa do callback.';
+            setStatus("ussdStatus", "waiting", "Parcial");
+            const ussdMeta = document.getElementById("ussdMeta");
+            if (ussdMeta)
+              ussdMeta.textContent =
+                "USSD detectado sem leitura completa do callback.";
           }
 
-          addTimeline('Estado', 'Painel de estado actualizado.');
+          addTimeline("Estado", "Painel de estado actualizado.");
         } catch (error) {
-          const message = error instanceof Error ? error.message : 'Falha ao actualizar o estado';
-          addTimeline('Erro', message);
+          const message =
+            error instanceof Error
+              ? error.message
+              : "Falha ao actualizar o estado";
+          addTimeline("Erro", message);
         }
       }
 
@@ -522,94 +1101,133 @@
           await detectBackendPort();
           await updateSystemStatus();
         } catch (_error) {
-          addTimeline('Erro', 'Falha ao detectar o backend. Confirme se o servidor esta activo.');
+          addTimeline(
+            "Erro",
+            "Falha ao detectar o backend. Confirme se o servidor esta activo.",
+          );
         }
       }
 
       async function sendUSSD() {
         const normalizedText = normalizeInputForBackend(ussdInput);
-        if (!sessionId) sessionId = 'ussd-' + Date.now();
+        if (!sessionId) sessionId = "ussd-" + Date.now();
         updateSessionLabel();
-        setScreenContent(ussdInput || '[vazio]', { sending: true });
-        addTimeline('USSD enviado', 'Sessao ' + sessionId + ' -> texto "' + (normalizedText || '[vazio]') + '".');
+        setScreenContent(ussdInput || "[vazio]", { sending: true });
+        addTimeline(
+          "USSD enviado",
+          "Sessao " +
+            sessionId +
+            ' -> texto "' +
+            (normalizedText || "[vazio]") +
+            '".',
+        );
 
         try {
-          const response = await fetch('http://localhost:' + backendPort + '/api/ussd/test', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ sessionId, serviceCode: SERVICE_CODE, phoneNumber, text: normalizedText })
-          });
+          const response = await fetch(
+            "http://localhost:" + backendPort + "/api/ussd/test",
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                sessionId,
+                serviceCode: SERVICE_CODE,
+                phoneNumber,
+                text: normalizedText,
+              }),
+            },
+          );
 
-          if (!response.ok) throw new Error('HTTP ' + response.status);
+          if (!response.ok) throw new Error("HTTP " + response.status);
 
           const data = await response.json();
-          const parsed = parseUssdPayload(data.response || data.message || 'Sem resposta do backend.');
-          setScreenContent(parsed.message, { ended: parsed.action === 'END' });
-          addTimeline('USSD recebido', parsed.action + ' -> ' + parsed.message.replace(/\s+/g, ' ').trim().slice(0, 180));
+          const parsed = parseUssdPayload(
+            data.response || data.message || "Sem resposta do backend.",
+          );
+          setScreenContent(parsed.message, { ended: parsed.action === "END" });
+          addTimeline(
+            "USSD recebido",
+            parsed.action +
+              " -> " +
+              parsed.message.replace(/\s+/g, " ").trim().slice(0, 180),
+          );
 
           const followUp = buildSystemFollowUp(normalizedText, parsed.message);
-          addMessageBubble('system', followUp);
+          addMessageBubble("system", followUp);
 
-          if (parsed.action === 'END') {
+          if (parsed.action === "END") {
             sessionId = null;
             updateSessionLabel();
           }
 
-          ussdInput = '';
+          ussdInput = "";
           updateDialedPreview();
         } catch (error) {
-          const message = error instanceof Error ? error.message : 'Falha desconhecida';
-          setScreenContent('Falha ao contactar o backend local.\n\nConfirme se o servidor esta activo e se o callback esta acessivel.');
-          addTimeline('Erro USSD', message);
-          addMessageBubble('system', 'WIRA: o backend local nao respondeu. Verifique o servidor e tente novamente.');
+          const message =
+            error instanceof Error ? error.message : "Falha desconhecida";
+          setScreenContent(
+            "Falha ao contactar o backend local.\n\nConfirme se o servidor esta activo e se o callback esta acessivel.",
+          );
+          addTimeline("Erro USSD", message);
+          addMessageBubble(
+            "system",
+            "WIRA: o backend local nao respondeu. Verifique o servidor e tente novamente.",
+          );
         }
       }
 
       function useMessageShortcut(type) {
         const map = {
-          ajuda: 'Preciso de ajuda para entrar no sistema.',
-          progresso: 'Nao entendi o meu progresso. Pode explicar?'
+          ajuda: "Preciso de ajuda para entrar no sistema.",
+          progresso: "Nao entendi o meu progresso. Pode explicar?",
+          curso: "Qual e o meu proximo curso ou modulo?",
+          certificado: "Quando recebo o meu certificado?",
         };
-        document.getElementById('messageInput').value = map[type] || '';
+        document.getElementById("messageInput").value = map[type] || "";
       }
 
       function sendMessage() {
-        const input = document.getElementById('messageInput');
+        const input = document.getElementById("messageInput");
         const text = input.value.trim();
         if (!text) {
-          addTimeline('Mensagem', 'Escreva um texto antes de enviar.');
+          addTimeline("Mensagem", "Escreva um texto antes de enviar.");
           return;
         }
-        addMessageBubble('user', text);
-        addTimeline('Mensagem da beneficiaria', text.slice(0, 140));
+        addMessageBubble("user", text);
+        addTimeline("Mensagem da beneficiaria", text.slice(0, 140));
         const reply = replyToUserMessage(text);
-        window.setTimeout(() => addMessageBubble('system', reply), 300);
-        input.value = '';
+        window.setTimeout(() => addMessageBubble("system", reply), 300);
+        input.value = "";
       }
 
       async function runShortcut(type) {
         resetUSSD();
         dialServiceCode();
         await sendUSSD();
-        pasteAccessCode('V0042');
+        pasteAccessCode("V0042");
         await sendUSSD();
 
-        const targetMap = { progress: '2', help: '3', courses: '1' };
-        const choice = targetMap[type] || '2';
+        const targetMap = { progress: "2", help: "3", courses: "1" };
+        const choice = targetMap[type] || "2";
         ussdInput = choice;
         updateDialedPreview();
         await sendUSSD();
-        addTimeline('Atalho', 'Fluxo rapido "' + type + '" executado.');
+        addTimeline("Atalho", 'Fluxo rapido "' + type + '" executado.');
       }
 
-      document.addEventListener('DOMContentLoaded', () => {
+      document.addEventListener("DOMContentLoaded", () => {
         updatePhoneTime();
         updateDialedPreview();
         updateSessionLabel();
-        setScreenContent('');
+        setScreenContent("");
         setInterval(updatePhoneTime, 30000);
-        addMessageBubble('system', 'WIRA: este painel simula as mensagens complementares ao USSD. Use o telefone ao lado e veja aqui os detalhes que nao cabem no menu.');
-        addTimeline('Simulador', 'Interface pronta para testar o fluxo ' + SERVICE_CODE + '.');
+        addMessageBubble(
+          "system",
+          "WIRA: este painel simula mensagens complementares ao USSD, como progresso detalhado, lembretes de curso, certificacao e apoio seguro.",
+        );
+        addTimeline(
+          "Simulador",
+          "Interface pronta para testar o fluxo " + SERVICE_CODE + ".",
+        );
         initializeBackendConnection();
       });
     </script>

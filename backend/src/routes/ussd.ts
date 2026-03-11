@@ -1,4 +1,4 @@
-import express, { Request, Response } from 'express'
+﻿import express, { Request, Response } from 'express'
 import prismaService from '../services/prisma'
 import { authenticateToken, ipRateLimit, logger } from '../middleware/security'
 import smsProviderService from '../services/smsProvider'
@@ -226,7 +226,7 @@ async function handleUssdRequest(
       return {
         success: true,
         sessionId: session.id,
-        response: formatResponse(false, 'Sessão sem autenticação. Informe novamente seu código V####.')
+        response: formatResponse(false, 'Sessão sem autenticação. Informe novamente o seu código V####.')
       }
     }
 
@@ -235,7 +235,7 @@ async function handleUssdRequest(
       return {
         success: true,
         sessionId: session.id,
-        response: formatResponse(true, 'Obrigado por usar WIRA. Até breve.')
+        response: formatResponse(true, 'Obrigado por usar o WIRA. Até breve.')
       }
     }
 
@@ -279,7 +279,7 @@ async function handleUssdRequest(
       return {
         success: true,
         sessionId: session.id,
-        response: formatResponse(false, `PROGRESSO GERAL - ${userCode}\n\nCursos activos: ${summary.totalCourses}\nMódulos Completos: ${summary.completedModules}\nProgresso medio: ${summary.averageProgress}%\n\n0. Voltar ao menu principal`)
+        response: formatResponse(false, `PROGRESSO GERAL - ${userCode}\n\nCursos activos: ${summary.totalCourses}\nMódulos concluídos: ${summary.completedModules}\nProgresso médio: ${summary.averageProgress}%\n\n0. Voltar ao menu principal`)
       }
     }
 
@@ -463,3 +463,4 @@ router.post(
 )
 
 export default router
+
