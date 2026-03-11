@@ -370,7 +370,7 @@ curl http://localhost:3000/health
 
 ```env
 # USSD Configuration
-USSD_SHORTCODE=*123#
+USSD_SHORTCODE=*384*36224#
 USSD_TIMEOUT=300000
 USSD_MAX_SESSIONS=1000
 
