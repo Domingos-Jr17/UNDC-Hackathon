@@ -39,7 +39,7 @@ export default function ActivateUser() {
             return;
         }
 
-        const id = toast.loading('Gerando código...');
+        const id = toast.loading('A gerar código...');
 
         try {
             const user = await activateUser({
@@ -57,7 +57,7 @@ export default function ActivateUser() {
 
     const handleSendSMS = useCallback(async () => {
         if (!generatedCode) {
-            toast.error('Gere um código primeiro');
+            toast.error('Gere primeiro um código');
             return;
         }
 
@@ -67,7 +67,7 @@ export default function ActivateUser() {
             return;
         }
 
-        const id = toast.loading('Enviando SMS...');
+        const id = toast.loading('A enviar SMS...');
         try {
             await sendSMS(generatedCode, phone);
             toast.dismiss(id);
@@ -78,7 +78,7 @@ export default function ActivateUser() {
 
     return (
         <Layout
-            title="Nova ativação"
+            title="Nova activação"
             subtitle="Registe a beneficiária, gere um código seguro e conclua o acesso inicial num único fluxo."
         >
             <div className="grid grid-cols-1 lg:grid-cols-[1.08fr_0.92fr] gap-6">
@@ -93,7 +93,7 @@ export default function ActivateUser() {
                     <CardContent>
                         <form id="userForm" onSubmit={handleSubmit(handleGenerateCode)} className="space-y-4">
                             <div className="space-y-2">
-                                <Label htmlFor="realName">Nome Completo</Label>
+                                <Label htmlFor="realName">Nome completo</Label>
                                 <Input
                                     id="realName"
                                     required
@@ -107,7 +107,7 @@ export default function ActivateUser() {
                             </div>
 
                             <div className="space-y-2">
-                                <Label htmlFor="dateOfBirth">Data de Nascimento</Label>
+                                <Label htmlFor="dateOfBirth">Data de nascimento</Label>
                                 <Input
                                     id="dateOfBirth"
                                     required
@@ -121,7 +121,7 @@ export default function ActivateUser() {
                             </div>
 
                             <div className="space-y-2">
-                                <Label htmlFor="ngoId">ONG de Acolhimento</Label>
+                                <Label htmlFor="ngoId">ONG de acolhimento</Label>
                                 <Input
                                     id="ngoId"
                                     required
@@ -148,7 +148,7 @@ export default function ActivateUser() {
                             </div>
 
                             <div className="space-y-2">
-                                <Label htmlFor="initialSkills">Habilidades Iniciais</Label>
+                                <Label htmlFor="initialSkills">Competências iniciais</Label>
                                 <textarea
                                     id="initialSkills"
                                     className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
@@ -183,12 +183,12 @@ export default function ActivateUser() {
                             {loading ? (
                                 <>
                                     <Spinner size="sm" className="mr-2" />
-                                    Gerando Código...
+                                            A gerar código...
                                 </>
                             ) : (
                                 <>
                                     <UserPlus className="w-4 h-4 mr-2" />
-                                    Gerar Código de Acesso
+                                    Gerar código de acesso
                                 </>
                             )}
                         </Button>
@@ -198,7 +198,7 @@ export default function ActivateUser() {
                                 <div className="p-6 bg-primary/5 border border-primary/20 rounded-lg">
                                     <div className="text-center space-y-2">
                                         <TypographySmall className="text-primary font-medium">
-                                            Código Gerado:
+                                            Código gerado:
                                         </TypographySmall>
                                         <div className="text-3xl font-bold text-primary font-mono tracking-wider">
                                             {generatedCode}
@@ -218,7 +218,7 @@ export default function ActivateUser() {
                                     disabled={!generatedCode}
                                 >
                                     <MessageSquare className="w-4 h-4 mr-2" />
-                                    Enviar Código por SMS
+                                    Enviar código por SMS
                                 </Button>
                             </div>
                         )}
@@ -233,7 +233,7 @@ export default function ActivateUser() {
                         <Shield className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
                         <div className="space-y-1">
                             <TypographyMuted className="font-medium text-foreground">
-                                Proteção de Identidade
+                                 Protecção de identidade
                             </TypographyMuted>
                             <TypographyMuted className="text-sm">
                                 A beneficiária recebe um código anónimo para aceder à aplicação WIRA.

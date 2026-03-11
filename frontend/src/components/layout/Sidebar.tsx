@@ -41,7 +41,7 @@ const sidebarItems: SidebarItem[] = [
   },
   {
     id: 'active',
-    label: 'Nova ativação',
+    label: 'Nova activação',
     icon: UserCheck,
     path: '/active',
     description: 'Activar beneficiárias e distribuir códigos.',
@@ -164,7 +164,7 @@ export default function Sidebar({
                 <div>
                  
                   <h2 className="text-lg font-semibold text-slate-950">Portal Operacional</h2>
-                  <p className="text-xs text-muted-foreground">Acompanhe ativações, risco e progresso.</p>
+                  <p className="text-xs text-muted-foreground">Acompanhe activações, risco e progresso.</p>
                 </div>
               ) : null}
             </div>

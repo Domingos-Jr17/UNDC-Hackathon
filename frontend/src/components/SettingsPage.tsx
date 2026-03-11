@@ -154,7 +154,7 @@ export default function SettingsPage() {
     const nextNotifications = { ...notifications, [key]: !notifications[key] }
     const nextAudit = appendAudit(
       'Preferências atualizadas',
-      `A definição "${notificationLabels[key]}" foi ${nextNotifications[key] ? 'ativada' : 'desativada'}.`
+      `A definição "${notificationLabels[key]}" foi ${nextNotifications[key] ? 'activada' : 'desactivada'}.`
     )
     persistSettings({
       profile: profileData,

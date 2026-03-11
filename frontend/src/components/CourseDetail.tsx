@@ -43,22 +43,22 @@ export default function CourseDetail() {
 
   if (loading) {
     return (
-      <Layout title="Detalhe do curso" subtitle="Estrutura, enquadramento e materiais associados.">
-        <LoadingOverlay show={loading} message="A carregar detalhe do curso..." />
-      </Layout>
+        <Layout title="Detalhe do curso" subtitle="Estrutura, enquadramento e materiais associados.">
+          <LoadingOverlay show={loading} message="A carregar o detalhe do curso..." />
+        </Layout>
     )
   }
 
   if (error || !course) {
     return (
-      <Layout title="Detalhe do curso" subtitle="Estrutura, enquadramento e materiais associados.">
-        <Card>
-          <CardContent className="p-8 text-center">
-            <h2 className="text-xl font-semibold text-destructive">Curso nao encontrado</h2>
-            <p className="mt-2 text-muted-foreground">{error ?? 'Nao foi possivel localizar o curso solicitado.'}</p>
-            <Button className="mt-4" onClick={() => navigate('/courses')}>
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Voltar para cursos
+        <Layout title="Detalhe do curso" subtitle="Estrutura, enquadramento e materiais associados.">
+          <Card>
+            <CardContent className="p-8 text-center">
+              <h2 className="text-xl font-semibold text-destructive">Curso não encontrado</h2>
+              <p className="mt-2 text-muted-foreground">{error ?? 'Não foi possível localizar o curso pedido.'}</p>
+              <Button className="mt-4" onClick={() => navigate('/courses')}>
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Voltar para cursos
             </Button>
           </CardContent>
         </Card>
@@ -79,7 +79,7 @@ export default function CourseDetail() {
             <div className="max-w-3xl space-y-4">
               <div className="flex flex-wrap gap-2">
                 <Badge className="border-0 bg-white/10 text-white">{course.level}</Badge>
-                <Badge variant="secondary" className="bg-white/10 text-white">{course.modules_count} modulos</Badge>
+                <Badge variant="secondary" className="bg-white/10 text-white">{course.modules_count} módulos</Badge>
                 <Badge variant="secondary" className="bg-white/10 text-white">
                   {course.is_active === false ? 'Inactivo' : 'Activo'}
                 </Badge>
@@ -87,7 +87,7 @@ export default function CourseDetail() {
               <div>
                 <h2 className="text-3xl font-semibold">{course.title}</h2>
                 <p className="mt-3 text-sm leading-7 text-slate-300">
-                  {course.description ?? 'Sem descricao detalhada. Este curso esta registado, mas ainda precisa de enquadramento editorial para facilitar acompanhamento e comunicacao.'}
+                  {course.description ?? 'Sem descrição detalhada. Este curso está registado, mas ainda precisa de enquadramento editorial para facilitar o acompanhamento e a comunicação.'}
                 </p>
               </div>
             </div>
@@ -98,28 +98,28 @@ export default function CourseDetail() {
                 Novo curso
               </Button>
               <Button variant="outline" className="border-white/20 bg-white/10 text-white hover:bg-white/15" onClick={() => navigate('/reports')}>
-                Ver relatorios
+                Ver relatórios
               </Button>
             </div>
           </CardContent>
         </Card>
 
         <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          <InfoCard icon={Clock} label="Duracao" value={`${course.duration_hours} horas`} />
-          <InfoCard icon={Layers3} label="Modulos" value={`${course.modules_count} modulos`} />
+          <InfoCard icon={Clock} label="Duração" value={`${course.duration_hours} horas`} />
+          <InfoCard icon={Layers3} label="Módulos" value={`${course.modules_count} módulos`} />
           <InfoCard icon={User} label="Instrutor(a)" value={course.instructor ?? 'Equipa WIRA'} />
-          <InfoCard icon={BookOpen} label="Competencias" value={skills.length > 0 ? `${skills.length} registadas` : 'Por completar'} />
+          <InfoCard icon={BookOpen} label="Competências" value={skills.length > 0 ? `${skills.length} registadas` : 'Por completar'} />
         </section>
 
         <section className="grid gap-6 xl:grid-cols-[1fr_0.78fr]">
           <Card className="rounded-[32px] border-white/70 bg-white shadow-sm">
             <CardHeader>
-              <CardTitle className="text-slate-950">Competencias associadas</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {skills.length === 0 ? (
-                <p className="text-sm text-muted-foreground">Nenhuma competencia registada. Vale a pena complementar para melhorar catalogo, pesquisa e relatorios.</p>
-              ) : (
+                <CardTitle className="text-slate-950">Competências associadas</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {skills.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">Nenhuma competência registada. Convém completar esta informação para melhorar o catálogo, a pesquisa e os relatórios.</p>
+                ) : (
                 <div className="flex flex-wrap gap-2">
                   {skills.map(skill => (
                     <Badge key={skill} variant="secondary" className="rounded-full">
@@ -133,39 +133,39 @@ export default function CourseDetail() {
 
           <Card className="rounded-[32px] border-white/70 bg-white shadow-sm">
             <CardHeader>
-              <CardTitle className="text-slate-950">Leitura rapida</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4 text-sm text-slate-700">
-              <div className="rounded-2xl bg-slate-50 p-4">
-                <p className="font-medium text-slate-950">Enquadramento</p>
-                <p className="mt-1 leading-6">
-                  Curso de nivel {course.level.toLowerCase()} com {course.duration_hours} horas distribuidas em {course.modules_count} modulos.
-                </p>
-              </div>
-              <div className="rounded-2xl bg-slate-50 p-4">
-                <p className="font-medium text-slate-950">Modelo de conteudo</p>
-                <p className="mt-1 leading-6">
-                  Cada modulo pode combinar video, PDF e texto. Nenhum desses materiais e obrigatorio isoladamente.
-                </p>
-              </div>
-              <div className="grid gap-3 md:grid-cols-2">
-                <QuickStat label="Modulos com video" value={String(moduleContentSummary.video)} />
-                <QuickStat label="Modulos com PDF" value={String(moduleContentSummary.pdf)} />
-                <QuickStat label="Modulos com texto" value={String(moduleContentSummary.text)} />
-                <QuickStat label="Conteudo misto" value={String(moduleContentSummary.mixed)} />
-              </div>
-            </CardContent>
-          </Card>
-        </section>
+                <CardTitle className="text-slate-950">Leitura rápida</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4 text-sm text-slate-700">
+                <div className="rounded-2xl bg-slate-50 p-4">
+                  <p className="font-medium text-slate-950">Enquadramento</p>
+                  <p className="mt-1 leading-6">
+                    Curso de nível {course.level.toLowerCase()} com {course.duration_hours} horas distribuídas por {course.modules_count} módulos.
+                  </p>
+                </div>
+                <div className="rounded-2xl bg-slate-50 p-4">
+                  <p className="font-medium text-slate-950">Modelo de conteúdo</p>
+                  <p className="mt-1 leading-6">
+                    Cada módulo pode combinar vídeo, PDF e texto. Nenhum destes materiais é obrigatório de forma isolada.
+                  </p>
+                </div>
+                <div className="grid gap-3 md:grid-cols-2">
+                  <QuickStat label="Módulos com vídeo" value={String(moduleContentSummary.video)} />
+                  <QuickStat label="Módulos com PDF" value={String(moduleContentSummary.pdf)} />
+                  <QuickStat label="Módulos com texto" value={String(moduleContentSummary.text)} />
+                  <QuickStat label="Conteúdo misto" value={String(moduleContentSummary.mixed)} />
+                </div>
+              </CardContent>
+            </Card>
+          </section>
 
         <Card className="rounded-[32px] border-white/70 bg-white shadow-sm">
           <CardHeader>
-            <CardTitle className="text-slate-950">Materiais por modulo</CardTitle>
+            <CardTitle className="text-slate-950">Materiais por módulo</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             {!modules || modules.length === 0 ? (
               <p className="text-sm text-muted-foreground">
-                Este curso ainda nao tem modulos publicados. Pode cria-los com video, PDF, texto ou qualquer combinacao desses materiais.
+                Este curso ainda não tem módulos publicados. Pode criá-los com vídeo, PDF, texto ou qualquer combinação destes materiais.
               </p>
             ) : (
               <div className="grid gap-4 xl:grid-cols-2">
@@ -174,27 +174,27 @@ export default function CourseDetail() {
                   const hasPdf = Boolean(module.pdfUrl)
                   const hasText = Boolean(module.textContent)
                   const contentCount = [hasVideo, hasPdf, hasText].filter(Boolean).length
-                  const primaryFormat = hasVideo ? 'Video' : hasPdf ? 'PDF' : hasText ? 'Texto' : 'Sem material'
+                  const primaryFormat = hasVideo ? 'Vídeo' : hasPdf ? 'PDF' : hasText ? 'Texto' : 'Sem material'
                   const recommendedAction = hasVideo
-                    ? 'Comece pelo video e use o texto/PDF como apoio.'
+                    ? 'Comece pelo vídeo e use o texto ou o PDF como apoio.'
                     : hasPdf
-                      ? 'Use o PDF como material principal deste modulo.'
+                      ? 'Use o PDF como material principal deste módulo.'
                       : hasText
-                        ? 'Este modulo foi publicado como leitura guiada.'
-                        : 'Este modulo ainda nao tem material publicado.'
+                        ? 'Este módulo foi publicado como leitura guiada.'
+                        : 'Este módulo ainda não tem material publicado.'
 
                   return (
                     <div key={module.id} className="rounded-[28px] border border-slate-200 bg-slate-50 p-5">
                       <div className="flex items-start justify-between gap-3">
                         <div>
-                          <p className="text-sm font-medium text-primary">Modulo {module.id}</p>
+                          <p className="text-sm font-medium text-primary">Módulo {module.id}</p>
                           <h3 className="text-lg font-semibold text-slate-950">{module.title}</h3>
                         </div>
                         <Badge variant="outline">{module.duration}</Badge>
                       </div>
 
                       <p className="mt-3 text-sm leading-6 text-slate-600">
-                        {module.description ?? 'Sem descricao breve publicada.'}
+                        {module.description ?? 'Sem descrição breve publicada.'}
                       </p>
 
                       <div className="mt-4 grid gap-3 md:grid-cols-2">
@@ -204,12 +204,12 @@ export default function CourseDetail() {
                           <p className="mt-1 text-sm leading-6 text-slate-600">{recommendedAction}</p>
                         </div>
                         <div className="rounded-2xl bg-white p-4">
-                          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Composicao do modulo</p>
+                          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Composição do módulo</p>
                           <p className="mt-2 text-base font-semibold text-slate-950">
                             {contentCount === 0 ? 'Sem materiais' : `${contentCount} formato${contentCount > 1 ? 's' : ''} publicado${contentCount > 1 ? 's' : ''}`}
                           </p>
                           <p className="mt-1 text-sm leading-6 text-slate-600">
-                            {hasText ? 'O texto ajuda a consolidar a aprendizagem.' : 'Se necessario, complemente com texto ou PDF para ampliar contexto.'}
+                            {hasText ? 'O texto ajuda a consolidar a aprendizagem.' : 'Se necessário, complemente com texto ou PDF para ampliar o contexto.'}
                           </p>
                         </div>
                       </div>
@@ -217,7 +217,7 @@ export default function CourseDetail() {
                       <div className="mt-4 flex flex-wrap gap-2">
                         <Badge variant={hasVideo ? 'default' : 'secondary'} className={hasVideo ? 'bg-primary text-white' : ''}>
                           <PlayCircle className="mr-1 h-3.5 w-3.5" />
-                          {hasVideo ? 'Video' : 'Sem video'}
+                          {hasVideo ? 'Vídeo' : 'Sem vídeo'}
                         </Badge>
                         <Badge variant={hasPdf ? 'default' : 'secondary'} className={hasPdf ? 'bg-slate-900 text-white' : ''}>
                           <FileText className="mr-1 h-3.5 w-3.5" />
@@ -235,7 +235,7 @@ export default function CourseDetail() {
                             <Button asChild size="sm" className="rounded-xl">
                               <a href={module.videoUrl} target="_blank" rel="noreferrer">
                                 <PlayCircle className="mr-2 h-4 w-4" />
-                                Abrir video
+                                Abrir vídeo
                                 <ExternalLink className="ml-2 h-3.5 w-3.5" />
                               </a>
                             </Button>
@@ -253,9 +253,9 @@ export default function CourseDetail() {
                       ) : null}
 
                       {module.textContent ? (
-                        <div className="mt-4 rounded-2xl bg-white p-4 text-sm leading-6 text-slate-700">
-                          <p className="mb-2 text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Pre-visualizacao do texto</p>
-                          {module.textContent.length > 240 ? `${module.textContent.slice(0, 240)}...` : module.textContent}
+                        <div className="mt-4 rounded-2xl bg-white p-4 text-sm leading-7 text-slate-700">
+                          <p className="mb-2 text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Conteúdo textual do módulo</p>
+                          <p className="whitespace-pre-line">{module.textContent}</p>
                         </div>
                       ) : null}
                     </div>

@@ -33,7 +33,7 @@ interface CreateCourseFormState {
 }
 
 const createEmptyModule = (index: number): ModuleDraft => ({
-  title: `Modulo ${index + 1}`,
+  title: `Módulo ${index + 1}`,
   description: '',
   durationMinutes: '30',
   videoUrl: '',
@@ -60,7 +60,7 @@ const normalizeApiError = (error: unknown): string => {
   if (error instanceof Error) {
     return error.message
   }
-  return 'Nao foi possivel criar o curso.'
+  return 'Não foi possível criar o curso.'
 }
 
 const syncModuleDrafts = (modules: ModuleDraft[], nextCount: number): ModuleDraft[] => {
@@ -124,32 +124,32 @@ export default function CreateCoursePage() {
     const modulesCount = Number(form.modulesCount)
 
     if (!form.title.trim()) {
-      toast.error('Informe o titulo do curso.')
+      toast.error('Indique o título do curso.')
       return
     }
     if (!form.level.trim()) {
-      toast.error('Informe o nivel do curso.')
+      toast.error('Indique o nível do curso.')
       return
     }
     if (!Number.isInteger(durationHours) || durationHours < 1) {
-      toast.error('A duracao deve ser um numero inteiro maior que zero.')
+      toast.error('A duração deve ser um número inteiro superior a zero.')
       return
     }
     if (!Number.isInteger(modulesCount) || modulesCount < 1) {
-      toast.error('A quantidade de modulos deve ser um numero inteiro maior que zero.')
+      toast.error('A quantidade de módulos deve ser um número inteiro superior a zero.')
       return
     }
 
     const modules = syncModuleDrafts(form.modules, modulesCount)
     for (const [index, module] of modules.entries()) {
       if (!module.title.trim()) {
-        toast.error(`O modulo ${index + 1} precisa de titulo.`)
+        toast.error(`O módulo ${index + 1} precisa de um título.`)
         return
       }
 
       const durationMinutes = Number(module.durationMinutes)
       if (!Number.isInteger(durationMinutes) || durationMinutes < 1) {
-        toast.error(`O modulo ${index + 1} precisa de uma duracao valida em minutos.`)
+        toast.error(`O módulo ${index + 1} precisa de uma duração válida em minutos.`)
         return
       }
     }
@@ -202,7 +202,7 @@ export default function CreateCoursePage() {
   return (
     <Layout
       title="Criar curso"
-      subtitle="Registe o curso e publique modulos com video, PDF e texto como materiais opcionais."
+      subtitle="Registe o curso e publique módulos com vídeo, PDF e texto como materiais opcionais."
     >
       <div className="space-y-6">
         <Button variant="outline" onClick={() => navigate('/courses')}>
@@ -218,10 +218,10 @@ export default function CreateCoursePage() {
               </CardHeader>
               <CardContent className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <div className="space-y-2 md:col-span-2">
-                  <Label htmlFor="title">Titulo</Label>
+                  <Label htmlFor="title">Título</Label>
                   <Input
                     id="title"
-                    placeholder="Costura avancada para rendimento local"
+                    placeholder="Costura avançada para rendimento local"
                     value={form.title}
                     onChange={event => setField('title', event.target.value)}
                     required
@@ -229,10 +229,10 @@ export default function CreateCoursePage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="level">Nivel</Label>
+                  <Label htmlFor="level">Nível</Label>
                   <Input
                     id="level"
-                    placeholder="Intermedio"
+                    placeholder="Intermédio"
                     value={form.level}
                     onChange={event => setField('level', event.target.value)}
                     required
@@ -250,7 +250,7 @@ export default function CreateCoursePage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="duration">Duracao (horas)</Label>
+                  <Label htmlFor="duration">Duração (horas)</Label>
                   <Input
                     id="duration"
                     type="number"
@@ -264,7 +264,7 @@ export default function CreateCoursePage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="modules">Modulos</Label>
+                  <Label htmlFor="modules">Módulos</Label>
                   <Input
                     id="modules"
                     type="number"
@@ -278,7 +278,7 @@ export default function CreateCoursePage() {
                 </div>
 
                 <div className="space-y-2 md:col-span-2">
-                  <Label htmlFor="skills">Competencias-chave</Label>
+                  <Label htmlFor="skills">Competências-chave</Label>
                   <Input
                     id="skills"
                     placeholder="Corte, acabamento, controlo de qualidade"
@@ -288,11 +288,11 @@ export default function CreateCoursePage() {
                 </div>
 
                 <div className="space-y-2 md:col-span-2">
-                  <Label htmlFor="description">Descricao</Label>
+                  <Label htmlFor="description">Descrição</Label>
                   <Textarea
                     id="description"
                     rows={5}
-                    placeholder="Explique o objectivo do curso, o que sera aprendido e para quem este conteudo faz mais sentido."
+                    placeholder="Explique o objectivo do curso, o que será aprendido e para quem este conteúdo faz mais sentido."
                     value={form.description}
                     onChange={event => setField('description', event.target.value)}
                   />
@@ -310,13 +310,13 @@ export default function CreateCoursePage() {
                 </CardHeader>
                 <CardContent className="space-y-4 text-sm text-slate-700">
                   <div className="rounded-2xl bg-white p-4">
-                    Video e PDF sao opcionais. Cada modulo pode ser so texto, so PDF, so video ou uma combinacao.
+                    Vídeo e PDF são opcionais. Cada módulo pode ser só texto, só PDF, só vídeo ou uma combinação.
                   </div>
                   <div className="rounded-2xl bg-white p-4">
-                    Use texto nos modulos para orientacoes, resumos academicos, instrucoes praticas e passos de seguranca.
+                    Use texto nos módulos para orientações, resumos académicos, instruções práticas e passos de segurança.
                   </div>
                   <div className="rounded-2xl bg-white p-4">
-                    Se ainda nao tiver materiais prontos, o curso pode nascer com modulos base e ser enriquecido depois.
+                    Se ainda não tiver materiais prontos, o curso pode nascer com módulos base e ser enriquecido mais tarde.
                   </div>
                 </CardContent>
               </Card>
@@ -329,10 +329,10 @@ export default function CreateCoursePage() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3 text-sm text-slate-700">
-                  <p>{form.modules.length} modulos preparados para este curso.</p>
+                  <p>{form.modules.length} módulos preparados para este curso.</p>
                   <div className="grid gap-3 sm:grid-cols-3">
                     <div className="rounded-2xl bg-slate-50 p-4">
-                      <p className="font-medium text-slate-950">Videos</p>
+                      <p className="font-medium text-slate-950">Vídeos</p>
                       <p className="mt-1 text-2xl font-semibold">{contentSummary.video}</p>
                     </div>
                     <div className="rounded-2xl bg-slate-50 p-4">
@@ -352,9 +352,9 @@ export default function CreateCoursePage() {
           <section className="space-y-4">
             <div className="flex items-center justify-between gap-3">
               <div>
-                <h2 className="text-xl font-semibold text-slate-950">Modulos e materiais</h2>
+                <h2 className="text-xl font-semibold text-slate-950">Módulos e materiais</h2>
                 <p className="text-sm text-muted-foreground">
-                  Preencha o essencial de cada modulo. Video e PDF sao opcionais; o texto pode ser o conteudo principal.
+                  Preencha o essencial de cada módulo. Vídeo e PDF são opcionais; o texto pode ser o conteúdo principal.
                 </p>
               </div>
             </div>
@@ -363,12 +363,12 @@ export default function CreateCoursePage() {
               {syncModuleDrafts(form.modules, Number(form.modulesCount) || form.modules.length).map((module, index) => (
                 <Card key={`module-${index}`} className="rounded-[28px] border-white/70 bg-white shadow-sm">
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-lg text-slate-950">Modulo {index + 1}</CardTitle>
+                    <CardTitle className="text-lg text-slate-950">Módulo {index + 1}</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="grid gap-4 md:grid-cols-2">
                       <div className="space-y-2">
-                        <Label htmlFor={`module-title-${index}`}>Titulo do modulo</Label>
+                        <Label htmlFor={`module-title-${index}`}>Título do módulo</Label>
                         <Input
                           id={`module-title-${index}`}
                           value={module.title}
@@ -378,7 +378,7 @@ export default function CreateCoursePage() {
                       </div>
 
                       <div className="space-y-2">
-                        <Label htmlFor={`module-duration-${index}`}>Duracao (minutos)</Label>
+                        <Label htmlFor={`module-duration-${index}`}>Duração (minutos)</Label>
                         <Input
                           id={`module-duration-${index}`}
                           type="number"
@@ -392,11 +392,11 @@ export default function CreateCoursePage() {
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor={`module-description-${index}`}>Descricao breve</Label>
+                      <Label htmlFor={`module-description-${index}`}>Descrição breve</Label>
                       <Textarea
                         id={`module-description-${index}`}
                         rows={3}
-                        placeholder="Diga qual e o foco deste modulo."
+                        placeholder="Indique qual é o foco deste módulo."
                         value={module.description}
                         onChange={event => setModuleField(index, 'description', event.target.value)}
                       />
@@ -406,7 +406,7 @@ export default function CreateCoursePage() {
                       <div className="space-y-2">
                         <Label htmlFor={`module-video-${index}`} className="flex items-center gap-2">
                           <PlayCircle className="h-4 w-4 text-primary" />
-                          URL do video
+                          URL do vídeo
                         </Label>
                         <Input
                           id={`module-video-${index}`}
@@ -431,11 +431,11 @@ export default function CreateCoursePage() {
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor={`module-text-${index}`}>Texto informativo / academico</Label>
+                      <Label htmlFor={`module-text-${index}`}>Texto informativo / académico</Label>
                       <Textarea
                         id={`module-text-${index}`}
                         rows={6}
-                        placeholder="Cole aqui o conteudo textual do modulo. Este campo pode substituir o video ou o PDF quando necessario."
+                        placeholder="Cole aqui o conteúdo textual do módulo. Este campo pode substituir o vídeo ou o PDF quando necessário."
                         value={module.textContent}
                         onChange={event => setModuleField(index, 'textContent', event.target.value)}
                       />
@@ -447,7 +447,7 @@ export default function CreateCoursePage() {
                         checked={module.downloadable}
                         onChange={event => setModuleField(index, 'downloadable', event.target.checked)}
                       />
-                      Disponibilizar este modulo para acesso offline quando houver ficheiro ou pacote para descarregar.
+                      Disponibilizar este módulo para acesso offline quando houver ficheiro ou pacote para descarregar.
                     </label>
                   </CardContent>
                 </Card>

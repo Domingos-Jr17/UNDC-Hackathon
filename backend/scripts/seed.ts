@@ -81,7 +81,7 @@ async function seedBaseData(): Promise<void> {
         duration_hours: 40,
         modules_count: 8,
         level: 'Intermediário',
-        skills: 'costura,controle-de-qualidade,producao'
+        skills: 'costura,controlo-de-qualidade,producao'
       },
       {
         id: 'culinaria',
@@ -96,7 +96,7 @@ async function seedBaseData(): Promise<void> {
       {
         id: 'agricultura',
         title: 'Agricultura Sustentável',
-        description: 'Práticas de agricultura regenerativa para renda local.',
+        description: 'Práticas de agricultura regenerativa para rendimento local.',
         instructor: 'Mentora Técnica 3',
         duration_hours: 30,
         modules_count: 6,
@@ -256,7 +256,7 @@ async function seedJobs(): Promise<void> {
         title: 'Assistente de Produção Têxtil',
         description: 'Apoio na produção e acabamento de peças.',
         location: 'Maputo',
-        required_skills: 'costura,controle-de-qualidade',
+        required_skills: 'costura,controlo-de-qualidade',
         contract_type: 'FULL_TIME',
         schedule: '08:00-17:00',
         salary_range: '11.000-15.000 MZN',
@@ -266,7 +266,7 @@ async function seedJobs(): Promise<void> {
       {
         id: 'job-004',
         title: 'Ajudante de Cozinha Industrial',
-        description: 'Pré-preparo de alimentos e suporte operacional.',
+        description: 'Pré-preparo de alimentos e apoio operacional.',
         location: 'Matola',
         required_skills: 'culinaria,higiene,organizacao',
         contract_type: 'FULL_TIME',
@@ -293,76 +293,100 @@ async function seedCourseContent(): Promise<void> {
         {
           module_number: 1,
           title: 'Preparação do espaço e segurança',
-          description: 'Organização da mesa, postura e revisão da máquina antes de iniciar.',
+          description: 'Organização do posto de trabalho, postura correcta e verificação inicial da máquina.',
           duration_minutes: 35,
           video_url: sewingVideoUrl,
           pdf_url: sewingPdfUrl,
           downloadable: true,
-          text_content:
-            'Antes de começar, limpe a mesa, confirme a posição da cadeira e teste o pedal. Mantenha tesoura, fita métrica, alfinetes e linhas num local acessível. A segurança começa com atenção ao cabo de energia, iluminação adequada e mãos afastadas da agulha durante qualquer ajuste.'
+          text_content: [
+            'Antes de iniciar qualquer actividade de costura, a bancada deve estar limpa, estável e com iluminação suficiente para permitir a leitura exacta das marcações no tecido. A cadeira deve ser ajustada de forma a manter as costas direitas, os ombros relaxados e os pés bem apoiados, evitando fadiga ao longo da sessão.',
+            'A máquina precisa de uma revisão breve antes de cada utilização: confirmar a agulha, testar o pedal, observar o estado do fio superior e da bobina, e verificar se não há resíduos presos nos dentes de arrasto. Esta rotina simples reduz falhas, previne acidentes e ajuda a manter uma costura mais regular desde o primeiro minuto de trabalho.',
+            'Também é essencial definir um lugar fixo para tesoura, fita métrica, alfinetes, giz e linhas. Quando o material está organizado, a formanda perde menos tempo, evita movimentos bruscos perto da agulha e consegue concentrar-se melhor no objectivo do módulo. Segurança e disciplina começam muito antes do primeiro ponto.'
+          ].join('\n\n')
         },
         {
           module_number: 2,
           title: 'Conhecer tecidos e linhas',
-          description: 'Escolha de materiais conforme o tipo de peça e o uso final.',
+          description: 'Selecção de materiais conforme a peça, o uso pretendido e o tipo de acabamento.',
           duration_minutes: 40,
           downloadable: false,
-          text_content:
-            'Tecidos leves exigem agulhas finas e menor tensão. Tecidos médios e grossos pedem linhas mais resistentes e testes prévios. Sempre compare elasticidade, espessura e resistência antes de cortar para evitar desperdício e garantir acabamento uniforme.'
+          text_content: [
+            'Nem todos os tecidos se comportam da mesma maneira. Tecidos leves, como popeline ou viscose, exigem agulhas mais finas, tensão mais controlada e corte cuidadoso para evitar deformações. Tecidos médios ou grossos, como ganga, brim ou sarja, pedem linhas mais resistentes e maior atenção à passagem da agulha.',
+            'Antes de cortar, é importante observar a elasticidade, a espessura, a textura e a direcção do fio do tecido. Uma escolha errada pode comprometer o caimento da peça, provocar rugas indesejadas ou causar desgaste prematuro nas zonas de maior esforço. Por isso, o reconhecimento do material faz parte do trabalho técnico e não deve ser tratado como detalhe secundário.',
+            'O mesmo princípio vale para as linhas: a cor, a resistência e a espessura devem acompanhar o tecido e o fim de uso da peça. Em produção para venda, esta decisão afecta não só a aparência final, mas também a durabilidade e a confiança do cliente. Conhecer materiais é, portanto, uma competência prática com impacto directo na qualidade.'
+          ].join('\n\n')
         },
         {
           module_number: 3,
           title: 'Medição e corte com precisão',
-          description: 'Marcação correcta, margens de costura e aproveitamento do tecido.',
+          description: 'Marcação correcta, margens de costura e melhor aproveitamento do tecido.',
           duration_minutes: 45,
           downloadable: false,
-          text_content:
-            'Use giz ou marcador próprio para tecido e confirme duas vezes todas as medidas. Reserve margens consistentes para costura e acabamento. Um corte preciso reduz retrabalho, melhora o caimento da peça e ajuda a manter o padrão de produção.'
+          text_content: [
+            'Medir bem é o primeiro passo para costurar com consistência. Antes do corte, todas as medidas devem ser confirmadas com calma, de preferência duas vezes, usando fita métrica íntegra e uma superfície plana. O giz ou marcador próprio para tecido deve ser visível sem danificar o material, permitindo acompanhar linhas de corte e pontos de referência.',
+            'As margens de costura precisam de ser definidas de forma uniforme. Quando a margem muda sem controlo, a peça perde simetria, o encaixe entre partes fica comprometido e o retrabalho torna-se quase inevitável. Além disso, um corte impreciso gera desperdício de tecido, reduz a produtividade e dificulta a repetição do mesmo modelo em série.',
+            'Uma profissional atenta aprende a planear a disposição das partes sobre o tecido antes de cortar. Esse planeamento ajuda a aproveitar melhor o material, respeita a direcção do fio e evita perdas em projectos pequenos e grandes. O corte não é apenas execução; é também leitura, cálculo e gestão de recursos.'
+          ].join('\n\n')
         },
         {
           module_number: 4,
           title: 'Pontos básicos e controlo da tensão',
-          description: 'Ponto recto, retrocesso e ajustes para costura regular.',
+          description: 'Ponto recto, retrocesso e ajustes que garantem regularidade na costura.',
           duration_minutes: 50,
           downloadable: false,
-          text_content:
-            'O ponto recto serve como base para a maioria das peças. Faça sempre uma amostra antes de costurar o material final. Se o ponto estiver frouxo ou repuxado, ajuste a tensão da linha e teste novamente até obter regularidade nos dois lados do tecido.'
+          text_content: [
+            'O ponto recto é a base de grande parte das peças de vestuário e de muitos trabalhos utilitários. Apesar de parecer simples, ele depende de uma combinação correcta entre agulha, linha, tecido e regulação da máquina. Por isso, deve existir sempre um teste em retalho antes de avançar para o material definitivo.',
+            'Quando o ponto apresenta folga, repuxa o tecido ou cria laçadas num dos lados, normalmente há problema de tensão, de passagem do fio ou de compatibilidade entre materiais. A solução não é insistir na costura final, mas sim parar, analisar e corrigir. Esta pausa técnica evita danos maiores e poupa tempo de reparação.',
+            'O retrocesso também merece treino específico, porque é ele que fixa o início e o fim da costura em muitos contextos. Um bom controlo da tensão, aliado a arranque e fecho correctos, transmite profissionalismo, resistência e melhor acabamento. A qualidade de uma peça vê-se muitas vezes nos detalhes menos vistosos.'
+          ].join('\n\n')
         },
         {
           module_number: 5,
           title: 'Montagem de painéis e bainhas',
-          description: 'União de partes principais e acabamento inferior.',
+          description: 'União das partes principais e acabamento inferior com alinhamento consistente.',
           duration_minutes: 55,
           downloadable: false,
-          text_content:
-            'Ao unir painéis, alinhe bordas e fixe com alfinetes ou alinhavo. Costure de forma contínua e verifique simetria antes da bainha. Uma bainha bem marcada melhora a apresentação da peça e evita desgaste prematuro.'
+          text_content: [
+            'Na montagem de painéis, o alinhamento das bordas define a forma final da peça. Antes de costurar, convém fixar as partes com alfinetes ou alinhavo, sobretudo quando o tecido desliza ou quando há curvas e encaixes sensíveis. Esta preparação permite corrigir desvios antes de a costura ficar definitiva.',
+            'Ao longo da união, a costureira deve observar se as margens permanecem constantes e se não se formam pequenas tensões que deformem o tecido. Depois da montagem, é útil abrir ou assentar as costuras com cuidado, conforme o modelo, para melhorar a apresentação e facilitar acabamentos posteriores.',
+            'A bainha é um dos sinais mais visíveis de rigor técnico. Quando é mal marcada ou cosida de forma irregular, a peça perde elegância e aparenta menor valor. Uma bainha estável, direita e bem passada protege o tecido contra desgaste e reforça a percepção de qualidade no momento da entrega ou venda.'
+          ].join('\n\n')
         },
         {
           module_number: 6,
           title: 'Colocação de bolsos e reforços',
-          description: 'Aplicação de componentes funcionais com resistência.',
+          description: 'Aplicação de componentes funcionais com resistência, simetria e acabamento limpo.',
           duration_minutes: 50,
           downloadable: false,
-          text_content:
-            'Marque a posição do bolso com referência ao centro e à altura da peça. Faça costura de reforço nos cantos e verifique se o bolso ficou plano. Reforços simples aumentam durabilidade e confiança no uso diário da peça confeccionada.'
+          text_content: [
+            'Os bolsos combinam função e estética, por isso a sua colocação deve respeitar medidas, alturas e alinhamentos muito claros. Antes de fixar, é importante marcar o centro, conferir a distância entre lados e observar a posição da peça no corpo ou no uso previsto. Um bolso torto compromete imediatamente a percepção de qualidade.',
+            'Nos cantos e nas zonas de maior esforço, a costura de reforço é indispensável. Estes pequenos acabamentos fazem grande diferença na durabilidade da peça, sobretudo quando se trata de roupa de trabalho, aventais, uniformes ou peças de uso frequente. Reforçar não é exagerar; é prevenir desgaste prematuro.',
+            'A aplicação de reforços também ensina uma lógica importante: costurar para durar. Em contextos de formação para empregabilidade ou auto-rendimento, este cuidado ajuda a produzir peças mais fiáveis, reduz reclamações e constrói reputação profissional. O módulo ensina técnica, mas também responsabilidade pelo resultado final.'
+          ].join('\n\n')
         },
         {
           module_number: 7,
           title: 'Revisão de qualidade',
-          description: 'Inspecção visual, limpeza de linhas e correcção de falhas.',
+          description: 'Inspecção visual, limpeza de fios e correcção de falhas antes da entrega.',
           duration_minutes: 35,
           downloadable: false,
-          text_content:
-            'Revise a peça por dentro e por fora. Corte pontas de linha, confirme alinhamento e procure pontos saltados. A revisão final protege a reputação do trabalho, reduz devoluções e prepara a beneficiária para responder a padrões de clientes e empregadores.'
+          text_content: [
+            'A revisão final deve ser feita com a peça aberta, observando o lado direito e o avesso. É o momento de procurar pontos saltados, linhas frouxas, costuras tortas, marcas de giz não removidas e diferenças de simetria. Quanto mais cedo estas falhas forem detectadas, mais simples será corrigi-las.',
+            'Também convém cortar pontas de linha, limpar resíduos e verificar se todos os componentes estão firmes. Uma peça pode estar funcional, mas ainda assim parecer descuidada se não passar por esta etapa de revisão estética. O acabamento transmite respeito pelo trabalho e pela pessoa que vai usar ou comprar a peça.',
+            'Em ambiente profissional, a revisão de qualidade protege a reputação da costureira, reduz devoluções e cria confiança. Por isso, este módulo não deve ser entendido como mera formalidade. Rever é uma competência técnica e comercial ao mesmo tempo: melhora o produto e fortalece a credibilidade de quem o produz.'
+          ].join('\n\n')
         },
         {
           module_number: 8,
           title: 'Preparação para entrega ou venda',
-          description: 'Apresentação da peça, cálculo simples e orientação ao cliente.',
+          description: 'Apresentação da peça, cálculo simples de custos e comunicação com o cliente.',
           duration_minutes: 30,
           downloadable: false,
-          text_content:
-            'Ao entregar uma peça, apresente-a limpa, dobrada e pronta para prova. Registe custo de material, tempo gasto e preço final. Explicar cuidados básicos de lavagem e uso aumenta confiança e melhora a relação com clientes.'
+          text_content: [
+            'Uma peça pronta para entrega deve estar limpa, dobrada ou pendurada de forma cuidada e, sempre que possível, passada a ferro. A apresentação influencia a confiança do cliente antes mesmo de qualquer prova. Pequenos gestos, como remover fios soltos ou proteger a peça durante o transporte, aumentam o valor percebido.',
+            'Este módulo introduz também noções simples de cálculo: registar gasto de tecido, acessórios, tempo investido e preço final. Sem esta informação, torna-se difícil perceber se o trabalho está a gerar rendimento justo. Saber calcular custos ajuda a definir preços sustentáveis e a negociar com maior segurança.',
+            'Por fim, a relação com o cliente exige comunicação clara. Explicar medidas, cuidados de lavagem, prazo de entrega e limites do serviço reduz mal-entendidos e fortalece a confiança. A costura como actividade económica não depende só de técnica; depende igualmente de organização, apresentação e responsabilidade comercial.'
+          ].join('\n\n')
         }
       ]
     },
@@ -372,65 +396,86 @@ async function seedCourseContent(): Promise<void> {
         {
           module_number: 1,
           title: 'Higiene pessoal e da cozinha',
-          description: 'Rotinas básicas para reduzir contaminação.',
+          description: 'Rotinas essenciais para reduzir contaminação e manter um serviço seguro.',
           duration_minutes: 35,
           downloadable: false,
-          text_content:
-            'Lave as mãos antes de cada tarefa, use avental limpo e mantenha superfícies higienizadas. Separe utensílios de alimentos crus e cozidos. A disciplina nestes cuidados reduz risco para clientes e melhora a qualidade do serviço.'
+          text_content: [
+            'A higiene pessoal é uma das primeiras barreiras de protecção em qualquer cozinha. Lavar as mãos correctamente, manter unhas curtas, usar avental limpo e prender o cabelo são medidas básicas que reduzem riscos de contaminação. Estas práticas devem acontecer antes do início do trabalho e repetir-se sempre que houver mudança de tarefa.',
+            'O mesmo cuidado precisa de ser aplicado às superfícies, facas, tábuas e recipientes. Utensílios usados com alimentos crus não devem passar directamente para alimentos cozinhados ou prontos a servir. A separação de tarefas evita contaminação cruzada e protege a saúde de quem consome.',
+            'Num contexto profissional, higiene não é apenas boa prática; é critério de confiança. Quem cozinha para venda ou para grupos precisa de mostrar regularidade e disciplina. Este módulo reforça a ideia de que qualidade alimentar começa com hábitos simples, consistentes e observáveis no dia-a-dia.'
+          ].join('\n\n')
         },
         {
           module_number: 2,
           title: 'Organização do posto de trabalho',
-          description: 'Mise en place, ordem e segurança no serviço.',
+          description: 'Mise en place, ordem e segurança para cozinhar com ritmo e menor desperdício.',
           duration_minutes: 30,
           downloadable: false,
-          text_content:
-            'Antes de cozinhar, deixe ingredientes medidos, utensílios prontos e recipientes identificados. Trabalhar com ordem evita desperdício, acelera o serviço e ajuda a responder melhor a ambientes de cozinha com maior pressão.'
+          text_content: [
+            'Organizar o posto de trabalho antes de cozinhar permite ganhar tempo e reduzir erros. Ingredientes medidos, utensílios preparados, recipientes identificados e superfícies limpas tornam o processo mais fluido, sobretudo quando o serviço exige rapidez. A preparação prévia também ajuda a manter a mente focada e evita improvisos desnecessários.',
+            'A lógica da mise en place não serve apenas restaurantes; é útil em qualquer cozinha de formação, venda local ou produção doméstica. Quando cada elemento tem um lugar definido, fica mais fácil controlar quantidades, cumprir tempos de cozedura e manter a limpeza durante toda a actividade.',
+            'Além disso, um posto organizado melhora a segurança. Menos objectos espalhados significam menor risco de cortes, quedas, queimaduras ou trocas de ingredientes. Trabalhar com ordem é uma competência profissional que aumenta a produtividade e transmite maior confiança à equipa e aos clientes.'
+          ].join('\n\n')
         },
         {
           module_number: 3,
           title: 'Cortes fundamentais',
-          description: 'Padronização de legumes, ervas e proteínas.',
+          description: 'Padronização de legumes, ervas e proteínas para cozedura uniforme e boa apresentação.',
           duration_minutes: 40,
           downloadable: false,
-          text_content:
-            'Treinar cortes iguais melhora a cozedura e a apresentação. Mantenha os dedos protegidos, segure a faca com firmeza e estabilize a tábua. A padronização é uma competência valorizada em restauração e produção alimentar.'
+          text_content: [
+            'Aprender a cortar bem melhora o aspecto visual do prato e a regularidade da cozedura. Pedaços de tamanho semelhante cozinham ao mesmo ritmo, evitando alimentos crus numa parte e demasiado cozinhados noutra. Esta uniformidade é especialmente importante quando se trabalha em quantidade ou com receitas repetidas.',
+            'A técnica começa com postura correcta, pega firme da faca e protecção dos dedos. A tábua deve estar estável, limpa e adequada ao tipo de ingrediente. O treino deve ser progressivo, começando por cortes mais simples e evoluindo para maior velocidade sem perder precisão nem segurança.',
+            'Em cozinhas de produção, padronizar cortes também ajuda a calcular custos e a prever porções. Quando a preparação é consistente, o resultado torna-se mais previsível e profissional. Este módulo mostra que cortar não é só dividir ingredientes: é preparar bem a base de todo o prato.'
+          ].join('\n\n')
         },
         {
           module_number: 4,
           title: 'Temperaturas seguras',
-          description: 'Controlo de calor e conservação adequada.',
+          description: 'Controlo do calor e do frio para conservar, cozinhar e servir com segurança.',
           duration_minutes: 35,
           downloadable: false,
-          text_content:
-            'Carnes, molhos e refeições prontas exigem atenção à temperatura. Evite deixar alimentos muito tempo fora de refrigeração. O controlo de calor e frio protege a saúde de quem consome e reduz perdas por deterioração.'
+          text_content: [
+            'O controlo da temperatura é decisivo para a segurança alimentar. Alimentos crus, cozinhados e preparados com antecedência precisam de condições adequadas para não favorecer o crescimento de microrganismos. Deixar refeições demasiado tempo fora de refrigeração ou servi-las abaixo da temperatura segura aumenta o risco para quem consome.',
+            'Este módulo ajuda a distinguir situações de cozedura, reaquecimento, conservação e serviço. Mais do que decorar números, interessa compreender o princípio: calor insuficiente não elimina perigos, e frio mal gerido acelera a deterioração. A observação do tempo e da temperatura deve fazer parte da rotina de qualquer cozinha responsável.',
+            'A aplicação correcta destas regras evita perdas, reclamações e problemas de saúde pública. Para quem pretende trabalhar em restauração, cantinas, pastelaria ou venda informal, dominar estes fundamentos é uma vantagem prática e profissional.'
+          ].join('\n\n')
         },
         {
           module_number: 5,
           title: 'Preparações de base',
-          description: 'Caldos, arroz, molhos e acompanhamento simples.',
+          description: 'Caldos, arroz, molhos e acompanhamentos que sustentam vários menus.',
           duration_minutes: 50,
           downloadable: false,
-          text_content:
-            'Dominar bases culinárias facilita a execução de menus diferentes. Ajuste sal, textura e tempo de cozedura de forma gradual. Uma boa base permite produzir refeições consistentes mesmo com recursos limitados.'
+          text_content: [
+            'As preparações de base sustentam uma grande parte do trabalho culinário. Saber fazer um caldo equilibrado, um arroz solto, um molho simples ou um acompanhamento consistente permite adaptar-se a menus diferentes sem começar sempre do zero. Estas bases ajudam a organizar a produção e a responder melhor a pedidos variados.',
+            'Durante o processo, é importante provar, ajustar sal, observar textura e controlar o tempo de cozedura. Pequenas correcções feitas no momento certo evitam desperdício e melhoram o resultado final. A prática repetida desenvolve sensibilidade culinária, algo que nenhum manual substitui totalmente.',
+            'Quem domina bases culinárias ganha autonomia. Mesmo com poucos ingredientes ou equipamento limitado, torna-se possível cozinhar com mais regularidade, planear melhor o trabalho e oferecer refeições com qualidade estável. É esse o valor formativo deste módulo.'
+          ].join('\n\n')
         },
         {
           module_number: 6,
           title: 'Apresentação e porcionamento',
-          description: 'Padronização visual e controlo de quantidades.',
+          description: 'Padronização visual e controlo das quantidades para servir melhor e vender com equilíbrio.',
           duration_minutes: 35,
           downloadable: false,
-          text_content:
-            'Servir porções regulares melhora custo, previsibilidade e imagem do negócio. Limpe as bordas do prato, organize cores e texturas e confirme se o tamanho da porção corresponde ao preço cobrado.'
+          text_content: [
+            'Servir bem não significa apenas encher o prato. O porcionamento correcto ajuda a equilibrar custos, respeitar o preço cobrado e manter consistência entre uma venda e outra. Quando as porções mudam sem critério, o cliente percebe instabilidade e o negócio perde controlo financeiro.',
+            'Na apresentação, detalhes simples fazem diferença: limpar bordas, distribuir cores com cuidado, evitar excesso de molho sobre elementos crocantes e garantir que o prato está visualmente equilibrado. Uma boa composição melhora a experiência de quem recebe a refeição e valoriza o trabalho da cozinheira.',
+            'Este módulo liga técnica, percepção de valor e sustentabilidade do serviço. Ao aprender a porcionar e apresentar com método, a formanda passa a cozinhar não só para alimentar, mas também para servir com profissionalismo e identidade.'
+          ].join('\n\n')
         },
         {
           module_number: 7,
           title: 'Atendimento e produção para venda',
-          description: 'Rotina operacional para refeições comerciais.',
+          description: 'Rotina operacional para cozinhar, organizar encomendas e servir clientes com confiança.',
           duration_minutes: 35,
           downloadable: false,
-          text_content:
-            'Ao cozinhar para venda, é importante registar encomendas, controlar ingredientes e manter comunicação clara com clientes. A cozinha profissional depende tanto de sabor quanto de organização, pontualidade e confiança.'
+          text_content: [
+            'Cozinhar para venda exige mais do que saber preparar alimentos. É necessário registar encomendas, controlar quantidades, antecipar horários e comunicar de forma clara com quem compra. Uma cozinha comercial depende de sabor, mas também de pontualidade, organização e fiabilidade.',
+            'A produção deve estar articulada com os recursos disponíveis. Isso significa saber quanto preparar, como conservar e como ajustar o trabalho quando há alterações no volume de pedidos. Esta visão operacional evita perdas e permite responder com maior serenidade a períodos de maior procura.',
+            'No contacto com o cliente, clareza e respeito são essenciais. Informar preços, prazos, opções de menu e limitações do serviço reduz conflitos e ajuda a construir reputação. O módulo fecha o curso com uma perspectiva prática: cozinhar bem é importante, mas vender bem também é uma competência.'
+          ].join('\n\n')
         }
       ]
     },
@@ -440,56 +485,74 @@ async function seedCourseContent(): Promise<void> {
         {
           module_number: 1,
           title: 'Leitura do terreno',
-          description: 'Observação do solo, drenagem e exposição solar.',
+          description: 'Observação do solo, drenagem, exposição solar e limitações do espaço cultivável.',
           duration_minutes: 35,
           downloadable: false,
-          text_content:
-            'Antes de plantar, observe a inclinação do terreno, a retenção de água e a quantidade de sol ao longo do dia. Esta leitura inicial ajuda a escolher culturas adequadas e a evitar perdas por excesso de sombra ou encharcamento.'
+          text_content: [
+            'Antes de plantar, é necessário observar o terreno com atenção. A inclinação, a drenagem, a exposição solar e a circulação da água influenciam directamente o sucesso da cultura. Uma boa leitura inicial ajuda a evitar decisões apressadas e orienta melhor a escolha do que pode ser plantado em cada zona.',
+            'Também importa reparar na textura do solo, na presença de pedras, na facilidade de acesso e nos sinais de erosão. Estes elementos condicionam o tipo de trabalho necessário, o esforço de preparação e até os custos de manutenção. Conhecer o terreno permite planear com realismo.',
+            'Este módulo desenvolve uma competência de observação que vale para pequenas machambas, hortas comunitárias ou produção familiar. Cultivar bem começa por interpretar o espaço disponível e actuar de forma compatível com as condições reais do local.'
+          ].join('\n\n')
         },
         {
           module_number: 2,
           title: 'Preparação do solo',
-          description: 'Matéria orgânica, limpeza e correcções básicas.',
+          description: 'Matéria orgânica, limpeza e correcções básicas para melhorar fertilidade e estrutura.',
           duration_minutes: 45,
           downloadable: false,
-          text_content:
-            'A preparação do solo começa com remoção de resíduos, arejamento e incorporação de composto orgânico. Um solo equilibrado melhora enraizamento, retenção de nutrientes e produtividade, mesmo em pequenas parcelas.'
+          text_content: [
+            'Preparar o solo é mais do que cavar. É preciso remover resíduos inadequados, desfazer compactações, incorporar matéria orgânica e avaliar se a terra consegue reter água e nutrientes de forma equilibrada. Um solo bem preparado favorece o enraizamento e aumenta a capacidade de resposta da planta nas primeiras semanas.',
+            'A aplicação de composto ou estrume curtido, quando bem feita, melhora a estrutura do solo e reduz a dependência de soluções mais caras. No entanto, o excesso ou a utilização sem critério pode trazer novos problemas. Por isso, este módulo reforça a importância de usar recursos locais com observação e medida.',
+            'Mesmo em parcelas pequenas, a preparação correcta tem impacto visível na produtividade. Um bom início reduz perdas, facilita a manutenção posterior e cria melhores condições para que a cultura se desenvolva de modo saudável e sustentável.'
+          ].join('\n\n')
         },
         {
           module_number: 3,
           title: 'Sementeira e transplante',
-          description: 'Espaçamento, profundidade e cuidado inicial das mudas.',
+          description: 'Espaçamento, profundidade e cuidados iniciais com sementes e mudas.',
           duration_minutes: 40,
           downloadable: false,
-          text_content:
-            'Cada cultura exige profundidade e espaçamento próprios. Evite semear demasiado junto para não criar competição por luz e nutrientes. No transplante, proteja as raízes e regue logo após a mudança.'
+          text_content: [
+            'Cada cultura exige profundidade, distância e ritmo próprios de instalação. Semear demasiado fundo dificulta a emergência; semear demasiado à superfície expõe a semente ao calor, à secura ou às aves. O mesmo cuidado vale para o espaçamento, que deve permitir circulação de ar, luz e acesso aos nutrientes.',
+            'No transplante, a prioridade é proteger a raiz e reduzir o stress da muda. O processo deve ser feito com solo húmido, manuseamento calmo e rega logo após a mudança. Plantas transplantadas sem estes cuidados podem parar de crescer ou perder-se nas primeiras horas.',
+            'Este módulo mostra como decisões aparentemente simples afectam todo o ciclo produtivo. Uma instalação correcta aumenta a taxa de sobrevivência, melhora o desenvolvimento inicial e prepara o terreno para uma colheita mais consistente.'
+          ].join('\n\n')
         },
         {
           module_number: 4,
           title: 'Irrigação eficiente',
-          description: 'Rotina de rega e redução de desperdício de água.',
+          description: 'Rotina de rega, observação da humidade e redução do desperdício de água.',
           duration_minutes: 35,
           downloadable: false,
-          text_content:
-            'Regar cedo ou no fim da tarde reduz evaporação. Observe a humidade do solo antes de repetir a rega. Pequenas melhorias na frequência e no método de irrigação podem aumentar a produção sem elevar custos.'
+          text_content: [
+            'A água deve ser usada com critério. Regar cedo ou ao fim da tarde reduz evaporação e permite maior aproveitamento pela planta. No entanto, a frequência de rega não pode ser decidida apenas por hábito; é preciso observar a humidade do solo, o clima do dia e a fase de desenvolvimento da cultura.',
+            'O excesso de água pode causar apodrecimento das raízes, favorecer doenças e desperdiçar um recurso precioso. Já a falta de rega compromete o crescimento e enfraquece a planta. O equilíbrio depende de observação contínua e de pequenas decisões ajustadas ao contexto.',
+            'Ao aprender métodos simples de irrigação eficiente, a formanda ganha capacidade de produzir mais com menos desperdício. Esta é uma competência particularmente importante em contextos de escassez de água, produção familiar e gestão responsável de recursos.'
+          ].join('\n\n')
         },
         {
           module_number: 5,
           title: 'Controlo de pragas e doenças',
-          description: 'Monitorização e resposta inicial com baixo risco.',
+          description: 'Monitorização do campo e resposta inicial com medidas preventivas e de baixo risco.',
           duration_minutes: 45,
           downloadable: false,
-          text_content:
-            'Inspeccione folhas, caules e frutos com regularidade. Identificar sinais cedo facilita o controlo e evita disseminação. Sempre que possível, comece com medidas preventivas e soluções de baixo impacto antes de recorrer a produtos mais agressivos.'
+          text_content: [
+            'O controlo começa com observação regular. Folhas manchadas, furos, mudanças de cor, crescimento anormal ou presença de insectos podem indicar pragas ou doenças em fase inicial. Quanto mais cedo estes sinais forem detectados, maiores são as hipóteses de intervenção eficaz sem perdas extensas.',
+            'Sempre que possível, a primeira resposta deve privilegiar medidas preventivas e soluções de menor impacto: limpeza do terreno, rotação de culturas, remoção de partes afectadas e melhoria da ventilação. Produtos mais agressivos devem ser considerados com cuidado, apenas quando necessário e com orientação adequada.',
+            'Este módulo promove uma abordagem responsável. Não se trata apenas de eliminar um problema imediato, mas de manter o equilíbrio da produção e proteger a saúde da terra, da pessoa que cultiva e de quem vai consumir o alimento.'
+          ].join('\n\n')
         },
         {
           module_number: 6,
           title: 'Colheita e comercialização local',
-          description: 'Momento certo, armazenamento e venda básica.',
+          description: 'Momento certo de colheita, conservação inicial e organização básica para venda.',
           duration_minutes: 35,
           downloadable: false,
-          text_content:
-            'Colher no momento certo preserva sabor, peso e valor de mercado. Separe produtos danificados, mantenha sombra durante o transporte e registe volumes vendidos. A gestão simples da colheita ajuda a transformar produção em rendimento estável.'
+          text_content: [
+            'Colher no momento adequado faz diferença no sabor, no peso, na resistência ao transporte e no valor de mercado. Uma colheita demasiado cedo pode reduzir qualidade; demasiado tarde pode aumentar perdas. Por isso, este módulo trabalha sinais de maturação e critérios simples para decidir o melhor momento de recolha.',
+            'Depois da colheita, os produtos precisam de sombra, selecção e acondicionamento básico. Separar unidades danificadas, evitar esmagamento e manter limpeza durante o transporte ajuda a preservar o valor da produção. Mesmo em venda local, a apresentação influencia fortemente a decisão de compra.',
+            'A comercialização começa na organização: registar quantidades, perceber o que vende melhor, observar preços e conversar com clientes. Com estas práticas, a produção agrícola deixa de ser apenas actividade de subsistência e pode transformar-se numa fonte de rendimento mais estável e consciente.'
+          ].join('\n\n')
         }
       ]
     }
@@ -522,7 +585,7 @@ async function seedCourseContent(): Promise<void> {
         options_json: JSON.stringify([
           'Cortar o tecido',
           'Preparar acabamento das bordas',
-          'Costurar diretamente na peca',
+          'Costurar directamente na peca',
           'Medir e marcar a posicao'
         ]),
         correct_answer: 3,
@@ -568,7 +631,7 @@ async function seedCourseContent(): Promise<void> {
         question_text: 'Qual tecnica economiza mais agua na irrigacao?',
         options_json: JSON.stringify(['Sulcos', 'Inundacao', 'Aspersao', 'Gotejamento']),
         correct_answer: 3,
-        explanation: 'Gotejamento aplica agua diretamente na raiz com menor perda.'
+        explanation: 'Gotejamento aplica agua directamente na raiz com menor perda.'
       },
       {
         course_id: 'agricultura',
@@ -607,4 +670,3 @@ if (require.main === module) {
 }
 
 export { main as seedData }
-
