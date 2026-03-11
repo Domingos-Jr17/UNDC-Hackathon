@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { toast } from 'sonner'
-import { apiService, ApiError, User, DashboardStats, Activity, Course } from '../services/api'
+import { apiService, ApiError, User, DashboardStats, Activity, Course, CourseModule } from '../services/api'
 
 interface UseApiOptions {
   dependencies?: unknown[]
@@ -336,6 +336,18 @@ export function useCourses() {
   return useApi<Course[]>('courses', () => apiService.getCourses(), {
     staleTime: 5 * 60_000
   })
+}
+
+export function useCourseModules(courseId: string) {
+  return useApi<CourseModule[]>(
+    `course-modules:${courseId}`,
+    () => apiService.getCourseModules(courseId),
+    {
+      dependencies: [courseId],
+      enabled: Boolean(courseId),
+      staleTime: 5 * 60_000
+    }
+  )
 }
 
 export function useUserActivation() {

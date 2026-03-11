@@ -77,6 +77,27 @@ interface CreateCourseEnvelope {
   course: Course
 }
 
+export interface CourseModule {
+  id: number
+  title: string
+  duration: string
+  description?: string
+  videoUrl?: string
+  pdfUrl?: string
+  textContent?: string
+  downloadable: boolean
+}
+
+export interface CreateCourseModuleInput {
+  title: string
+  description?: string
+  duration_minutes: number
+  video_url?: string
+  pdf_url?: string
+  text_content?: string
+  downloadable?: boolean
+}
+
 interface VerifyCertificateEnvelope {
   success: boolean
   valid: boolean
@@ -362,12 +383,20 @@ class ApiService {
     modules_count: number
     level: string
     skills?: string
+    modules?: CreateCourseModuleInput[]
   }): Promise<Course> {
     const payload = await this.request<CreateCourseEnvelope>('/api/courses', {
       method: 'POST',
       body: data
     })
     return payload.course
+  }
+
+  async getCourseModules(courseId: string): Promise<CourseModule[]> {
+    const payload = await this.request<{ success: boolean; modules: CourseModule[] }>(`/api/courses/${courseId}/modules`, {
+      requiresAuth: false
+    })
+    return payload.modules
   }
 
   async getCourseProgress(userId: string): Promise<unknown> {

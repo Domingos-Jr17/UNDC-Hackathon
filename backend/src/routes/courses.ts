@@ -52,6 +52,14 @@ router.post(
   body('duration_hours').isInt({ min: 1, max: 1000 }).withMessage('duration_hours invalido'),
   body('modules_count').isInt({ min: 1, max: 200 }).withMessage('modules_count invalido'),
   body('level').isString().trim().isLength({ min: 2, max: 40 }).withMessage('level invalido'),
+  body('modules').optional().isArray({ max: 200 }).withMessage('modules invalido'),
+  body('modules.*.title').optional().isString().trim().isLength({ min: 1, max: 160 }).withMessage('module title invalido'),
+  body('modules.*.duration_minutes').optional().isInt({ min: 1, max: 1440 }).withMessage('module duration invalido'),
+  body('modules.*.description').optional({ nullable: true }).isString().isLength({ max: 4000 }).withMessage('module description invalida'),
+  body('modules.*.video_url').optional({ nullable: true }).isURL().withMessage('module video_url invalido'),
+  body('modules.*.pdf_url').optional({ nullable: true }).isURL().withMessage('module pdf_url invalido'),
+  body('modules.*.text_content').optional({ nullable: true }).isString().isLength({ max: 20000 }).withMessage('module text_content invalido'),
+  body('modules.*.downloadable').optional().isBoolean().withMessage('module downloadable invalido'),
   handleValidationErrors,
   CourseController.create
 );

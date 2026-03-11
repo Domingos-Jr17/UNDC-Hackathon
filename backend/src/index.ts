@@ -32,6 +32,7 @@ import cors from 'cors'
 import helmet from 'helmet'
 import { Server } from 'http'
 import detectPort from 'detect-port'
+import path from 'path'
 
 // Import routes and middleware
 import authRoutes from './routes/auth'
@@ -105,6 +106,9 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Request logging
 app.use(requestLogger)
+
+// Static course assets (PDF/MP4) served by the API.
+app.use('/media', express.static(path.resolve(__dirname, '../public')))
 
 // General rate limiting for all API routes
 app.use('/api/', generalLimiter)

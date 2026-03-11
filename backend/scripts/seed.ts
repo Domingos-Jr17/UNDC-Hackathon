@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env node
+#!/usr/bin/env node
 import { PrismaClient } from '@prisma/client'
 import bcrypt from 'bcryptjs'
 import winston from 'winston'
@@ -20,6 +20,16 @@ const logger = winston.createLogger({
 })
 
 const prisma = new PrismaClient()
+
+const resolveSeedPublicBaseUrl = (): string => {
+  const candidate = (
+    process.env.SEED_PUBLIC_BASE_URL ??
+    process.env.PUBLIC_API_BASE_URL ??
+    `http://localhost:${process.env.PORT ?? '3000'}`
+  ).trim()
+
+  return candidate.replace(/\/+$/, '')
+}
 
 const resolveSeedStaffPassword = (): string => {
   const envPassword = process.env.SEED_STAFF_PASSWORD
@@ -272,75 +282,236 @@ async function seedJobs(): Promise<void> {
 
 async function seedCourseContent(): Promise<void> {
   logger.info('Seeding course modules and quiz questions...')
+  const publicBaseUrl = resolveSeedPublicBaseUrl()
+  const sewingVideoUrl = `${publicBaseUrl}/media/course-content/custura.mp4`
+  const sewingPdfUrl = `${publicBaseUrl}/media/course-content/custura.pdf`
 
-  await prisma.courseModule.createMany({
-    data: [
-      {
-        course_id: 'costura',
-        module_number: 1,
-        title: 'Introducao a Maquina de Costura',
-        description: 'Preparacao inicial da maquina e seguranca operacional.',
-        duration_minutes: 45,
-        video_url: 'https://cdn.wira.training/costura-mod1.mp4',
-        downloadable: true
-      },
-      {
-        course_id: 'costura',
-        module_number: 2,
-        title: 'Tipos de Tecidos',
-        description: 'Selecionar tecidos para uniforme escolar e ajuste de tensao.',
-        duration_minutes: 60,
-        video_url: 'https://cdn.wira.training/costura-mod2.mp4',
-        downloadable: true
-      },
-      {
-        course_id: 'costura',
-        module_number: 3,
-        title: 'Pontos Basicos',
-        description: 'Pontos retos e reforco de acabamento.',
-        duration_minutes: 70,
-        video_url: 'https://cdn.wira.training/costura-mod3.mp4',
-        downloadable: true
-      },
-      {
-        course_id: 'culinaria',
-        module_number: 1,
-        title: 'Higiene e Seguranca Alimentar',
-        description: 'Boas praticas e manipulacao segura de alimentos.',
-        duration_minutes: 40,
-        video_url: 'https://cdn.wira.training/culinaria-mod1.mp4',
-        downloadable: true
-      },
-      {
-        course_id: 'culinaria',
-        module_number: 2,
-        title: 'Tecnicas de Corte',
-        description: 'Cortes padrao para producao em escala.',
-        duration_minutes: 55,
-        video_url: 'https://cdn.wira.training/culinaria-mod2.mp4',
-        downloadable: true
-      },
-      {
-        course_id: 'agricultura',
-        module_number: 1,
-        title: 'Preparacao do Solo',
-        description: 'Conservacao, pH e enriquecimento organico.',
-        duration_minutes: 50,
-        video_url: 'https://cdn.wira.training/agricultura-mod1.mp4',
-        downloadable: true
-      },
-      {
-        course_id: 'agricultura',
-        module_number: 2,
-        title: 'Irrigacao Eficiente',
-        description: 'Manejo de agua e tecnicas de gotejamento.',
-        duration_minutes: 45,
-        video_url: 'https://cdn.wira.training/agricultura-mod2.mp4',
-        downloadable: true
-      }
-    ],
-    skipDuplicates: true
-  })
+  const courseModules = [
+    {
+      course_id: 'costura',
+      modules: [
+        {
+          module_number: 1,
+          title: 'Preparação do espaço e segurança',
+          description: 'Organização da mesa, postura e revisão da máquina antes de iniciar.',
+          duration_minutes: 35,
+          video_url: sewingVideoUrl,
+          pdf_url: sewingPdfUrl,
+          downloadable: true,
+          text_content:
+            'Antes de começar, limpe a mesa, confirme a posição da cadeira e teste o pedal. Mantenha tesoura, fita métrica, alfinetes e linhas num local acessível. A segurança começa com atenção ao cabo de energia, iluminação adequada e mãos afastadas da agulha durante qualquer ajuste.'
+        },
+        {
+          module_number: 2,
+          title: 'Conhecer tecidos e linhas',
+          description: 'Escolha de materiais conforme o tipo de peça e o uso final.',
+          duration_minutes: 40,
+          downloadable: false,
+          text_content:
+            'Tecidos leves exigem agulhas finas e menor tensão. Tecidos médios e grossos pedem linhas mais resistentes e testes prévios. Sempre compare elasticidade, espessura e resistência antes de cortar para evitar desperdício e garantir acabamento uniforme.'
+        },
+        {
+          module_number: 3,
+          title: 'Medição e corte com precisão',
+          description: 'Marcação correcta, margens de costura e aproveitamento do tecido.',
+          duration_minutes: 45,
+          downloadable: false,
+          text_content:
+            'Use giz ou marcador próprio para tecido e confirme duas vezes todas as medidas. Reserve margens consistentes para costura e acabamento. Um corte preciso reduz retrabalho, melhora o caimento da peça e ajuda a manter o padrão de produção.'
+        },
+        {
+          module_number: 4,
+          title: 'Pontos básicos e controlo da tensão',
+          description: 'Ponto recto, retrocesso e ajustes para costura regular.',
+          duration_minutes: 50,
+          downloadable: false,
+          text_content:
+            'O ponto recto serve como base para a maioria das peças. Faça sempre uma amostra antes de costurar o material final. Se o ponto estiver frouxo ou repuxado, ajuste a tensão da linha e teste novamente até obter regularidade nos dois lados do tecido.'
+        },
+        {
+          module_number: 5,
+          title: 'Montagem de painéis e bainhas',
+          description: 'União de partes principais e acabamento inferior.',
+          duration_minutes: 55,
+          downloadable: false,
+          text_content:
+            'Ao unir painéis, alinhe bordas e fixe com alfinetes ou alinhavo. Costure de forma contínua e verifique simetria antes da bainha. Uma bainha bem marcada melhora a apresentação da peça e evita desgaste prematuro.'
+        },
+        {
+          module_number: 6,
+          title: 'Colocação de bolsos e reforços',
+          description: 'Aplicação de componentes funcionais com resistência.',
+          duration_minutes: 50,
+          downloadable: false,
+          text_content:
+            'Marque a posição do bolso com referência ao centro e à altura da peça. Faça costura de reforço nos cantos e verifique se o bolso ficou plano. Reforços simples aumentam durabilidade e confiança no uso diário da peça confeccionada.'
+        },
+        {
+          module_number: 7,
+          title: 'Revisão de qualidade',
+          description: 'Inspecção visual, limpeza de linhas e correcção de falhas.',
+          duration_minutes: 35,
+          downloadable: false,
+          text_content:
+            'Revise a peça por dentro e por fora. Corte pontas de linha, confirme alinhamento e procure pontos saltados. A revisão final protege a reputação do trabalho, reduz devoluções e prepara a beneficiária para responder a padrões de clientes e empregadores.'
+        },
+        {
+          module_number: 8,
+          title: 'Preparação para entrega ou venda',
+          description: 'Apresentação da peça, cálculo simples e orientação ao cliente.',
+          duration_minutes: 30,
+          downloadable: false,
+          text_content:
+            'Ao entregar uma peça, apresente-a limpa, dobrada e pronta para prova. Registe custo de material, tempo gasto e preço final. Explicar cuidados básicos de lavagem e uso aumenta confiança e melhora a relação com clientes.'
+        }
+      ]
+    },
+    {
+      course_id: 'culinaria',
+      modules: [
+        {
+          module_number: 1,
+          title: 'Higiene pessoal e da cozinha',
+          description: 'Rotinas básicas para reduzir contaminação.',
+          duration_minutes: 35,
+          downloadable: false,
+          text_content:
+            'Lave as mãos antes de cada tarefa, use avental limpo e mantenha superfícies higienizadas. Separe utensílios de alimentos crus e cozidos. A disciplina nestes cuidados reduz risco para clientes e melhora a qualidade do serviço.'
+        },
+        {
+          module_number: 2,
+          title: 'Organização do posto de trabalho',
+          description: 'Mise en place, ordem e segurança no serviço.',
+          duration_minutes: 30,
+          downloadable: false,
+          text_content:
+            'Antes de cozinhar, deixe ingredientes medidos, utensílios prontos e recipientes identificados. Trabalhar com ordem evita desperdício, acelera o serviço e ajuda a responder melhor a ambientes de cozinha com maior pressão.'
+        },
+        {
+          module_number: 3,
+          title: 'Cortes fundamentais',
+          description: 'Padronização de legumes, ervas e proteínas.',
+          duration_minutes: 40,
+          downloadable: false,
+          text_content:
+            'Treinar cortes iguais melhora a cozedura e a apresentação. Mantenha os dedos protegidos, segure a faca com firmeza e estabilize a tábua. A padronização é uma competência valorizada em restauração e produção alimentar.'
+        },
+        {
+          module_number: 4,
+          title: 'Temperaturas seguras',
+          description: 'Controlo de calor e conservação adequada.',
+          duration_minutes: 35,
+          downloadable: false,
+          text_content:
+            'Carnes, molhos e refeições prontas exigem atenção à temperatura. Evite deixar alimentos muito tempo fora de refrigeração. O controlo de calor e frio protege a saúde de quem consome e reduz perdas por deterioração.'
+        },
+        {
+          module_number: 5,
+          title: 'Preparações de base',
+          description: 'Caldos, arroz, molhos e acompanhamento simples.',
+          duration_minutes: 50,
+          downloadable: false,
+          text_content:
+            'Dominar bases culinárias facilita a execução de menus diferentes. Ajuste sal, textura e tempo de cozedura de forma gradual. Uma boa base permite produzir refeições consistentes mesmo com recursos limitados.'
+        },
+        {
+          module_number: 6,
+          title: 'Apresentação e porcionamento',
+          description: 'Padronização visual e controlo de quantidades.',
+          duration_minutes: 35,
+          downloadable: false,
+          text_content:
+            'Servir porções regulares melhora custo, previsibilidade e imagem do negócio. Limpe as bordas do prato, organize cores e texturas e confirme se o tamanho da porção corresponde ao preço cobrado.'
+        },
+        {
+          module_number: 7,
+          title: 'Atendimento e produção para venda',
+          description: 'Rotina operacional para refeições comerciais.',
+          duration_minutes: 35,
+          downloadable: false,
+          text_content:
+            'Ao cozinhar para venda, é importante registar encomendas, controlar ingredientes e manter comunicação clara com clientes. A cozinha profissional depende tanto de sabor quanto de organização, pontualidade e confiança.'
+        }
+      ]
+    },
+    {
+      course_id: 'agricultura',
+      modules: [
+        {
+          module_number: 1,
+          title: 'Leitura do terreno',
+          description: 'Observação do solo, drenagem e exposição solar.',
+          duration_minutes: 35,
+          downloadable: false,
+          text_content:
+            'Antes de plantar, observe a inclinação do terreno, a retenção de água e a quantidade de sol ao longo do dia. Esta leitura inicial ajuda a escolher culturas adequadas e a evitar perdas por excesso de sombra ou encharcamento.'
+        },
+        {
+          module_number: 2,
+          title: 'Preparação do solo',
+          description: 'Matéria orgânica, limpeza e correcções básicas.',
+          duration_minutes: 45,
+          downloadable: false,
+          text_content:
+            'A preparação do solo começa com remoção de resíduos, arejamento e incorporação de composto orgânico. Um solo equilibrado melhora enraizamento, retenção de nutrientes e produtividade, mesmo em pequenas parcelas.'
+        },
+        {
+          module_number: 3,
+          title: 'Sementeira e transplante',
+          description: 'Espaçamento, profundidade e cuidado inicial das mudas.',
+          duration_minutes: 40,
+          downloadable: false,
+          text_content:
+            'Cada cultura exige profundidade e espaçamento próprios. Evite semear demasiado junto para não criar competição por luz e nutrientes. No transplante, proteja as raízes e regue logo após a mudança.'
+        },
+        {
+          module_number: 4,
+          title: 'Irrigação eficiente',
+          description: 'Rotina de rega e redução de desperdício de água.',
+          duration_minutes: 35,
+          downloadable: false,
+          text_content:
+            'Regar cedo ou no fim da tarde reduz evaporação. Observe a humidade do solo antes de repetir a rega. Pequenas melhorias na frequência e no método de irrigação podem aumentar a produção sem elevar custos.'
+        },
+        {
+          module_number: 5,
+          title: 'Controlo de pragas e doenças',
+          description: 'Monitorização e resposta inicial com baixo risco.',
+          duration_minutes: 45,
+          downloadable: false,
+          text_content:
+            'Inspeccione folhas, caules e frutos com regularidade. Identificar sinais cedo facilita o controlo e evita disseminação. Sempre que possível, comece com medidas preventivas e soluções de baixo impacto antes de recorrer a produtos mais agressivos.'
+        },
+        {
+          module_number: 6,
+          title: 'Colheita e comercialização local',
+          description: 'Momento certo, armazenamento e venda básica.',
+          duration_minutes: 35,
+          downloadable: false,
+          text_content:
+            'Colher no momento certo preserva sabor, peso e valor de mercado. Separe produtos danificados, mantenha sombra durante o transporte e registe volumes vendidos. A gestão simples da colheita ajuda a transformar produção em rendimento estável.'
+        }
+      ]
+    }
+  ] as const
+
+  for (const course of courseModules) {
+    for (const module of course.modules) {
+      await prisma.courseModule.upsert({
+        where: {
+          course_id_module_number: {
+            course_id: course.course_id,
+            module_number: module.module_number
+          }
+        },
+        update: module,
+        create: {
+          course_id: course.course_id,
+          ...module
+        }
+      })
+    }
+  }
 
   await prisma.courseQuizQuestion.createMany({
     data: [

@@ -143,7 +143,9 @@ export interface CourseModule {
   id: number
   title: string
   duration: string
-  videoUrl: string
+  videoUrl?: string
+  pdfUrl?: string
+  textContent?: string
   downloadable: boolean
   description?: string
 }

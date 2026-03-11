@@ -34,16 +34,34 @@ const toCourseModule = (row: {
   title: string
   duration_minutes: number
   video_url: string | null
+  pdf_url: string | null
+  text_content: string | null
   downloadable: boolean
   description: string | null
 }): CourseModule => ({
   id: row.module_number,
   title: row.title,
   duration: `${row.duration_minutes} min`,
-  videoUrl: row.video_url ?? '',
+  ...(row.video_url !== null ? { videoUrl: row.video_url } : {}),
+  ...(row.pdf_url !== null ? { pdfUrl: row.pdf_url } : {}),
+  ...(row.text_content !== null ? { textContent: row.text_content } : {}),
   downloadable: row.downloadable,
   ...(row.description !== null ? { description: row.description } : {})
 })
+
+interface CreateCourseModuleInput {
+  title: string
+  description?: string
+  duration_minutes: number
+  video_url?: string
+  pdf_url?: string
+  text_content?: string
+  downloadable?: boolean
+}
+
+interface CreateCourseInput extends Omit<CourseInterface, 'id' | 'created_at' | 'updated_at'> {
+  modules?: CreateCourseModuleInput[]
+}
 
 const safeParseOptions = (value: string): string[] => {
   try {
@@ -94,14 +112,30 @@ class CourseModel {
   }
 
   static async findModulesByCourseId(courseId: string): Promise<CourseModule[]> {
-    const rows = await prisma.courseModule.findMany({
-      where: {
-        course_id: courseId,
-        is_active: true
-      },
-      orderBy: { module_number: 'asc' }
-    })
-
+    const rows = await prisma.$queryRaw<Array<{
+      module_number: number
+      title: string
+      duration_minutes: number
+      video_url: string | null
+      pdf_url: string | null
+      text_content: string | null
+      downloadable: boolean
+      description: string | null
+    }>>`
+      SELECT
+        "module_number",
+        "title",
+        "duration_minutes",
+        "video_url",
+        "pdf_url",
+        "text_content",
+        "downloadable",
+        "description"
+      FROM "CourseModule"
+      WHERE "course_id" = ${courseId}
+        AND "is_active" = true
+      ORDER BY "module_number" ASC
+    `
     return rows.map(toCourseModule)
   }
 
@@ -125,7 +159,17 @@ class CourseModel {
     return this.findAll()
   }
 
-  static async create(data: Omit<CourseInterface, 'id' | 'created_at' | 'updated_at'>): Promise<CourseInterface> {
+  static async create(data: CreateCourseInput): Promise<CourseInterface> {
+    const requestedModules = data.modules?.length
+      ? data.modules
+      : Array.from({ length: data.modules_count }, (_, index) => ({
+          title: `Módulo ${index + 1}`,
+          duration_minutes: 30,
+          downloadable: false
+        }))
+
+    const normalizedModulesCount = requestedModules.length > 0 ? requestedModules.length : data.modules_count
+
     const course = await prisma.course.create({
       data: {
         id: `course-${Date.now()}`,
@@ -133,12 +177,44 @@ class CourseModel {
         description: data.description ?? null,
         instructor: data.instructor ?? null,
         duration_hours: data.duration_hours,
-        modules_count: data.modules_count,
+        modules_count: normalizedModulesCount,
         level: data.level,
         skills: data.skills ?? null,
         is_active: data.is_active ?? true
       }
     })
+
+    if (requestedModules.length > 0) {
+      await prisma.$transaction(
+        requestedModules.map((module, index) => prisma.$executeRaw`
+          INSERT INTO "CourseModule" (
+            "course_id",
+            "module_number",
+            "title",
+            "description",
+            "duration_minutes",
+            "video_url",
+            "pdf_url",
+            "text_content",
+            "downloadable",
+            "is_active",
+            "created_at"
+          ) VALUES (
+            ${course.id},
+            ${index + 1},
+            ${module.title},
+            ${'description' in module ? module.description ?? null : null},
+            ${module.duration_minutes},
+            ${'video_url' in module ? module.video_url ?? null : null},
+            ${'pdf_url' in module ? module.pdf_url ?? null : null},
+            ${'text_content' in module ? module.text_content ?? null : null},
+            ${module.downloadable ?? Boolean(('video_url' in module ? module.video_url : undefined) || ('pdf_url' in module ? module.pdf_url : undefined))},
+            ${true},
+            ${new Date()}
+          )
+        `)
+      )
+    }
 
     return toCourse(course)
   }

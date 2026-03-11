@@ -87,6 +87,8 @@ model CourseModule {
   description      String?
   duration_minutes Int
   video_url        String?
+  pdf_url          String?
+  text_content     String?
   downloadable     Boolean   @default(false)
   is_active        Boolean   @default(true)
   created_at       DateTime  @default(now())
