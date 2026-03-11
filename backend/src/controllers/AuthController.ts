@@ -68,8 +68,13 @@ class AuthController {
         }
       );
 
-      // Reset login attempts on successful login
-      await UserModel.resetLoginAttempts(normalizedCode);
+      // Do not block login response on secondary account housekeeping.
+      void UserModel.resetLoginAttempts(normalizedCode).catch((resetError: Error) => {
+        logger.warn('Failed to reset login attempts after login', {
+          anonymousCode: normalizedCode,
+          error: resetError.message
+        });
+      });
 
       // Remove sensitive data from response
       const safeUser = {
@@ -168,8 +173,13 @@ class AuthController {
         }
       );
 
-      // Update last login
-      await UserModel.updateLastLogin(user.anonymous_code);
+      // Avoid blocking staff login on secondary bookkeeping work.
+      void UserModel.updateLastLogin(user.anonymous_code).catch((updateError: Error) => {
+        logger.warn('Failed to update last login after staff login', {
+          anonymousCode: user.anonymous_code,
+          error: updateError.message
+        });
+      });
 
       // Remove sensitive data from response
       const safeUser = {

@@ -53,9 +53,9 @@ export default function StaffLoginForm() {
   }
 
   return (
-    <Card className="w-full max-w-lg rounded-[32px] border-white/70 bg-white/95 shadow-2xl shadow-slate-900/10" role="main" aria-labelledby="staff-login-title">
+    <Card className="w-full max-w-lg rounded-[32px] border-white bg-white shadow-2xl shadow-slate-900/10" role="main" aria-labelledby="staff-login-title">
       <CardHeader className="space-y-4 text-center">
-        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-3xl bg-primary/10 text-primary">
+        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-3xl bg-white text-primary">
           <ShieldCheck className="h-7 w-7" />
         </div>
         <div className="space-y-2">

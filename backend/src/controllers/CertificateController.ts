@@ -1,9 +1,10 @@
-﻿import { Request, Response } from 'express';
+import { Request, Response } from 'express';
 import { AuthenticatedRequest } from '../types';
 import { canAccessAnonymousCode, logger } from '../middleware/security';
 import CertificateModel from '../models/Certificate';
 import { CertificateGenerationRequest, CertificateVerificationResponse } from '../types';
 import prismaService from '../services/prisma';
+import cacheService from '../services/cache';
 
 const prisma = prismaService.getClient();
 
@@ -56,6 +57,8 @@ class CertificateController {
         institution: 'WIRA Academy'
       });
 
+      await cacheService.invalidatePattern(`mobile:certificates:${anonymousCode}`);
+
       res.json({
         success: true,
         verificationCode: certificate.verification_code,
@@ -76,6 +79,7 @@ class CertificateController {
 
   static async getByUser(req: AuthenticatedRequest, res: Response): Promise<void> {
     const { anonymousCode } = req.params;
+    const cacheKey = `mobile:certificates:${anonymousCode}`;
 
     if (!canAccessAnonymousCode(req.user, anonymousCode)) {
       res.status(403).json({
@@ -86,6 +90,16 @@ class CertificateController {
     }
 
     try {
+      const cached = await cacheService.getJSON<{
+        success: true
+        certificates: unknown[]
+      }>(cacheKey);
+
+      if (cached) {
+        res.json(cached);
+        return;
+      }
+
       const certificates = await prisma.certificate.findMany({
         where: {
           anonymous_code: anonymousCode,
@@ -94,7 +108,7 @@ class CertificateController {
         orderBy: { issue_date: 'desc' }
       });
 
-      res.json({
+      const payload = {
         success: true,
         certificates: certificates.map((item: any) => ({
           id: item.id,
@@ -105,7 +119,10 @@ class CertificateController {
           score: item.score,
           qrCode: item.qr_code
         }))
-      });
+      };
+
+      await cacheService.setJSON(cacheKey, payload, 300);
+      res.json(payload);
     } catch (error) {
       logger.error('Error fetching user certificates', {
         error: (error as Error).message,
@@ -160,6 +177,7 @@ class CertificateController {
 
     try {
       await CertificateModel.revoke(code, reason);
+      await cacheService.invalidatePattern('mobile:certificates:');
 
       res.json({
         success: true,
@@ -188,7 +206,6 @@ class CertificateController {
     }
 
     try {
-    
       const certificate = await CertificateModel.findByUserAndCourse(anonymousCode, courseId);
 
       if (!certificate) {
@@ -220,6 +237,7 @@ class CertificateController {
       const certificateData = req.body;
 
       const certificate = await CertificateModel.create(certificateData);
+      await cacheService.invalidatePattern('mobile:certificates:');
 
       res.status(201).json({
         success: true,
@@ -249,6 +267,7 @@ class CertificateController {
         return;
       }
 
+      await cacheService.invalidatePattern('mobile:certificates:');
       res.json({
         success: true,
         certificate,
@@ -267,6 +286,7 @@ class CertificateController {
 
     try {
       await CertificateModel.delete({ verification_code: code });
+      await cacheService.invalidatePattern('mobile:certificates:');
 
       res.json({
         success: true,
@@ -282,5 +302,3 @@ class CertificateController {
 }
 
 export default CertificateController;
-
-

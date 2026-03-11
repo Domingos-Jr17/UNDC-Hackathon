@@ -3,6 +3,7 @@ import * as SecureStore from 'expo-secure-store'
 
 const TOKEN_KEY = 'wira_token'
 const USER_CODE_KEY = 'wira_user_code'
+const CACHE_PREFIX = 'wira_cache:'
 
 let secureStoreAvailable: boolean | null = null
 
@@ -57,9 +58,13 @@ export const sessionService = {
   },
 
   async clearSession(): Promise<void> {
+    const cacheKeys = await AsyncStorage.getAllKeys()
+    const mobileCacheKeys = cacheKeys.filter(key => key.startsWith(CACHE_PREFIX))
+
     await Promise.all([
       clearToken(),
-      AsyncStorage.removeItem(USER_CODE_KEY)
+      AsyncStorage.removeItem(USER_CODE_KEY),
+      ...(mobileCacheKeys.length > 0 ? [AsyncStorage.multiRemove(mobileCacheKeys)] : [])
     ])
   }
 }

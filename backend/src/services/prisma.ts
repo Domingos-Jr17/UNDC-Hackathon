@@ -35,6 +35,11 @@ class PrismaService {
     return this.prisma;
   }
 
+  async connect(): Promise<void> {
+    await this.prisma.$connect();
+    logger.info('Prisma client connected');
+  }
+
   async disconnect(): Promise<void> {
     await this.prisma.$disconnect();
     logger.info('Prisma client disconnected');

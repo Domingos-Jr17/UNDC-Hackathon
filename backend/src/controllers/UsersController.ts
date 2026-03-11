@@ -1,7 +1,8 @@
-Ôªøimport { Request, Response } from 'express'
+import { Request, Response } from 'express'
 import prismaService from '../services/prisma'
 import encryptionService from '../services/encryption'
 import { logger } from '../middleware/security'
+import cacheService from '../services/cache'
 
 const prisma = prismaService.getClient()
 const normalizeNgoId = (value: string): string => value.trim().toLowerCase().replace(/^ong-/, 'ngo-')
@@ -55,12 +56,28 @@ class UsersController {
     const parsedLimit = Math.min(parseInt(String(limit), 10) || 50, 200)
     const parsedOffset = parseInt(String(offset), 10) || 0
     const statusFilter = status === 'Ativo' ? true : status === 'Inativo' ? false : null
+    const cacheKey = `admin:users:list:${statusFilter === null ? 'all' : statusFilter ? 'active' : 'inactive'}:${parsedLimit}:${parsedOffset}`
     const where = {
       role: 'VICTIM' as const,
       ...(statusFilter === null ? {} : { is_active: statusFilter })
     }
 
     try {
+      const cached = await cacheService.getJSON<{
+        success: true
+        users: ReturnType<typeof mapUserListItem>[]
+        pagination: {
+          limit: number
+          offset: number
+          total: number
+        }
+      }>(cacheKey)
+
+      if (cached) {
+        res.json(cached)
+        return
+      }
+
       const users = await prisma.user.findMany({
         where,
         include: {
@@ -81,7 +98,7 @@ class UsersController {
         where
       })
 
-      res.json({
+      const payload = {
         success: true,
         users: users.map(user => mapUserListItem(user)),
         pagination: {
@@ -89,10 +106,13 @@ class UsersController {
           offset: parsedOffset,
           total
         }
-      })
+      }
+
+      await cacheService.setJSON(cacheKey, payload, 90)
+      res.json(payload)
     } catch (error) {
       logger.error('Error listing users', { error: (error as Error).message })
-      res.status(500).json({ error: 'Erro ao listar usu√°rios' })
+      res.status(500).json({ error: 'Erro ao listar usu·rios' })
     }
   }
 
@@ -150,7 +170,7 @@ class UsersController {
       if (!user || user.role !== 'VICTIM') {
         res.status(404).json({
           success: false,
-          error: 'Usu√°rio n√£o encontrado'
+          error: 'Usu·rio n„o encontrado'
         })
         return
       }
@@ -183,7 +203,7 @@ class UsersController {
       })
     } catch (error) {
       logger.error('Error fetching user by id', { error: (error as Error).message, id })
-      res.status(500).json({ error: 'Erro ao buscar usu√°rio' })
+      res.status(500).json({ error: 'Erro ao buscar usu·rio' })
     }
   }
 
@@ -206,7 +226,7 @@ class UsersController {
 
     res.status(500).json({
       success: false,
-      error: 'N√£o foi poss√≠vel gerar c√≥digo √∫nico'
+      error: 'N„o foi possÌvel gerar cÛdigo ˙nico'
     })
   }
 
@@ -222,7 +242,7 @@ class UsersController {
     if (!ngoId) {
       res.status(400).json({
         success: false,
-        error: 'ngoId √© obrigat√≥rio'
+        error: 'ngoId È obrigatÛrio'
       })
       return
     }
@@ -233,7 +253,7 @@ class UsersController {
       if (!ngo || !ngo.is_active) {
         res.status(400).json({
           success: false,
-          error: 'ONG inv√°lida para activa√ß√£o'
+          error: 'ONG inv·lida para activaÁ„o'
         })
         return
       }
@@ -251,7 +271,7 @@ class UsersController {
       if (!generatedCode) {
         res.status(500).json({
           success: false,
-          error: 'Falha ao gerar c√≥digo de acesso'
+          error: 'Falha ao gerar cÛdigo de acesso'
         })
         return
       }
@@ -278,6 +298,8 @@ class UsersController {
         })
       }
 
+      await cacheService.invalidatePattern('admin:users:')
+
       res.status(201).json({
         success: true,
         user: {
@@ -290,7 +312,7 @@ class UsersController {
       })
     } catch (error) {
       logger.error('Error activating user', { error: (error as Error).message })
-      res.status(500).json({ error: 'Erro ao activar usu√°rio' })
+      res.status(500).json({ error: 'Erro ao activar usu·rio' })
     }
   }
 
@@ -301,7 +323,7 @@ class UsersController {
     if (typeof active !== 'boolean') {
       res.status(400).json({
         success: false,
-        error: 'Campo active (boolean) √© obrigat√≥rio'
+        error: 'Campo active (boolean) È obrigatÛrio'
       })
       return
     }
@@ -319,6 +341,8 @@ class UsersController {
           data: { is_active: active }
         })
 
+      await cacheService.invalidatePattern('admin:users:')
+
       res.json({
         success: true,
         user: {
@@ -329,7 +353,7 @@ class UsersController {
       })
     } catch (error) {
       logger.error('Error updating user activation', { error: (error as Error).message, id })
-      res.status(500).json({ error: 'Erro ao atualizar activa√ß√£o do usu√°rio' })
+      res.status(500).json({ error: 'Erro ao atualizar activaÁ„o do usu·rio' })
     }
   }
 
@@ -345,7 +369,7 @@ class UsersController {
       if (!user) {
         res.status(404).json({
           success: false,
-          error: 'Usu√°rio n√£o encontrado'
+          error: 'Usu·rio n„o encontrado'
         })
         return
       }
@@ -377,7 +401,7 @@ class UsersController {
       })
     } catch (error) {
       logger.error('Error fetching user progress', { error: (error as Error).message, id })
-      res.status(500).json({ error: 'Erro ao buscar progresso do usu√°rio' })
+      res.status(500).json({ error: 'Erro ao buscar progresso do usu·rio' })
     }
   }
 
@@ -393,7 +417,7 @@ class UsersController {
       if (!user) {
         res.status(404).json({
           success: false,
-          error: 'Usu√°rio n√£o encontrado'
+          error: 'Usu·rio n„o encontrado'
         })
         return
       }
@@ -420,11 +444,9 @@ class UsersController {
       })
     } catch (error) {
       logger.error('Error fetching user certificates', { error: (error as Error).message, id })
-      res.status(500).json({ error: 'Erro ao buscar certificados do usu√°rio' })
+      res.status(500).json({ error: 'Erro ao buscar certificados do usu·rio' })
     }
   }
 }
 
 export default UsersController
-
-

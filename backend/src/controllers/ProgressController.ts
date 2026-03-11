@@ -3,10 +3,12 @@ import { AuthenticatedRequest } from '../types';
 import { canAccessAnonymousCode, logger } from '../middleware/security';
 import ProgressModel from '../models/Progress';
 import CourseModel from '../models/Course';
+import cacheService from '../services/cache';
 
 class ProgressController {
   static async getUserAggregate(req: AuthenticatedRequest, res: Response): Promise<void> {
     const { userCode } = req.params;
+    const cacheKey = `mobile:progress:aggregate:${userCode}`;
 
     if (!canAccessAnonymousCode(req.user, userCode)) {
       res.status(403).json({
@@ -17,6 +19,30 @@ class ProgressController {
     }
 
     try {
+      const cached = await cacheService.getJSON<{
+        success: true
+        userCode: string
+        summary: {
+          totalCourses: number
+          activeCourses: number
+          averageProgress: number
+        }
+        courses: Array<{
+          courseId: string
+          title: string
+          modulesCount: number
+          progress: number
+          currentModule: number
+          completedModules: string[]
+          lastActivity: string | null
+        }>
+      }>(cacheKey);
+
+      if (cached) {
+        res.json(cached);
+        return;
+      }
+
       const [progressRows, courses] = await Promise.all([
         ProgressModel.findByUser(userCode),
         CourseModel.findMany()
@@ -45,7 +71,7 @@ class ProgressController {
         ? Math.round(coursesWithProgress.reduce((acc, item) => acc + item.progress, 0) / totalCourses)
         : 0;
 
-      res.json({
+      const payload = {
         success: true,
         userCode,
         summary: {
@@ -54,7 +80,10 @@ class ProgressController {
           averageProgress
         },
         courses: coursesWithProgress
-      });
+      };
+
+      await cacheService.setJSON(cacheKey, payload, 90);
+      res.json(payload);
     } catch (error) {
       logger.error('Database error fetching aggregated user progress', {
         error: (error as Error).message,
@@ -68,6 +97,7 @@ class ProgressController {
 
   static async getUserProgress(req: AuthenticatedRequest, res: Response): Promise<void> {
     const { userCode, courseId } = req.params;
+    const cacheKey = `mobile:progress:item:${userCode}:${courseId}`;
 
     if (!canAccessAnonymousCode(req.user, userCode)) {
       res.status(403).json({
@@ -78,6 +108,16 @@ class ProgressController {
     }
 
     try {
+      const cached = await cacheService.getJSON<{
+        success: true
+        progress: unknown
+      }>(cacheKey);
+
+      if (cached) {
+        res.json(cached);
+        return;
+      }
+
       // Use ORM-like method to find progress
       const progress = await ProgressModel.findUnique({
         user_code: userCode,
@@ -92,10 +132,13 @@ class ProgressController {
         return;
       }
 
-      res.json({
+      const payload = {
         success: true,
         progress
-      });
+      };
+
+      await cacheService.setJSON(cacheKey, payload, 90);
+      res.json(payload);
     } catch (error) {
       logger.error('Database error fetching progress', {
         error: (error as Error).message,
@@ -130,6 +173,8 @@ class ProgressController {
         quizAttempts,
         lastQuizScore
       );
+
+      await cacheService.invalidatePattern(`mobile:progress:*:${userCode}*`);
 
       res.json({
         success: true,

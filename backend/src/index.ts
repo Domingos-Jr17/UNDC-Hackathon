@@ -349,6 +349,8 @@ const getAvailablePort = async (preferredPort: number): Promise<number> => {
 // Start server with dynamic port detection
 const startServer = async (): Promise<void> => {
   try {
+    await prismaService.connect()
+
     const preferredPort = parseInt(process.env.PORT ?? '3000')
     const actualPort = await getAvailablePort(preferredPort)
 

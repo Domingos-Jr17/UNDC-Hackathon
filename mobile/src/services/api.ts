@@ -1,8 +1,29 @@
 import { Platform } from 'react-native'
+import AsyncStorage from '@react-native-async-storage/async-storage'
 import sessionService from './session'
 
 const ENV_API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL?.trim()
 let cachedApiBaseUrl: string | null = ENV_API_BASE_URL ?? null
+const CACHE_PREFIX = 'wira_cache:'
+
+type CachePolicy = {
+  ttlMs: number
+}
+
+type CachePolicyKey =
+  | 'courses'
+  | 'modules'
+  | 'quiz'
+  | 'progressAggregate'
+  | 'progressCourse'
+  | 'certificates'
+  | 'jobs'
+  | 'jobMatching'
+
+type CacheEnvelope<T> = {
+  timestamp: number
+  data: T
+}
 
 const normalizeBaseUrl = (value: string): string => value.replace(/\/+$/, '')
 
@@ -191,7 +212,67 @@ const parseJson = async <T>(response: Response): Promise<T> => {
   return data
 }
 
+const buildCacheStorageKey = (key: string): string => `${CACHE_PREFIX}${key}`
+
+const readCache = async <T>(key: string, policy: CachePolicy): Promise<T | null> => {
+  try {
+    const raw = await AsyncStorage.getItem(buildCacheStorageKey(key))
+    if (!raw) {
+      return null
+    }
+
+    const parsed = JSON.parse(raw) as CacheEnvelope<T>
+    if (Date.now() - parsed.timestamp > policy.ttlMs) {
+      await AsyncStorage.removeItem(buildCacheStorageKey(key))
+      return null
+    }
+
+    return parsed.data
+  } catch {
+    return null
+  }
+}
+
+const writeCache = async <T>(key: string, data: T): Promise<void> => {
+  try {
+    const payload: CacheEnvelope<T> = {
+      timestamp: Date.now(),
+      data
+    }
+    await AsyncStorage.setItem(buildCacheStorageKey(key), JSON.stringify(payload))
+  } catch {
+    // Ignore cache write failures and continue with network result.
+  }
+}
+
+const invalidateCache = async (pattern: string): Promise<void> => {
+  try {
+    const keys = await AsyncStorage.getAllKeys()
+    const matching = keys.filter(key => key.startsWith(CACHE_PREFIX) && key.includes(pattern))
+    if (matching.length > 0) {
+      await AsyncStorage.multiRemove(matching)
+    }
+  } catch {
+    // Ignore cache invalidation failures.
+  }
+}
+
 class ApiService {
+  private readonly cachePolicies: Record<CachePolicyKey, CachePolicy> = {
+    courses: { ttlMs: 5 * 60 * 1000 },
+    modules: { ttlMs: 5 * 60 * 1000 },
+    quiz: { ttlMs: 10 * 60 * 1000 },
+    progressAggregate: { ttlMs: 90 * 1000 },
+    progressCourse: { ttlMs: 90 * 1000 },
+    certificates: { ttlMs: 5 * 60 * 1000 },
+    jobs: { ttlMs: 3 * 60 * 1000 },
+    jobMatching: { ttlMs: 2 * 60 * 1000 }
+  }
+
+  private getCachePolicy(key: CachePolicyKey): CachePolicy {
+    return this.cachePolicies[key]
+  }
+
   private async request<T>(path: string, init?: RequestInit, requiresAuth: boolean = true): Promise<T> {
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
@@ -230,37 +311,73 @@ class ApiService {
   }
 
   async getCourses(): Promise<CourseItem[]> {
+    const cacheKey = 'courses'
+    const cached = await readCache<CourseItem[]>(cacheKey, this.getCachePolicy('courses'))
+    if (cached) {
+      return cached
+    }
+
     const response = await this.request<{ success: boolean; courses: CourseItem[] }>('/api/courses', {
       method: 'GET'
     })
+    await writeCache(cacheKey, response.courses)
     return response.courses
   }
 
   async getCourseModules(courseId: string): Promise<CourseModule[]> {
+    const cacheKey = `modules:${courseId}`
+    const cached = await readCache<CourseModule[]>(cacheKey, this.getCachePolicy('modules'))
+    if (cached) {
+      return cached
+    }
+
     const response = await this.request<{ success: boolean; modules: CourseModule[] }>(`/api/courses/${courseId}/modules`, {
       method: 'GET'
     })
+    await writeCache(cacheKey, response.modules)
     return response.modules
   }
 
   async getCourseQuiz(courseId: string): Promise<QuizQuestion[]> {
+    const cacheKey = `quiz:${courseId}`
+    const cached = await readCache<QuizQuestion[]>(cacheKey, this.getCachePolicy('quiz'))
+    if (cached) {
+      return cached
+    }
+
     const response = await this.request<{ success: boolean; quiz: QuizQuestion[] }>(`/api/courses/${courseId}/quiz`, {
       method: 'GET'
     })
+    await writeCache(cacheKey, response.quiz)
     return response.quiz
   }
 
   async getAggregatedProgress(userCode: string): Promise<AggregatedProgress> {
-    return this.request<AggregatedProgress>(`/api/progress/user/${userCode}`, {
+    const cacheKey = `progress:aggregate:${userCode}`
+    const cached = await readCache<AggregatedProgress>(cacheKey, this.getCachePolicy('progressAggregate'))
+    if (cached) {
+      return cached
+    }
+
+    const response = await this.request<AggregatedProgress>(`/api/progress/user/${userCode}`, {
       method: 'GET'
     })
+    await writeCache(cacheKey, response)
+    return response
   }
 
   async getCourseProgress(userCode: string, courseId: string): Promise<CourseProgress> {
+    const cacheKey = `progress:course:${userCode}:${courseId}`
+    const cached = await readCache<CourseProgress>(cacheKey, this.getCachePolicy('progressCourse'))
+    if (cached) {
+      return cached
+    }
+
     const response = await this.request<{ success: boolean; progress: CourseProgress }>(
       `/api/progress/user/${userCode}/course/${courseId}`,
       { method: 'GET' }
     )
+    await writeCache(cacheKey, response.progress)
     return response.progress
   }
 
@@ -285,13 +402,22 @@ class ApiService {
         lastQuizScore: options?.lastQuizScore
       })
     })
+    await invalidateCache(`progress:aggregate:${userCode}`)
+    await invalidateCache(`progress:course:${userCode}:`)
   }
 
   async getUserCertificates(userCode: string): Promise<CertificateRecord[]> {
+    const cacheKey = `certificates:${userCode}`
+    const cached = await readCache<CertificateRecord[]>(cacheKey, this.getCachePolicy('certificates'))
+    if (cached) {
+      return cached
+    }
+
     const response = await this.request<{ success: boolean; certificates: CertificateRecord[] }>(
       `/api/certificates/user/${userCode}`,
       { method: 'GET' }
     )
+    await writeCache(cacheKey, response.certificates)
     return response.certificates
   }
 
@@ -300,7 +426,7 @@ class ApiService {
     verificationCode: string
     qrCode: string
   }> {
-    return this.request<{
+    const payload = await this.request<{
       success: boolean
       verificationCode: string
       qrCode: string
@@ -312,16 +438,31 @@ class ApiService {
         score
       })
     })
+    await invalidateCache(`certificates:${userCode}`)
+    return payload
   }
 
   async getJobs(): Promise<JobRecord[]> {
+    const cacheKey = 'jobs:list'
+    const cached = await readCache<JobRecord[]>(cacheKey, this.getCachePolicy('jobs'))
+    if (cached) {
+      return cached
+    }
+
     const response = await this.request<{ success: boolean; jobs: JobRecord[] }>('/api/jobs', {
       method: 'GET'
     })
+    await writeCache(cacheKey, response.jobs)
     return response.jobs
   }
 
   async getJobMatching(userCode: string, location?: string): Promise<JobRecord[]> {
+    const cacheKey = `jobs:matching:${userCode}:${location ?? ''}`
+    const cached = await readCache<JobRecord[]>(cacheKey, this.getCachePolicy('jobMatching'))
+    if (cached) {
+      return cached
+    }
+
     const response = await this.request<{ success: boolean; jobs: JobRecord[] }>('/api/jobs/matching', {
       method: 'POST',
       body: JSON.stringify({
@@ -329,6 +470,7 @@ class ApiService {
         location
       })
     })
+    await writeCache(cacheKey, response.jobs)
     return response.jobs
   }
 
@@ -339,6 +481,7 @@ class ApiService {
         anonymousCode: userCode
       })
     })
+    await invalidateCache('jobs:')
   }
 }
 

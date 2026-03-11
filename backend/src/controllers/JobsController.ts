@@ -1,7 +1,8 @@
-﻿import { Request, Response } from 'express'
+import { Request, Response } from 'express'
 import prismaService from '../services/prisma'
 import { AuthenticatedRequest } from '../types'
 import { canAccessAnonymousCode, logger } from '../middleware/security'
+import cacheService from '../services/cache'
 
 const prisma = prismaService.getClient()
 
@@ -30,8 +31,19 @@ const calculateMatchScore = (
 class JobsController {
   static async listJobs(req: Request, res: Response): Promise<void> {
     const { location, skill, limit = '20' } = req.query
+    const cacheKey = `mobile:jobs:list:${String(location ?? '')}:${String(skill ?? '')}:${String(limit)}`
 
     try {
+      const cached = await cacheService.getJSON<{
+        success: true
+        jobs: unknown[]
+      }>(cacheKey)
+
+      if (cached) {
+        res.json(cached)
+        return
+      }
+
       const where = {
         is_active: true,
         ...(location ? { location: String(location) } : {}),
@@ -53,10 +65,13 @@ class JobsController {
         take: Math.min(parseInt(String(limit), 10) || 20, 100)
       })
 
-      res.json({
+      const payload = {
         success: true,
         jobs
-      })
+      }
+
+      await cacheService.setJSON(cacheKey, payload, 300)
+      res.json(payload)
     } catch (error) {
       logger.error('Error listing jobs', { error: (error as Error).message })
       res.status(500).json({ error: 'Erro ao listar vagas' })
@@ -69,6 +84,7 @@ class JobsController {
       location?: string
       availability?: string
     }
+    const cacheKey = `mobile:jobs:matching:${anonymousCode}:${location ?? ''}:${availability ?? ''}`
 
     if (!canAccessAnonymousCode(req.user, anonymousCode)) {
       res.status(403).json({
@@ -79,6 +95,17 @@ class JobsController {
     }
 
     try {
+      const cached = await cacheService.getJSON<{
+        success: true
+        anonymousCode: string
+        jobs: unknown[]
+      }>(cacheKey)
+
+      if (cached) {
+        res.json(cached)
+        return
+      }
+
       const progressRows = await prisma.progress.findMany({
         where: { user_code: anonymousCode },
         include: {
@@ -128,11 +155,14 @@ class JobsController {
         })
         .sort((a: any, b: any) => b.matching.score - a.matching.score)
 
-      res.json({
+      const payload = {
         success: true,
         anonymousCode,
         jobs: rankedJobs
-      })
+      }
+
+      await cacheService.setJSON(cacheKey, payload, 120)
+      res.json(payload)
     } catch (error) {
       logger.error('Error calculating job matching', {
         error: (error as Error).message,
@@ -221,6 +251,8 @@ class JobsController {
         }
       })
 
+      await cacheService.invalidatePattern('mobile:jobs:')
+
       res.status(201).json({
         success: true,
         application
@@ -237,6 +269,3 @@ class JobsController {
 }
 
 export default JobsController
-
-
-
