@@ -193,11 +193,9 @@ export default function Sidebar({
         </div>
 
         <div className="flex-1 overflow-y-auto px-4 py-5">
-          {!isCollapsed ? <p className="mb-3 px-2 text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Operação</p> : null}
           <nav className="space-y-2">{renderItems(groupedItems.core)}</nav>
 
           <div className="mt-6 border-t border-slate-200/80 pt-5">
-            {!isCollapsed ? <p className="mb-3 px-2 text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Apoio</p> : null}
             <nav className="space-y-2">{renderItems(groupedItems.support)}</nav>
           </div>
         </div>

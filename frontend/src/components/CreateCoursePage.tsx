@@ -9,6 +9,7 @@ import { toast } from 'sonner'
 import { ArrowLeft, BookOpen, Save, Sparkles } from 'lucide-react'
 import Layout from './layout/Layout'
 import { apiService, ApiError } from '@/services/api'
+import { invalidateApiCache } from '@/hooks/useApi'
 
 interface CreateCourseFormState {
   title: string
@@ -86,6 +87,7 @@ export default function CreateCoursePage() {
         skills: form.skills.trim() || undefined
       })
 
+      invalidateApiCache('courses')
       toast.dismiss(toastId)
       toast.success('Curso criado com sucesso.')
       navigate(`/courses/${course.id}`)

@@ -1,48 +1,199 @@
-﻿import { useState, useEffect, useCallback } from 'react'
-import { apiService, ApiError, User, DashboardStats, Activity, Course } from '../services/api'
+import { useCallback, useEffect, useState } from 'react'
 import { toast } from 'sonner'
+import { apiService, ApiError, User, DashboardStats, Activity, Course } from '../services/api'
 
-interface UseApiState<T> {
+interface UseApiOptions {
+  dependencies?: unknown[]
+  staleTime?: number
+  enabled?: boolean
+}
+
+interface BaseUseApiState<T> {
   data: T | null
   loading: boolean
   error: string | null
+  updatedAt: number | null
+}
+
+interface UseApiState<T> extends BaseUseApiState<T> {
   refetch: () => Promise<void>
 }
 
-export function useApi<T>(apiCall: () => Promise<T>, dependencies: unknown[] = []): UseApiState<T> {
-  const [state, setState] = useState<UseApiState<T>>({
-    data: null,
-    loading: true,
-    error: null,
-    refetch: async () => undefined
+interface CacheEntry<T> {
+  data: T
+  updatedAt: number
+}
+
+const DEFAULT_STALE_TIME = 60_000
+const apiCache = new Map<string, CacheEntry<unknown>>()
+const inFlightRequests = new Map<string, Promise<unknown>>()
+
+const isCacheFresh = (updatedAt: number, staleTime: number): boolean =>
+  Date.now() - updatedAt < staleTime
+
+const getCacheEntry = <T,>(cacheKey: string): CacheEntry<T> | null => {
+  const entry = apiCache.get(cacheKey)
+  return entry ? (entry as CacheEntry<T>) : null
+}
+
+export function invalidateApiCache(
+  matcher?: string | string[] | ((cacheKey: string) => boolean)
+): void {
+  if (!matcher) {
+    apiCache.clear()
+    inFlightRequests.clear()
+    return
+  }
+
+  const shouldDelete = typeof matcher === 'function'
+    ? matcher
+    : (cacheKey: string) => Array.isArray(matcher) ? matcher.includes(cacheKey) : cacheKey === matcher
+
+  Array.from(apiCache.keys()).forEach(cacheKey => {
+    if (shouldDelete(cacheKey)) {
+      apiCache.delete(cacheKey)
+      inFlightRequests.delete(cacheKey)
+    }
+  })
+}
+
+export function useApi<T>(
+  cacheKey: string,
+  apiCall: () => Promise<T>,
+  options: UseApiOptions = {}
+): UseApiState<T> {
+  const {
+    dependencies = [],
+    staleTime = DEFAULT_STALE_TIME,
+    enabled = true
+  } = options
+
+  const [state, setState] = useState<BaseUseApiState<T>>(() => {
+    const cached = enabled ? getCacheEntry<T>(cacheKey) : null
+    return {
+      data: cached?.data ?? null,
+      loading: enabled ? !cached : false,
+      error: null,
+      updatedAt: cached?.updatedAt ?? null
+    }
   })
 
-  const fetchData = useCallback(async () => {
-    setState(prev => ({ ...prev, loading: true, error: null }))
+  const fetchData = useCallback(async ({
+    force = false,
+    background = false
+  }: {
+    force?: boolean
+    background?: boolean
+  } = {}): Promise<void> => {
+    if (!enabled) {
+      return
+    }
+
+    const cached = getCacheEntry<T>(cacheKey)
+    if (!force && cached && isCacheFresh(cached.updatedAt, staleTime)) {
+      setState({
+        data: cached.data,
+        loading: false,
+        error: null,
+        updatedAt: cached.updatedAt
+      })
+      return
+    }
+
+    if (!background) {
+      setState(prev => ({
+        ...prev,
+        loading: prev.data === null || force,
+        error: null
+      }))
+    }
+
+    let request = (!force ? inFlightRequests.get(cacheKey) : undefined) as Promise<T> | undefined
+
+    if (!request) {
+      const pendingRequest = apiCall()
+        .then(result => {
+          const entry: CacheEntry<T> = {
+            data: result,
+            updatedAt: Date.now()
+          }
+          apiCache.set(cacheKey, entry)
+          return result
+        })
+        .finally(() => {
+          if (inFlightRequests.get(cacheKey) === pendingRequest) {
+            inFlightRequests.delete(cacheKey)
+          }
+        })
+
+      inFlightRequests.set(cacheKey, pendingRequest)
+      request = pendingRequest
+    }
 
     try {
-      const result = await apiCall()
+      const result = await request
+      const entry = getCacheEntry<T>(cacheKey)
+
       setState({
         data: result,
         loading: false,
         error: null,
-        refetch: fetchData
+        updatedAt: entry?.updatedAt ?? Date.now()
       })
     } catch (error) {
+      setState(prev => ({
+        data: prev.data,
+        loading: false,
+        error: (error as Error).message,
+        updatedAt: prev.updatedAt
+      }))
+      throw error
+    }
+  }, [apiCall, cacheKey, enabled, staleTime, ...dependencies])
+
+  const refetch = useCallback(async () => {
+    await fetchData({ force: true })
+  }, [fetchData])
+
+  useEffect(() => {
+    if (!enabled) {
       setState({
         data: null,
         loading: false,
-        error: (error as Error).message,
-        refetch: fetchData
+        error: null,
+        updatedAt: null
       })
+      return
     }
-  }, dependencies)
 
-  useEffect(() => {
+    const cached = getCacheEntry<T>(cacheKey)
+    if (cached) {
+      setState({
+        data: cached.data,
+        loading: false,
+        error: null,
+        updatedAt: cached.updatedAt
+      })
+
+      if (!isCacheFresh(cached.updatedAt, staleTime)) {
+        void fetchData({ background: true })
+      }
+      return
+    }
+
+    setState({
+      data: null,
+      loading: true,
+      error: null,
+      updatedAt: null
+    })
     void fetchData()
-  }, [fetchData])
+  }, [cacheKey, enabled, staleTime, fetchData])
 
-  return state
+  return {
+    ...state,
+    refetch
+  }
 }
 
 const toFrontendUser = (payload: {
@@ -91,6 +242,7 @@ export function useAuth() {
   const login = useCallback(async (code: string): Promise<boolean> => {
     try {
       setLoading(true)
+      invalidateApiCache()
       const normalizedCode = code.trim().toUpperCase()
       const payload = await apiService.authenticateUser(normalizedCode)
       const mapped = toFrontendUser(payload.user)
@@ -110,6 +262,7 @@ export function useAuth() {
   const staffLogin = useCallback(async (email: string, password: string): Promise<boolean> => {
     try {
       setLoading(true)
+      invalidateApiCache()
       const payload = await apiService.authenticateStaff(email, password)
       const mapped = toFrontendUser(payload.user)
       setUser(mapped)
@@ -126,6 +279,7 @@ export function useAuth() {
   }, [])
 
   const logout = useCallback(() => {
+    invalidateApiCache()
     localStorage.removeItem('wira_user')
     localStorage.removeItem('wira_token')
     setUser(null)
@@ -144,26 +298,44 @@ export function useAuth() {
 }
 
 export function useDashboardStats() {
-  return useApi<DashboardStats>(() => apiService.getDashboardStats(), [])
+  return useApi<DashboardStats>('dashboard-stats', () => apiService.getDashboardStats(), {
+    staleTime: 60_000
+  })
 }
 
 export function useRecentActivity() {
-  return useApi<Activity[]>(() => apiService.getRecentActivity(), [])
+  return useApi<Activity[]>('recent-activity', () => apiService.getRecentActivity(), {
+    staleTime: 45_000
+  })
 }
 
 export function useUsers(filters?: { status?: string }) {
   return useApi<User[]>(
+    `users:${filters?.status ?? 'all'}`,
     () => apiService.getUsers(filters),
-    [filters?.status]
+    {
+      dependencies: [filters?.status],
+      staleTime: 60_000
+    }
   )
 }
 
 export function useUserDetails(userId: string) {
-  return useApi<User>(() => apiService.getUserDetails(userId), [userId])
+  return useApi<User>(
+    `user-details:${userId}`,
+    () => apiService.getUserDetails(userId),
+    {
+      dependencies: [userId],
+      enabled: Boolean(userId),
+      staleTime: 60_000
+    }
+  )
 }
 
 export function useCourses() {
-  return useApi<Course[]>(() => apiService.getCourses(), [])
+  return useApi<Course[]>('courses', () => apiService.getCourses(), {
+    staleTime: 5 * 60_000
+  })
 }
 
 export function useUserActivation() {
@@ -179,6 +351,11 @@ export function useUserActivation() {
     setLoading(true)
     try {
       const user = await apiService.activateUser(userData)
+      invalidateApiCache(cacheKey =>
+        cacheKey === 'dashboard-stats' ||
+        cacheKey === 'recent-activity' ||
+        cacheKey.startsWith('users:')
+      )
       toast.success('Beneficiária activada com sucesso')
       return user
     } catch (error) {
@@ -226,26 +403,13 @@ export function useUserActivation() {
 }
 
 export function useApiHealth() {
-  const [isHealthy, setIsHealthy] = useState<boolean | null>(null)
-  const [lastCheck, setLastCheck] = useState<Date | null>(null)
+  const state = useApi<boolean>('api-health', () => apiService.testConnection(), {
+    staleTime: 2 * 60_000
+  })
 
-  const checkHealth = useCallback(async () => {
-    const healthy = await apiService.testConnection()
-    setIsHealthy(healthy)
-    setLastCheck(new Date())
-    return healthy
-  }, [])
-
-  useEffect(() => {
-    void checkHealth()
-    const interval = setInterval(() => {
-      void checkHealth()
-    }, 30000)
-
-    return () => clearInterval(interval)
-  }, [checkHealth])
-
-  return { isHealthy, lastCheck, checkHealth }
+  return {
+    isHealthy: state.data,
+    lastCheck: state.updatedAt ? new Date(state.updatedAt) : null,
+    checkHealth: state.refetch
+  }
 }
-
-
