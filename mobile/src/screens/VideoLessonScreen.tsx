@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react'
+﻿import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { ActivityIndicator, Linking, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import { VideoView, useVideoPlayer } from 'expo-video'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
@@ -75,9 +75,11 @@ export default function VideoLessonScreen({ route, navigation }: VideoLessonScre
     void loadData()
   }, [loadData])
 
+  const progressCourses = Array.isArray(state.progress?.courses) ? state.progress.courses : []
+
   const progressItem = useMemo(
-    () => state.progress?.courses.find(item => item.courseId === courseId),
-    [state.progress, courseId]
+    () => progressCourses.find(item => item.courseId === courseId),
+    [progressCourses, courseId]
   )
 
   const contentOrder = useMemo(() => {
@@ -599,3 +601,4 @@ const styles = StyleSheet.create({
     opacity: 0.45
   }
 })
+

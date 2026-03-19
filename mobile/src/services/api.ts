@@ -3,7 +3,18 @@ import AsyncStorage from '@react-native-async-storage/async-storage'
 import sessionService from './session'
 
 const ENV_API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL?.trim()
-let cachedApiBaseUrl: string | null = ENV_API_BASE_URL ?? null
+const ENV_API_BASE_URL_WEB = process.env.EXPO_PUBLIC_API_BASE_URL_WEB?.trim()
+const ENV_API_BASE_URL_NATIVE = process.env.EXPO_PUBLIC_API_BASE_URL_NATIVE?.trim()
+
+const resolvePlatformEnvBaseUrl = (): string | null => {
+  if (Platform.OS === 'web') {
+    return ENV_API_BASE_URL_WEB ?? ENV_API_BASE_URL ?? null
+  }
+
+  return ENV_API_BASE_URL_NATIVE ?? ENV_API_BASE_URL ?? null
+}
+
+let cachedApiBaseUrl: string | null = resolvePlatformEnvBaseUrl()
 const CACHE_PREFIX = 'wira_cache:'
 
 type CachePolicy = {
@@ -27,6 +38,62 @@ type CacheEnvelope<T> = {
 
 const normalizeBaseUrl = (value: string): string => value.replace(/\/+$/, '')
 
+const getActiveBaseUrl = (): string => normalizeBaseUrl(cachedApiBaseUrl ?? resolvePlatformEnvBaseUrl() ?? getDefaultBaseUrl())
+
+const isLoopbackAssetHost = (hostname: string): boolean =>
+  ['localhost', '127.0.0.1', '10.0.2.2'].includes(hostname.toLowerCase())
+
+const isPlaceholderAssetHost = (hostname: string): boolean => {
+  const normalized = hostname.toLowerCase()
+  return normalized === 'cdn.wira.local'
+    || normalized === 'cdn.wira.training'
+    || normalized.endsWith('.wira.local')
+    || normalized.endsWith('.wira.training')
+}
+
+const normalizeAssetUrl = (value: unknown): string | undefined => {
+  if (typeof value !== 'string') {
+    return undefined
+  }
+
+  const trimmed = value.trim()
+  if (!trimmed) {
+    return undefined
+  }
+
+  const activeBaseUrl = getActiveBaseUrl()
+  const activeOrigin = new URL(activeBaseUrl).origin
+
+  if (trimmed.startsWith('/')) {
+    return `${activeOrigin}${trimmed}`
+  }
+
+  if (/^cdn\.wira\./i.test(trimmed)) {
+    return undefined
+  }
+
+  let parsed: URL
+  try {
+    parsed = new URL(trimmed)
+  } catch {
+    return undefined
+  }
+
+  if (!['http:', 'https:'].includes(parsed.protocol)) {
+    return undefined
+  }
+
+  if (isPlaceholderAssetHost(parsed.hostname)) {
+    return undefined
+  }
+
+  if (isLoopbackAssetHost(parsed.hostname) && parsed.origin !== activeOrigin) {
+    return `${activeOrigin}${parsed.pathname}${parsed.search}${parsed.hash}`
+  }
+
+  return parsed.toString()
+}
+
 const getDefaultBaseUrl = (): string => {
   if (Platform.OS === 'android') {
     return 'http://10.0.2.2:3000'
@@ -41,9 +108,10 @@ const getDefaultBaseUrl = (): string => {
 }
 
 const buildCandidateBaseUrls = (): string[] => {
-  const primary = normalizeBaseUrl(ENV_API_BASE_URL ?? getDefaultBaseUrl())
+  const envBaseUrl = resolvePlatformEnvBaseUrl()
+  const primary = normalizeBaseUrl(envBaseUrl ?? getDefaultBaseUrl())
 
-  if (ENV_API_BASE_URL) {
+  if (envBaseUrl) {
     return [primary]
   }
 
@@ -68,6 +136,63 @@ interface ApiEnvelope<T> {
   success: boolean
   error?: string
   message?: string
+}
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null
+
+const parseMaybeJson = (value: unknown): unknown => {
+  if (typeof value !== 'string') {
+    return value
+  }
+
+  try {
+    return JSON.parse(value)
+  } catch {
+    return value
+  }
+}
+
+const toArray = <T>(value: unknown): T[] => {
+  const parsed = parseMaybeJson(value)
+  return Array.isArray(parsed) ? (parsed as T[]) : []
+}
+
+const toNumber = (value: unknown, fallback: number): number => {
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return value
+  }
+
+  if (typeof value === 'string') {
+    const parsed = Number(value)
+    if (Number.isFinite(parsed)) {
+      return parsed
+    }
+  }
+
+  return fallback
+}
+
+const getCollection = <T>(payload: unknown, key: string): T[] => {
+  const parsed = parseMaybeJson(payload)
+  if (Array.isArray(parsed)) {
+    return parsed as T[]
+  }
+
+  if (!isRecord(parsed)) {
+    return []
+  }
+
+  if (key in parsed) {
+    return toArray<T>(parsed[key])
+  }
+
+  const data = parseMaybeJson(parsed.data)
+  if (isRecord(data) && key in data) {
+    return toArray<T>(data[key])
+  }
+
+  return []
 }
 
 export interface LoginUser {
@@ -131,6 +256,122 @@ export interface AggregatedProgress {
     averageProgress: number
   }
   courses: ProgressCourse[]
+}
+
+const normalizeCourseItem = (value: unknown): CourseItem => {
+  const item = parseMaybeJson(value)
+  const record = isRecord(item) ? item : {}
+  const normalized: CourseItem = {
+    id: String(record.id ?? ''),
+    title: typeof record.title === 'string' ? record.title : 'Curso sem titulo',
+    duration_hours: toNumber(record.duration_hours, 0),
+    modules_count: toNumber(record.modules_count, 0),
+    level: typeof record.level === 'string' ? record.level : 'Basico'
+  }
+
+  if (typeof record.description === 'string') {
+    normalized.description = record.description
+  }
+
+  if (typeof record.instructor === 'string') {
+    normalized.instructor = record.instructor
+  }
+
+  if (typeof record.skills === 'string') {
+    normalized.skills = record.skills
+  }
+
+  return normalized
+}
+
+const normalizeCourseModule = (value: unknown): CourseModule => {
+  const item = parseMaybeJson(value)
+  const record = isRecord(item) ? item : {}
+  const normalized: CourseModule = {
+    id: toNumber(record.id, 0),
+    title: typeof record.title === 'string' ? record.title : 'Modulo',
+    duration: typeof record.duration === 'string' ? record.duration : '0 min',
+    downloadable: Boolean(record.downloadable)
+  }
+
+  const normalizedVideoUrl = normalizeAssetUrl(record.videoUrl)
+  if (normalizedVideoUrl) {
+    normalized.videoUrl = normalizedVideoUrl
+  }
+
+  const normalizedPdfUrl = normalizeAssetUrl(record.pdfUrl)
+  if (normalizedPdfUrl) {
+    normalized.pdfUrl = normalizedPdfUrl
+  }
+
+  if (typeof record.textContent === 'string') {
+    normalized.textContent = record.textContent
+  }
+
+  if (typeof record.description === 'string') {
+    normalized.description = record.description
+  }
+
+  return normalized
+}
+
+const normalizeQuizQuestion = (value: unknown): QuizQuestion => {
+  const item = parseMaybeJson(value)
+  const record = isRecord(item) ? item : {}
+
+  return {
+    id: toNumber(record.id, 0),
+    question: typeof record.question === 'string' ? record.question : '',
+    options: toArray<string>(record.options).filter(option => typeof option === 'string'),
+    correctAnswer: toNumber(record.correctAnswer, 0),
+    explanation: typeof record.explanation === 'string' ? record.explanation : ''
+  }
+}
+
+const normalizeProgressCourse = (value: unknown): ProgressCourse => {
+  const item = parseMaybeJson(value)
+  const record = isRecord(item) ? item : {}
+
+  return {
+    courseId: String(record.courseId ?? ''),
+    title: typeof record.title === 'string' ? record.title : 'Curso',
+    modulesCount: toNumber(record.modulesCount, 0),
+    progress: toNumber(record.progress, 0),
+    currentModule: toNumber(record.currentModule, 1),
+    completedModules: toArray<string>(record.completedModules).map(moduleId => String(moduleId)),
+    lastActivity: typeof record.lastActivity === 'string' ? record.lastActivity : null
+  }
+}
+
+const normalizeCoursesPayload = (payload: unknown): CourseItem[] =>
+  getCollection<unknown>(payload, 'courses').map(normalizeCourseItem)
+
+const normalizeModulesPayload = (payload: unknown): CourseModule[] =>
+  getCollection<unknown>(payload, 'modules').map(normalizeCourseModule)
+
+const normalizeQuizPayload = (payload: unknown): QuizQuestion[] =>
+  getCollection<unknown>(payload, 'quiz').map(normalizeQuizQuestion)
+
+const normalizeAggregatedProgress = (payload: unknown): AggregatedProgress => {
+  const parsed = parseMaybeJson(payload)
+  const record = isRecord(parsed) ? parsed : {}
+  const summary = isRecord(parseMaybeJson(record.summary)) ? (parseMaybeJson(record.summary) as Record<string, unknown>) : {}
+  const courses = getCollection<unknown>(payload, 'courses').map(normalizeProgressCourse)
+
+  return {
+    userCode: typeof record.userCode === 'string' ? record.userCode : '',
+    summary: {
+      totalCourses: toNumber(summary.totalCourses, courses.length),
+      activeCourses: toNumber(summary.activeCourses, courses.filter(course => course.progress > 0).length),
+      averageProgress: toNumber(
+        summary.averageProgress,
+        courses.length > 0
+          ? Math.round(courses.reduce((total, course) => total + course.progress, 0) / courses.length)
+          : 0
+      )
+    },
+    courses
+  }
 }
 
 export interface CourseProgress {
@@ -312,58 +553,62 @@ class ApiService {
 
   async getCourses(): Promise<CourseItem[]> {
     const cacheKey = 'courses'
-    const cached = await readCache<CourseItem[]>(cacheKey, this.getCachePolicy('courses'))
-    if (cached) {
-      return cached
+    const cached = await readCache<unknown>(cacheKey, this.getCachePolicy('courses'))
+    if (cached !== null) {
+      return normalizeCoursesPayload(cached)
     }
 
-    const response = await this.request<{ success: boolean; courses: CourseItem[] }>('/api/courses', {
+    const response = await this.request<unknown>('/api/courses', {
       method: 'GET'
     })
-    await writeCache(cacheKey, response.courses)
-    return response.courses
+    const courses = normalizeCoursesPayload(response)
+    await writeCache(cacheKey, courses)
+    return courses
   }
 
   async getCourseModules(courseId: string): Promise<CourseModule[]> {
     const cacheKey = `modules:${courseId}`
-    const cached = await readCache<CourseModule[]>(cacheKey, this.getCachePolicy('modules'))
-    if (cached) {
-      return cached
+    const cached = await readCache<unknown>(cacheKey, this.getCachePolicy('modules'))
+    if (cached !== null) {
+      return normalizeModulesPayload(cached)
     }
 
-    const response = await this.request<{ success: boolean; modules: CourseModule[] }>(`/api/courses/${courseId}/modules`, {
+    const response = await this.request<unknown>(`/api/courses/${courseId}/modules`, {
       method: 'GET'
     })
-    await writeCache(cacheKey, response.modules)
-    return response.modules
+    const modules = normalizeModulesPayload(response)
+    await writeCache(cacheKey, modules)
+    return modules
   }
 
   async getCourseQuiz(courseId: string): Promise<QuizQuestion[]> {
     const cacheKey = `quiz:${courseId}`
-    const cached = await readCache<QuizQuestion[]>(cacheKey, this.getCachePolicy('quiz'))
-    if (cached) {
-      return cached
+    const cached = await readCache<unknown>(cacheKey, this.getCachePolicy('quiz'))
+    if (cached !== null) {
+      return normalizeQuizPayload(cached)
     }
 
-    const response = await this.request<{ success: boolean; quiz: QuizQuestion[] }>(`/api/courses/${courseId}/quiz`, {
+    const response = await this.request<unknown>(`/api/courses/${courseId}/quiz`, {
       method: 'GET'
     })
-    await writeCache(cacheKey, response.quiz)
-    return response.quiz
+    const quiz = normalizeQuizPayload(response)
+    await writeCache(cacheKey, quiz)
+    return quiz
   }
 
   async getAggregatedProgress(userCode: string): Promise<AggregatedProgress> {
     const cacheKey = `progress:aggregate:${userCode}`
-    const cached = await readCache<AggregatedProgress>(cacheKey, this.getCachePolicy('progressAggregate'))
-    if (cached) {
-      return cached
+    const cached = await readCache<unknown>(cacheKey, this.getCachePolicy('progressAggregate'))
+    if (cached !== null) {
+      return normalizeAggregatedProgress(cached)
     }
 
-    const response = await this.request<AggregatedProgress>(`/api/progress/user/${userCode}`, {
+    const response = await this.request<unknown>(`/api/progress/user/${userCode}`, {
       method: 'GET'
     })
-    await writeCache(cacheKey, response)
-    return response
+    const progress = normalizeAggregatedProgress(response)
+    await writeCache(cacheKey, progress)
+    return progress
   }
 
   async getCourseProgress(userCode: string, courseId: string): Promise<CourseProgress> {

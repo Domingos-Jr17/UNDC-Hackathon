@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react'
+ï»¿import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import { RouteProp } from '@react-navigation/native'
@@ -72,9 +72,11 @@ export default function CourseDetailScreen({ route, navigation }: CourseDetailSc
     void loadData('initial')
   }, [loadData])
 
+  const progressCourses = Array.isArray(state.progress?.courses) ? state.progress.courses : []
+
   const progressItem = useMemo(
-    () => state.progress?.courses.find(item => item.courseId === courseId),
-    [state.progress, courseId]
+    () => progressCourses.find(item => item.courseId === courseId),
+    [progressCourses, courseId]
   )
 
   const completed = useMemo(() => new Set(progressItem?.completedModules ?? []), [progressItem])
@@ -154,13 +156,13 @@ export default function CourseDetailScreen({ route, navigation }: CourseDetailSc
         <Text style={styles.summaryEyebrow}>Plano de aprendizagem</Text>
         <Text style={styles.summaryTitle}>{state.course.title}</Text>
         <Text style={styles.summaryInstructor}>{state.course.instructor ?? 'Equipa tecnica WIRA'}</Text>
-        <Text style={styles.summaryMeta}>{state.course.duration_hours}h · {state.course.modules_count} modulos · {state.course.level}</Text>
+        <Text style={styles.summaryMeta}>{state.course.duration_hours}h Â· {state.course.modules_count} modulos Â· {state.course.level}</Text>
         <Text style={styles.summaryDescription}>{state.course.description ?? 'Formacao profissional com certificado.'}</Text>
 
         <View style={styles.progressTrack}>
           <View style={[styles.progressFill, { width: `${progressItem?.progress ?? 0}%` }]} />
         </View>
-        <Text style={styles.progressText}>{progressItem?.progress ?? 0}% concluido · modulo actual {progressItem?.currentModule ?? 1}</Text>
+        <Text style={styles.progressText}>{progressItem?.progress ?? 0}% concluido Â· modulo actual {progressItem?.currentModule ?? 1}</Text>
 
         <TouchableOpacity style={styles.primaryButton} onPress={() => openModule(currentModule)}>
           <Ionicons name="play-circle-outline" size={20} color={colors.textOnPrimary} />
@@ -615,3 +617,4 @@ const styles = StyleSheet.create({
     opacity: 0.45
   }
 })
+

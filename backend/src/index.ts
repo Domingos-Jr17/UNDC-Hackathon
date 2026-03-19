@@ -108,7 +108,15 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(requestLogger)
 
 // Static course assets (PDF/MP4) served by the API.
-app.use('/media', express.static(path.resolve(__dirname, '../public')))
+app.use('/media', (_req: express.Request, res: express.Response, next: express.NextFunction): void => {
+  res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin')
+  next()
+})
+app.use('/media', express.static(path.resolve(__dirname, '../public'), {
+  setHeaders: (res): void => {
+    res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin')
+  }
+}))
 
 // General rate limiting for all API routes
 app.use('/api/', generalLimiter)

@@ -60,8 +60,11 @@ export default function CourseLibraryScreen({ navigation }: CourseLibraryScreenP
   }, [loadData])
 
   const courseCards = useMemo<CourseWithProgress[]>(() => {
-    const byId = new Map(progress?.courses.map(item => [item.courseId, item]) ?? [])
-    return courses
+    const progressCourses = Array.isArray(progress?.courses) ? progress.courses : []
+    const availableCourses = Array.isArray(courses) ? courses : []
+    const byId = new Map(progressCourses.map(item => [item.courseId, item]))
+
+    return availableCourses
       .map(course => {
         const progressItem = byId.get(course.id)
         return {
@@ -265,3 +268,4 @@ const styles = StyleSheet.create({
     fontWeight: '700'
   }
 })
+
