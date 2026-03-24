@@ -144,7 +144,6 @@ export default function CourseDetailScreen({ route, navigation }: CourseDetailSc
       subtitle="Siga a recomendacao abaixo para manter uma progressao clara e consistente."
       refreshing={refreshing}
       onRefresh={() => void loadData('refresh')}
-      showBottomNav={false}
       showLogout={false}
     >
       <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>

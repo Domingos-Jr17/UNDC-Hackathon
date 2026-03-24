@@ -10,4 +10,5 @@ export type RootStackParamList = {
     Jobs: undefined;
     Progress: undefined;
     Support: undefined;
+    Settings: undefined;
 };

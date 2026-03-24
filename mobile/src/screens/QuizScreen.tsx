@@ -1,11 +1,14 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
-import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import { RouteProp } from '@react-navigation/native'
+import { Ionicons } from '@expo/vector-icons'
+import AppShell from '../components/AppShell'
 import { RootStackParamList } from '../types/navigation'
 import apiService, { QuizQuestion, QuizSubmissionResult } from '../services/api'
 import sessionService from '../services/session'
 import { showAlert } from '../utils/alerts'
+import { colors, shadows } from '../theme'
 
 type QuizScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Quiz'>
 type QuizScreenRouteProp = RouteProp<RootStackParamList, 'Quiz'>
@@ -124,10 +127,12 @@ export default function QuizScreen({ route, navigation }: QuizScreenProps) {
     }
   }
 
+  const answeredCount = useMemo(() => answers.filter(item => item >= 0).length, [answers])
+
   if (loading) {
     return (
       <View style={styles.loaderContainer}>
-        <ActivityIndicator size="large" color="#1E3A8A" />
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     )
   }
@@ -151,18 +156,26 @@ export default function QuizScreen({ route, navigation }: QuizScreenProps) {
   }
 
   return (
-    <ScrollView style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Text style={styles.backButton}>Voltar</Text>
-        </TouchableOpacity>
-        <Text style={styles.title}>Quiz • Módulo {moduleId}</Text>
-      </View>
+    <AppShell
+      navigation={navigation}
+      activeRoute="CourseLibrary"
+      title={`Quiz do modulo ${moduleId}`}
+      subtitle="Responda com calma. Ao atingir a nota minima, o certificado fica disponivel automaticamente."
+      showLogout={false}
+    >
+      <TouchableOpacity style={styles.backRow} onPress={() => navigation.goBack()}>
+        <Ionicons name="arrow-back" size={18} color={colors.primaryDark} />
+        <Text style={styles.backButton}>Voltar para o modulo</Text>
+      </TouchableOpacity>
 
-      <View style={styles.content}>
+      <View style={styles.progressSummaryCard}>
         <Text style={styles.progressText}>
           Pergunta {currentQuestion + 1} de {questions.length}
         </Text>
+        <Text style={styles.progressMeta}>{answeredCount} resposta(s) marcada(s)</Text>
+      </View>
+
+      <View style={styles.contentCard}>
         <View style={styles.questionCard}>
           <Text style={styles.question}>{question.question}</Text>
         </View>
@@ -213,61 +226,61 @@ export default function QuizScreen({ route, navigation }: QuizScreenProps) {
             </TouchableOpacity>
           )}
         </View>
-
-        {result ? (
-          <View style={styles.resultCard}>
-            <Text style={styles.resultTitle}>
-              {result.passed ? 'Quiz Concluído' : 'Continue Estudando'}
-            </Text>
-            <Text style={styles.resultSubtitle}>
-              Voce acertou {result.correct} de {questions.length} ({result.score}%).
-            </Text>
-            <Text style={styles.resultSubtitle}>
-              Nota minima: {PASSING_SCORE}%.
-            </Text>
-
-            {questions.map((item, index) => {
-              const review = result.reviews?.[index]
-              const expected = review?.correctIndex ?? 0
-              const selected = review?.selectedIndex ?? answers[index] ?? -1
-              const isCorrect = review?.isCorrect ?? false
-              const selectedOption = selected >= 0 && selected < item.options.length ? item.options[selected] : undefined
-              const expectedOption = item.options[expected] ?? ''
-              return (
-                <View key={`${item.id}-${index}`} style={styles.explanationCard}>
-                  <Text style={styles.explanationQuestion}>
-                    {index + 1}. {item.question}
-                  </Text>
-                  <Text style={[styles.explanationMeta, isCorrect ? styles.correctText : styles.incorrectText]}>
-                    Sua resposta: {selectedOption ? `${String.fromCharCode(65 + selected)}. ${selectedOption}` : 'Não respondida'}
-                  </Text>
-                  <Text style={styles.explanationMeta}>
-                    Correta: {String.fromCharCode(65 + expected)}. {expectedOption}
-                  </Text>
-                  {(review?.explanation || item.explanation) ? (
-                    <Text style={styles.explanationText}>Explicacao: {review?.explanation ?? item.explanation}</Text>
-                  ) : null}
-                </View>
-              )
-            })}
-
-            <View style={styles.resultActions}>
-              {result.passed ? (
-                <TouchableOpacity
-                  style={styles.primaryButton}
-                  onPress={() => navigation.navigate('Certificate', { courseId, score: result.score })}
-                >
-                  <Text style={styles.primaryButtonText}>Ver Certificado</Text>
-                </TouchableOpacity>
-              ) : null}
-              <TouchableOpacity style={styles.secondaryButton} onPress={() => navigation.goBack()}>
-                <Text style={styles.secondaryButtonText}>Voltar</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        ) : null}
       </View>
-    </ScrollView>
+
+      {result ? (
+        <View style={styles.resultCard}>
+          <Text style={styles.resultTitle}>
+            {result.passed ? 'Quiz concluido' : 'Continue a estudar'}
+          </Text>
+          <Text style={styles.resultSubtitle}>
+            Voce acertou {result.correct} de {questions.length} ({result.score}%).
+          </Text>
+          <Text style={styles.resultSubtitle}>
+            Nota minima: {PASSING_SCORE}%.
+          </Text>
+
+          {questions.map((item, index) => {
+            const review = result.reviews?.[index]
+            const expected = review?.correctIndex ?? 0
+            const selected = review?.selectedIndex ?? answers[index] ?? -1
+            const isCorrect = review?.isCorrect ?? false
+            const selectedOption = selected >= 0 && selected < item.options.length ? item.options[selected] : undefined
+            const expectedOption = item.options[expected] ?? ''
+            return (
+              <View key={`${item.id}-${index}`} style={styles.explanationCard}>
+                <Text style={styles.explanationQuestion}>
+                  {index + 1}. {item.question}
+                </Text>
+                <Text style={[styles.explanationMeta, isCorrect ? styles.correctText : styles.incorrectText]}>
+                  Sua resposta: {selectedOption ? `${String.fromCharCode(65 + selected)}. ${selectedOption}` : 'Nao respondida'}
+                </Text>
+                <Text style={styles.explanationMeta}>
+                  Correta: {String.fromCharCode(65 + expected)}. {expectedOption}
+                </Text>
+                {(review?.explanation || item.explanation) ? (
+                  <Text style={styles.explanationText}>Explicacao: {review?.explanation ?? item.explanation}</Text>
+                ) : null}
+              </View>
+            )
+          })}
+
+          <View style={styles.resultActions}>
+            {result.passed ? (
+              <TouchableOpacity
+                style={styles.primaryButton}
+                onPress={() => navigation.navigate('Certificate', { courseId, score: result.score })}
+              >
+                <Text style={styles.primaryButtonText}>Ver certificado</Text>
+              </TouchableOpacity>
+            ) : null}
+            <TouchableOpacity style={styles.secondaryButton} onPress={() => navigation.goBack()}>
+              <Text style={styles.secondaryButtonText}>Voltar</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      ) : null}
+    </AppShell>
   )
 }
 
@@ -276,73 +289,79 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#F5F5F5'
+    backgroundColor: colors.background
   },
   errorText: {
-    color: '#B91C1C',
+    color: colors.danger,
     fontSize: 16,
     fontWeight: '600'
   },
-  container: {
-    flex: 1,
-    backgroundColor: '#F5F5F5'
-  },
-  header: {
-    backgroundColor: '#1E3A8A',
-    paddingTop: 56,
-    paddingHorizontal: 20,
-    paddingBottom: 18
+  backRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6
   },
   backButton: {
-    color: '#90CAF9',
-    marginBottom: 8,
-    fontSize: 15
-  },
-  title: {
-    color: '#FFFFFF',
-    fontSize: 21,
+    color: colors.primaryDark,
+    fontSize: 15,
     fontWeight: '700'
   },
-  content: {
-    padding: 20
+  progressSummaryCard: {
+    borderRadius: 22,
+    backgroundColor: colors.primarySoft,
+    padding: 16,
+    ...shadows.card
   },
   progressText: {
-    color: '#4B5563',
-    fontWeight: '600',
-    marginBottom: 12
+    color: colors.text,
+    fontWeight: '800',
+    fontSize: 15
+  },
+  progressMeta: {
+    color: colors.textMuted,
+    fontSize: 13,
+    marginTop: 4
+  },
+  contentCard: {
+    borderRadius: 28,
+    backgroundColor: colors.surface,
+    padding: 20,
+    borderWidth: 1,
+    borderColor: colors.border,
+    ...shadows.card
   },
   questionCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
+    backgroundColor: colors.surfaceMuted,
+    borderRadius: 20,
     padding: 16
   },
   question: {
-    color: '#111827',
+    color: colors.text,
     fontSize: 17,
     lineHeight: 24,
-    fontWeight: '600'
+    fontWeight: '700'
   },
   options: {
     marginTop: 14,
     gap: 8
   },
   optionButton: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 10,
+    backgroundColor: colors.surface,
+    borderRadius: 16,
     padding: 14,
     borderWidth: 1,
-    borderColor: '#E5E7EB'
+    borderColor: colors.border
   },
   optionButtonSelected: {
-    borderColor: '#1E3A8A',
-    backgroundColor: '#EFF6FF'
+    borderColor: colors.primary,
+    backgroundColor: colors.primarySoft
   },
   optionText: {
-    color: '#1F2937',
+    color: colors.text,
     fontSize: 14
   },
   optionTextSelected: {
-    color: '#1E3A8A',
+    color: colors.primary,
     fontWeight: '700'
   },
   navigation: {
@@ -351,48 +370,51 @@ const styles = StyleSheet.create({
     gap: 8
   },
   resultCard: {
-    marginTop: 16,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    padding: 16,
-    gap: 10
+    borderRadius: 28,
+    backgroundColor: colors.surface,
+    padding: 20,
+    gap: 10,
+    borderWidth: 1,
+    borderColor: colors.border,
+    ...shadows.card
   },
   resultTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#1E3A8A'
+    fontSize: 20,
+    fontWeight: '800',
+    color: colors.primary
   },
   resultSubtitle: {
     fontSize: 13,
-    color: '#4B5563'
+    color: colors.textMuted
   },
   explanationCard: {
     borderWidth: 1,
-    borderColor: '#E5E7EB',
-    borderRadius: 10,
+    borderColor: colors.border,
+    borderRadius: 18,
     padding: 12,
-    marginTop: 8
+    marginTop: 8,
+    backgroundColor: colors.surfaceMuted
   },
   explanationQuestion: {
     fontSize: 14,
     fontWeight: '700',
-    color: '#111827',
+    color: colors.text,
     marginBottom: 6
   },
   explanationMeta: {
     fontSize: 12,
-    color: '#374151',
+    color: colors.text,
     marginBottom: 4
   },
   explanationText: {
     fontSize: 12,
-    color: '#6B7280'
+    color: colors.textMuted
   },
   correctText: {
-    color: '#16A34A'
+    color: colors.success
   },
   incorrectText: {
-    color: '#DC2626'
+    color: colors.danger
   },
   resultActions: {
     marginTop: 12,
@@ -400,24 +422,26 @@ const styles = StyleSheet.create({
   },
   primaryButton: {
     flex: 1,
-    backgroundColor: '#1E3A8A',
-    borderRadius: 8,
+    backgroundColor: colors.primary,
+    borderRadius: 18,
     paddingVertical: 13,
     alignItems: 'center'
   },
   primaryButtonText: {
-    color: '#FFFFFF',
+    color: colors.textOnPrimary,
     fontWeight: '700'
   },
   secondaryButton: {
     flex: 1,
-    backgroundColor: '#E5E7EB',
-    borderRadius: 8,
+    backgroundColor: colors.surfaceMuted,
+    borderRadius: 18,
     paddingVertical: 13,
-    alignItems: 'center'
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: colors.border
   },
   secondaryButtonText: {
-    color: '#111827',
+    color: colors.text,
     fontWeight: '700'
   },
   disabledButton: {

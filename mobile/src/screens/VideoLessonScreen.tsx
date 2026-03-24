@@ -189,7 +189,6 @@ export default function VideoLessonScreen({ route, navigation }: VideoLessonScre
       activeRoute="CourseLibrary"
       title={`Modulo ${moduleId}`}
       subtitle="Use o formato principal deste modulo e os restantes como apoio, quando existirem."
-      showBottomNav={false}
       showLogout={false}
     >
       <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>

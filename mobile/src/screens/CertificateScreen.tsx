@@ -72,7 +72,6 @@ export default function CertificateScreen({ route, navigation }: CertificateScre
       activeRoute="Progress"
       title="Certificado"
       subtitle="Guarde esta conquista e use o código de verificação sempre que precisar de confirmar o resultado."
-      showBottomNav={false}
       showLogout={false}
     >
       <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>

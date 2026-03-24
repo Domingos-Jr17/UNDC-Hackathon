@@ -34,6 +34,7 @@ interface AppShellProps {
   contentContainerStyle?: StyleProp<ViewStyle>
   showBottomNav?: boolean
   showLogout?: boolean
+  showSettings?: boolean
 }
 
 const navItems: Array<{
@@ -60,7 +61,8 @@ export default function AppShell({
   onRefresh,
   contentContainerStyle,
   showBottomNav = true,
-  showLogout = true
+  showLogout = true,
+  showSettings = true
 }: AppShellProps) {
   const bottomPadding = showBottomNav ? 116 : 32
 
@@ -87,11 +89,21 @@ export default function AppShell({
                 <Text style={styles.heroTitle}>{title}</Text>
                 {subtitle ? <Text style={styles.heroSubtitle}>{subtitle}</Text> : null}
               </View>
-              {showLogout ? (
-                <TouchableOpacity style={styles.logoutPill} onPress={() => void handleLogout()}>
-                  <Ionicons name="log-out-outline" size={18} color={colors.textOnPrimary} />
-                  <Text style={styles.logoutText}>Sair</Text>
-                </TouchableOpacity>
+              {(showSettings || showLogout) ? (
+                <View style={styles.heroActions}>
+                  {showSettings ? (
+                    <TouchableOpacity style={styles.headerGhostPill} onPress={() => navigation.navigate('Settings')}>
+                      <Ionicons name="settings-outline" size={18} color={colors.textOnPrimary} />
+                      <Text style={styles.headerGhostText}>Ajustes</Text>
+                    </TouchableOpacity>
+                  ) : null}
+                  {showLogout ? (
+                    <TouchableOpacity style={styles.logoutPill} onPress={() => void handleLogout()}>
+                      <Ionicons name="log-out-outline" size={18} color={colors.textOnPrimary} />
+                      <Text style={styles.logoutText}>Sair</Text>
+                    </TouchableOpacity>
+                  ) : null}
+                </View>
               ) : null}
             </View>
           </View>
@@ -101,10 +113,19 @@ export default function AppShell({
               <Text style={styles.compactTitle}>{title}</Text>
               {subtitle ? <Text style={styles.compactSubtitle}>{subtitle}</Text> : null}
             </View>
-            {showLogout ? (
-              <TouchableOpacity style={styles.logoutIconButton} onPress={() => void handleLogout()}>
-                <Ionicons name="log-out-outline" size={20} color={colors.primaryDark} />
-              </TouchableOpacity>
+            {(showSettings || showLogout) ? (
+              <View style={styles.compactHeaderActions}>
+                {showSettings ? (
+                  <TouchableOpacity style={styles.headerIconButton} onPress={() => navigation.navigate('Settings')}>
+                    <Ionicons name="settings-outline" size={20} color={colors.primaryDark} />
+                  </TouchableOpacity>
+                ) : null}
+                {showLogout ? (
+                  <TouchableOpacity style={styles.headerIconButton} onPress={() => void handleLogout()}>
+                    <Ionicons name="log-out-outline" size={20} color={colors.primaryDark} />
+                  </TouchableOpacity>
+                ) : null}
+              </View>
             ) : null}
           </View>
         )}
@@ -166,6 +187,11 @@ const styles = StyleSheet.create({
   heroHeaderInner: {
     gap: 18
   },
+  heroActions: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10
+  },
   heroCopy: {
     gap: 8
   },
@@ -197,6 +223,23 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 10
   },
+  headerGhostPill: {
+    alignSelf: 'flex-start',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.26)',
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    paddingHorizontal: 14,
+    paddingVertical: 10
+  },
+  headerGhostText: {
+    color: colors.textOnPrimary,
+    fontSize: 14,
+    fontWeight: '700'
+  },
   logoutText: {
     color: colors.textOnPrimary,
     fontSize: 14,
@@ -222,6 +265,10 @@ const styles = StyleSheet.create({
     gap: 4,
     paddingRight: 12
   },
+  compactHeaderActions: {
+    flexDirection: 'row',
+    gap: 10
+  },
   compactTitle: {
     color: colors.text,
     fontSize: 22,
@@ -232,7 +279,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 20
   },
-  logoutIconButton: {
+  headerIconButton: {
     height: 42,
     width: 42,
     alignItems: 'center',

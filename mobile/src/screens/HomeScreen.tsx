@@ -197,6 +197,12 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
             subtitle="Peça ajuda se tiver duvidas sobre acesso, percurso ou proximos passos."
             onPress={() => navigation.navigate('Support')}
           />
+          <QuickAction
+            icon="settings-outline"
+            title="Configuracoes"
+            subtitle="Ajuste preferencias locais, limpe cache e gira a sua sessao com rapidez."
+            onPress={() => navigation.navigate('Settings')}
+          />
         </View>
       </View>
     </AppShell>

@@ -2,6 +2,19 @@
 
 All significant changes to the WIRA Platform project will be documented in this file.
 
+## [Version 1.2.0] - 2026-03-24
+
+### Added
+- Mobile settings screen with local preferences, cache cleanup and direct session management
+- Quick access to mobile settings from the learning home screen and shared app header actions
+
+### Changed
+- Restored the mobile footer navigation during course detail, lesson consumption, quiz and certificate flows
+- Unified the mobile quiz experience with the same application shell used across the rest of the app
+
+### Verified
+- Certificate generation remains available after a passing mobile quiz submission, with a dedicated certificate view
+
 ## [Version 1.1.0] - 2024-12-14
 
 ### Added

@@ -14,6 +14,7 @@ import CertificateScreen from './src/screens/CertificateScreen'
 import JobsScreen from './src/screens/JobsScreen'
 import ProgressScreen from './src/screens/ProgressScreen'
 import SupportScreen from './src/screens/SupportScreen'
+import SettingsScreen from './src/screens/SettingsScreen'
 import { RootStackParamList } from './src/types/navigation'
 import { colors } from './src/theme'
 
@@ -41,6 +42,7 @@ function App() {
         <Stack.Screen name="Jobs" component={JobsScreen as any} />
         <Stack.Screen name="Progress" component={ProgressScreen as any} />
         <Stack.Screen name="Support" component={SupportScreen as any} />
+        <Stack.Screen name="Settings" component={SettingsScreen as any} />
       </Stack.Navigator>
     </NavigationContainer>
   )
