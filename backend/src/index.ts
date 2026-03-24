@@ -47,6 +47,11 @@ import dashboardRoutes from './routes/dashboard'
 import jobsRoutes from './routes/jobs'
 import smsRoutes from './routes/sms'
 import reportsRoutes from './routes/reports'
+import quizzesRoutes from './routes/quizzes'
+import employersRoutes from './routes/employers'
+import matchesRoutes from './routes/matches'
+import applicationsRoutes from './routes/applications'
+import { isFollowUpAlertsPhase2Enabled } from './config/features'
 
 // Import middleware
 import {
@@ -129,11 +134,23 @@ app.use('/api/certificates', certificatesRoutes)
 app.use('/api/ngos', authenticateToken, userRateLimit(), ngosRoutes)
 app.use('/api/audit-logs', authenticateToken, userRateLimit(), auditLogsRoutes)
 app.use('/api/ussd', ussdLimiter, ussdRoutes)
-app.use('/api/sms', authenticateToken, userRateLimit(), smsRoutes)
+app.use('/api/sms', smsRoutes)
 app.use('/api/users', authenticateToken, userRateLimit(), usersRoutes)
 app.use('/api/dashboard', authenticateToken, userRateLimit(), dashboardRoutes)
 app.use('/api/jobs', authenticateToken, userRateLimit(), jobsRoutes)
 app.use('/api/reports', authenticateToken, userRateLimit(), reportsRoutes)
+app.use('/api/quizzes', authenticateToken, userRateLimit(), quizzesRoutes)
+app.use('/api/employers', authenticateToken, userRateLimit(), employersRoutes)
+app.use('/api/matches', authenticateToken, userRateLimit(), matchesRoutes)
+app.use('/api/applications', authenticateToken, userRateLimit(), applicationsRoutes)
+
+if (isFollowUpAlertsPhase2Enabled) {
+  const checkinsRoutes = require('./routes/checkins').default as express.Router
+  const alertsRoutes = require('./routes/alerts').default as express.Router
+
+  app.use('/api/checkins', authenticateToken, userRateLimit(), checkinsRoutes)
+  app.use('/api/alerts', authenticateToken, userRateLimit(), alertsRoutes)
+}
 
 // Enhanced health check endpoint
 app.get('/health', async (_req: express.Request, res: express.Response): Promise<void> => {
@@ -187,85 +204,124 @@ app.get('/health', async (_req: express.Request, res: express.Response): Promise
 
 // API documentation endpoint
 app.get('/api', (_req: express.Request, res: express.Response): void => {
+  const endpoints: Record<string, Record<string, string>> = {
+    auth: {
+      'POST /api/auth/login': 'Login com código anónimo',
+      'POST /api/auth/validate': 'Validar token JWT',
+      'POST /api/auth/refresh': 'Atualizar token',
+      'DELETE /api/auth/logout': 'Logout',
+      'GET /api/auth/check/:code': 'Verificar disponibilidade de código'
+    },
+    courses: {
+      'GET /api/courses': 'Listar cursos ativos',
+      'POST /api/courses': 'Criar curso (STAFF/ADMIN)',
+      'GET /api/courses/:id': 'Obter detalhes do curso',
+      'GET /api/courses/:id/modules': 'Listar módulos do curso',
+      'GET /api/courses/:id/quiz': 'Obter quiz do curso',
+      'POST /api/courses/:id/invalidate-cache': 'Invalidar cache do curso'
+    },
+    progress: {
+      'GET /api/progress/user/:userCode': 'Obter progresso agregado do usuário',
+      'GET /api/progress/user/:userCode/course/:courseId': 'Obter progresso do usuário em curso',
+      'PUT /api/progress/user/:userCode/course/:courseId': 'Atualizar progresso do usuário em curso'
+    },
+    quizzes: {
+      'POST /api/quizzes/submit': 'Submeter respostas do quiz e obter resultado'
+    },
+    certificates: {
+      'POST /api/certificates/generate': 'Gerar certificado',
+      'GET /api/certificates/verify/:code': 'Verificar certificado',
+      'POST /api/certificates/revoke/:code': 'Revogar certificado',
+      'GET /api/certificates/user/:anonymousCode': 'Listar certificados por usuário',
+      'GET /api/certificates/user/:anonymousCode/course/:courseId': 'Obter certificado por usuário e curso'
+    },
+    jobs: {
+      'GET /api/jobs': 'Listar vagas ativas',
+      'POST /api/jobs': 'Criar vaga (STAFF/ADMIN)',
+      'PUT /api/jobs/:id': 'Atualizar vaga (STAFF/ADMIN)',
+      'POST /api/jobs/:id/match': 'Gerar shortlist de matches para uma vaga',
+      'POST /api/jobs/matching': 'Calcular matching de vagas por perfil',
+      'POST /api/jobs/:id/apply': 'Candidatar-se a uma vaga'
+    },
+    employers: {
+      'GET /api/employers': 'Listar empregadores',
+      'POST /api/employers': 'Criar empregador',
+      'PUT /api/employers/:id': 'Atualizar empregador'
+    },
+    matches: {
+      'GET /api/matches': 'Listar matches gerados',
+      'POST /api/matches/:id/review': 'Revisão ONG/social do match',
+      'POST /api/matches/:id/confirm-victim': 'Confirmar aceitação da beneficiária'
+    },
+    applications: {
+      'GET /api/applications': 'Listar candidaturas',
+      'POST /api/applications/:id/transition': 'Transitar estado da candidatura'
+    },
+    checkins: {
+      'GET /api/checkins': 'Listar check-ins e acompanhar respostas',
+      'POST /api/checkins/schedule': 'Agendar check-in pós-colocação',
+      'POST /api/checkins/:id/respond': 'Responder ou registar resposta do check-in'
+    },
+    alerts: {
+      'GET /api/alerts': 'Listar alertas operacionais',
+      'PUT /api/alerts/:id': 'Atualizar estado/resolução do alerta'
+    },
+    dashboard: {
+      'GET /api/dashboard/stats': 'Estatísticas do dashboard ONG',
+      'GET /api/dashboard/activity': 'Atividade recente'
+    },
+    reports: {
+      'GET /api/reports/users': 'Relatório de usuárias (xlsx/pdf)',
+      'GET /api/reports/activity': 'Relatório de atividade (xlsx/pdf)'
+    },
+    users: {
+      'GET /api/users': 'Listar beneficiárias',
+      'GET /api/users/:id': 'Detalhar beneficiária',
+      'POST /api/users/generate-code': 'Gerar código anónimo',
+      'POST /api/users/activate': 'Activar beneficiária',
+      'PATCH /api/users/:id/activation': 'Activar/desactivar beneficiária'
+    },
+    ngos: {
+      'GET /api/ngos': 'Listar ONGs',
+      'GET /api/ngos/:id': 'Obter ONG por ID',
+      'POST /api/ngos': 'Criar ONG',
+      'PUT /api/ngos/:id': 'Atualizar ONG',
+      'PATCH /api/ngos/:id/deactivate': 'Desactivar ONG',
+      'DELETE /api/ngos/:id': 'Remover ONG'
+    },
+    'audit-logs': {
+      'GET /api/audit-logs': 'Listar registos de auditoria',
+      'GET /api/audit-logs/user/:userCode': 'Obter registos por usuário',
+      'GET /api/audit-logs/action/:action': 'Obter registos por ação',
+      'GET /api/audit-logs/table/:tableName': 'Obter registos por tabela',
+      'POST /api/audit-logs': 'Criar registo de auditoria',
+      'GET /api/audit-logs/stats': 'Obter estatísticas de auditoria'
+    },
+    ussd: {
+      'POST /api/ussd': 'Processar requisição USSD',
+      'GET /api/ussd/status': 'Status do serviço USSD',
+      'GET /api/sms/status': 'Status do serviço SMS',
+      'POST /api/sms/send': 'Enviar SMS',
+      ...(isFollowUpAlertsPhase2Enabled
+        ? { 'POST /api/sms/inbound': 'Receber resposta SMS transacional' }
+        : {})
+    },
+    utility: {
+      'GET /health': 'Health check detalhado',
+      'GET /api': 'Documentação da API'
+    }
+  }
+
+  if (!isFollowUpAlertsPhase2Enabled) {
+    delete endpoints.checkins
+    delete endpoints.alerts
+  }
+
   res.json({
     name: 'WIRA Platform API',
     version: '3.0.0',
     description: 'Backend API para plataforma WIRA de capacitação e reintegração económica',
-    endpoints: {
-      auth: {
-        'POST /api/auth/login': 'Login com código anónimo',
-        'POST /api/auth/validate': 'Validar token JWT',
-        'POST /api/auth/refresh': 'Atualizar token',
-        'DELETE /api/auth/logout': 'Logout',
-        'GET /api/auth/check/:code': 'Verificar disponibilidade de código'
-      },
-      courses: {
-        'GET /api/courses': 'Listar cursos ativos',
-        'POST /api/courses': 'Criar curso (STAFF/ADMIN)',
-        'GET /api/courses/:id': 'Obter detalhes do curso',
-        'GET /api/courses/:id/modules': 'Listar módulos do curso',
-        'GET /api/courses/:id/quiz': 'Obter quiz do curso',
-        'POST /api/courses/:id/invalidate-cache': 'Invalidar cache do curso'
-      },
-      progress: {
-        'GET /api/progress/user/:userCode': 'Obter progresso agregado do usuário',
-        'GET /api/progress/user/:userCode/course/:courseId': 'Obter progresso do usuário em curso',
-        'PUT /api/progress/user/:userCode/course/:courseId': 'Atualizar progresso do usuário em curso'
-      },
-      certificates: {
-        'POST /api/certificates/generate': 'Gerar certificado',
-        'GET /api/certificates/verify/:code': 'Verificar certificado',
-        'POST /api/certificates/revoke/:code': 'Revogar certificado',
-        'GET /api/certificates/user/:anonymousCode': 'Listar certificados por usuário',
-        'GET /api/certificates/user/:anonymousCode/course/:courseId': 'Obter certificado por usuário e curso'
-      },
-      jobs: {
-        'GET /api/jobs': 'Listar vagas ativas',
-        'POST /api/jobs/matching': 'Calcular matching de vagas por perfil',
-        'POST /api/jobs/:id/apply': 'Candidatar-se a uma vaga'
-      },
-      dashboard: {
-        'GET /api/dashboard/stats': 'Estatísticas do dashboard ONG',
-        'GET /api/dashboard/activity': 'Atividade recente'
-      },
-      reports: {
-        'GET /api/reports/users': 'Relatório de usuárias (xlsx/pdf)',
-        'GET /api/reports/activity': 'Relatório de atividade (xlsx/pdf)'
-      },
-      users: {
-        'GET /api/users': 'Listar beneficiárias',
-        'GET /api/users/:id': 'Detalhar beneficiária',
-        'POST /api/users/generate-code': 'Gerar código anónimo',
-        'POST /api/users/activate': 'Activar beneficiária',
-        'PATCH /api/users/:id/activation': 'Activar/desactivar beneficiária'
-      },
-      ngos: {
-        'GET /api/ngos': 'Listar ONGs',
-        'GET /api/ngos/:id': 'Obter ONG por ID',
-        'POST /api/ngos': 'Criar ONG',
-        'PUT /api/ngos/:id': 'Atualizar ONG',
-        'PATCH /api/ngos/:id/deactivate': 'Desactivar ONG',
-        'DELETE /api/ngos/:id': 'Remover ONG'
-      },
-      'audit-logs': {
-        'GET /api/audit-logs': 'Listar registos de auditoria',
-        'GET /api/audit-logs/user/:userCode': 'Obter registos por usuário',
-        'GET /api/audit-logs/action/:action': 'Obter registos por ação',
-        'GET /api/audit-logs/table/:tableName': 'Obter registos por tabela',
-        'POST /api/audit-logs': 'Criar registo de auditoria',
-        'GET /api/audit-logs/stats': 'Obter estatísticas de auditoria'
-      },
-      ussd: {
-        'POST /api/ussd': 'Processar requisição USSD',
-        'GET /api/ussd/status': 'Status do serviço USSD',
-        'GET /api/sms/status': 'Status do serviço SMS',
-        'POST /api/sms/send': 'Enviar SMS'
-      },
-      utility: {
-        'GET /health': 'Health check detalhado',
-        'GET /api': 'Documentação da API'
-      }
-    },
+    endpoints,
     security: {
       authentication: 'JWT',
       encryption: 'AES-256-GCM',

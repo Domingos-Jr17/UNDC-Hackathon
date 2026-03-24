@@ -1,17 +1,31 @@
 import { Request, Response } from 'express'
 import prismaService from '../services/prisma'
 import { logger } from '../middleware/security'
+import { isFollowUpAlertsPhase2Enabled } from '../config/features'
 
 const prisma = prismaService.getClient()
 
 class DashboardController {
   static async getStats(_req: Request, res: Response): Promise<void> {
     try {
-      const [totalUsers, activeUsers, coursesCompleted, certificatesIssued] = await Promise.all([
+      const [
+        totalUsers,
+        activeUsers,
+        coursesCompleted,
+        certificatesIssued,
+        openAlerts,
+        placedApplications
+      ] = await Promise.all([
         prisma.user.count({ where: { role: 'VICTIM' } }),
         prisma.user.count({ where: { role: 'VICTIM', is_active: true } }),
         prisma.progress.count({ where: { percentage: { gte: 100 } } }),
-        prisma.certificate.count({ where: { revoked: false } })
+        prisma.certificate.count({ where: { revoked: false } }),
+        isFollowUpAlertsPhase2Enabled
+          ? prisma.alert.count({ where: { status: { in: ['OPEN', 'IN_PROGRESS'] } } })
+          : Promise.resolve(0),
+        isFollowUpAlertsPhase2Enabled
+          ? prisma.jobApplication.count({ where: { status: 'PLACED' } })
+          : Promise.resolve(0)
       ])
 
       const completionRows = await prisma.progress.findMany({
@@ -37,7 +51,13 @@ class DashboardController {
           activeUsers,
           coursesCompleted,
           certificatesIssued,
-          averageCompletionTime
+          averageCompletionTime,
+          ...(isFollowUpAlertsPhase2Enabled
+            ? {
+                openAlerts,
+                placedApplications
+              }
+            : {})
         }
       })
     } catch (error) {

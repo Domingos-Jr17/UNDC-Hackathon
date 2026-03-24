@@ -11,6 +11,7 @@ const mapUserListItem = (user: {
   id: number
   anonymous_code: string
   ngo_id: string | null
+  location?: string | null
   role: 'VICTIM' | 'STAFF' | 'ADMIN'
   is_active: boolean
   last_login_at: Date | null
@@ -52,14 +53,31 @@ const mapUserListItem = (user: {
 
 class UsersController {
   static async list(req: Request, res: Response): Promise<void> {
-    const { status, limit = '50', offset = '0' } = req.query
-    const parsedLimit = Math.min(parseInt(String(limit), 10) || 50, 200)
-    const parsedOffset = parseInt(String(offset), 10) || 0
+    const { status, limit = '50', offset, page = '1', pageSize, search, ngoId } = req.query
+    const resolvedLimit = pageSize ?? limit
+    const parsedLimit = Math.min(parseInt(String(resolvedLimit), 10) || 50, 200)
+    const parsedPage = Math.max(parseInt(String(page), 10) || 1, 1)
+    const parsedOffset = offset !== undefined
+      ? parseInt(String(offset), 10) || 0
+      : (parsedPage - 1) * parsedLimit
     const statusFilter = status === 'Ativo' ? true : status === 'Inativo' ? false : null
-    const cacheKey = `admin:users:list:${statusFilter === null ? 'all' : statusFilter ? 'active' : 'inactive'}:${parsedLimit}:${parsedOffset}`
+    const normalizedNgoId = typeof ngoId === 'string' ? normalizeNgoId(ngoId) : undefined
+    const normalizedSearch = typeof search === 'string' ? search.trim() : ''
+    const cacheKey = `admin:users:list:${statusFilter === null ? 'all' : statusFilter ? 'active' : 'inactive'}:${parsedLimit}:${parsedOffset}:${normalizedNgoId ?? 'all'}:${normalizedSearch || 'none'}`
     const where = {
       role: 'VICTIM' as const,
-      ...(statusFilter === null ? {} : { is_active: statusFilter })
+      ...(statusFilter === null ? {} : { is_active: statusFilter }),
+      ...(normalizedNgoId ? { ngo_id: normalizedNgoId } : {}),
+      ...(normalizedSearch
+        ? {
+            OR: [
+              { anonymous_code: { contains: normalizedSearch, mode: 'insensitive' as const } },
+              { ngo_id: { contains: normalizedSearch, mode: 'insensitive' as const } },
+              { real_name: { contains: normalizedSearch, mode: 'insensitive' as const } },
+              { location: { contains: normalizedSearch, mode: 'insensitive' as const } }
+            ]
+          }
+        : {})
     }
 
     try {
@@ -69,6 +87,8 @@ class UsersController {
         pagination: {
           limit: number
           offset: number
+          page: number
+          pageSize: number
           total: number
         }
       }>(cacheKey)
@@ -104,6 +124,8 @@ class UsersController {
         pagination: {
           limit: parsedLimit,
           offset: parsedOffset,
+          page: parsedPage,
+          pageSize: parsedLimit,
           total
         }
       }
@@ -112,7 +134,7 @@ class UsersController {
       res.json(payload)
     } catch (error) {
       logger.error('Error listing users', { error: (error as Error).message })
-      res.status(500).json({ error: 'Erro ao listar usu·rios' })
+      res.status(500).json({ error: 'Erro ao listar usu√°rios' })
     }
   }
 
@@ -170,7 +192,7 @@ class UsersController {
       if (!user || user.role !== 'VICTIM') {
         res.status(404).json({
           success: false,
-          error: 'Usu·rio n„o encontrado'
+          error: 'Usu√°rio n√£o encontrado'
         })
         return
       }
@@ -185,6 +207,11 @@ class UsersController {
         success: true,
         user: {
           ...summary,
+          realName: user.real_name ?? null,
+          phone: user.phone ?? null,
+          dateOfBirth: user.date_of_birth?.toISOString() ?? null,
+          initialSkills: user.initial_skills ?? null,
+          location: user.location ?? null,
           progress: user.progresses.map((item: any) => ({
             courseId: item.course_id,
             courseTitle: item.course.title,
@@ -203,7 +230,7 @@ class UsersController {
       })
     } catch (error) {
       logger.error('Error fetching user by id', { error: (error as Error).message, id })
-      res.status(500).json({ error: 'Erro ao buscar usu·rio' })
+      res.status(500).json({ error: 'Erro ao buscar usu√°rio' })
     }
   }
 
@@ -226,23 +253,24 @@ class UsersController {
 
     res.status(500).json({
       success: false,
-      error: 'N„o foi possÌvel gerar cÛdigo ˙nico'
+      error: 'N√£o foi poss√≠vel gerar c√≥digo √∫nico'
     })
   }
 
   static async activate(req: Request, res: Response): Promise<void> {
-    const { ngoId, realName, initialSkills, phone } = req.body as {
+    const { ngoId, realName, initialSkills, phone, dateOfBirth, location } = req.body as {
       ngoId: string
       realName?: string
       dateOfBirth?: string
       initialSkills?: string
       phone?: string
+      location?: string
     }
 
     if (!ngoId) {
       res.status(400).json({
         success: false,
-        error: 'ngoId È obrigatÛrio'
+        error: 'ngoId √© obrigat√≥rio'
       })
       return
     }
@@ -253,7 +281,7 @@ class UsersController {
       if (!ngo || !ngo.is_active) {
         res.status(400).json({
           success: false,
-          error: 'ONG inv·lida para activaÁ„o'
+          error: 'ONG inv√°lida para activa√ß√£o'
         })
         return
       }
@@ -271,7 +299,7 @@ class UsersController {
       if (!generatedCode) {
         res.status(500).json({
           success: false,
-          error: 'Falha ao gerar cÛdigo de acesso'
+          error: 'Falha ao gerar c√≥digo de acesso'
         })
         return
       }
@@ -282,21 +310,27 @@ class UsersController {
           ngo_id: normalizedNgoId,
           role: 'VICTIM',
           real_name: realName ?? null,
-          phone: phone ?? null
+          phone: phone ?? null,
+          date_of_birth: dateOfBirth ? new Date(dateOfBirth) : null,
+          initial_skills: initialSkills?.trim() ? initialSkills.trim() : null,
+          location: location?.trim() ? location.trim() : null
         }
       })
 
-      if (initialSkills) {
-        await prisma.auditLog.create({
-          data: {
-            user_code: generatedCode,
-            action: 'USER_INITIAL_SKILLS_REGISTERED',
-            table_name: 'User',
-            record_id: String(user.id),
-            new_values: JSON.stringify({ initialSkills })
-          }
-        })
-      }
+      await prisma.auditLog.create({
+        data: {
+          user_code: generatedCode,
+          action: 'USER_ACTIVATED',
+          table_name: 'User',
+          record_id: String(user.id),
+          new_values: JSON.stringify({
+            ngoId: normalizedNgoId,
+            initialSkills: initialSkills?.trim() ? initialSkills.trim() : null,
+            dateOfBirth: dateOfBirth ?? null,
+            location: location?.trim() ? location.trim() : null
+          })
+        }
+      })
 
       await cacheService.invalidatePattern('admin:users:')
 
@@ -307,12 +341,15 @@ class UsersController {
           anonymousCode: user.anonymous_code,
           ngoId: user.ngo_id,
           role: user.role,
+          dateOfBirth: user.date_of_birth?.toISOString() ?? null,
+          initialSkills: user.initial_skills ?? null,
+          location: user.location ?? null,
           createdAt: user.created_at.toISOString()
         }
       })
     } catch (error) {
       logger.error('Error activating user', { error: (error as Error).message })
-      res.status(500).json({ error: 'Erro ao activar usu·rio' })
+      res.status(500).json({ error: 'Erro ao activar usu√°rio' })
     }
   }
 
@@ -323,7 +360,7 @@ class UsersController {
     if (typeof active !== 'boolean') {
       res.status(400).json({
         success: false,
-        error: 'Campo active (boolean) È obrigatÛrio'
+        error: 'Campo active (boolean) √© obrigat√≥rio'
       })
       return
     }
@@ -342,6 +379,15 @@ class UsersController {
         })
 
       await cacheService.invalidatePattern('admin:users:')
+      await prisma.auditLog.create({
+        data: {
+          user_code: user.anonymous_code,
+          action: active ? 'USER_REACTIVATED' : 'USER_DEACTIVATED',
+          table_name: 'User',
+          record_id: String(user.id),
+          new_values: JSON.stringify({ is_active: active })
+        }
+      })
 
       res.json({
         success: true,
@@ -353,7 +399,83 @@ class UsersController {
       })
     } catch (error) {
       logger.error('Error updating user activation', { error: (error as Error).message, id })
-      res.status(500).json({ error: 'Erro ao atualizar activaÁ„o do usu·rio' })
+      res.status(500).json({ error: 'Erro ao atualizar activa√ß√£o do usu√°rio' })
+    }
+  }
+
+  static async update(req: Request, res: Response): Promise<void> {
+    const { id } = req.params
+    const maybeNumericId = Number(id)
+    const { realName, phone, ngoId, initialSkills, dateOfBirth, location } = req.body as {
+      realName?: string
+      phone?: string
+      ngoId?: string
+      initialSkills?: string
+      dateOfBirth?: string
+      location?: string
+    }
+
+    try {
+      const normalizedNgoId = ngoId ? normalizeNgoId(ngoId) : undefined
+      const user = Number.isNaN(maybeNumericId)
+        ? await prisma.user.update({
+            where: { anonymous_code: id },
+            data: {
+              ...(realName !== undefined ? { real_name: realName || null } : {}),
+              ...(phone !== undefined ? { phone: phone || null } : {}),
+              ...(normalizedNgoId !== undefined ? { ngo_id: normalizedNgoId } : {}),
+              ...(initialSkills !== undefined ? { initial_skills: initialSkills || null } : {}),
+              ...(dateOfBirth !== undefined ? { date_of_birth: dateOfBirth ? new Date(dateOfBirth) : null } : {}),
+              ...(location !== undefined ? { location: location || null } : {})
+            }
+          })
+        : await prisma.user.update({
+            where: { id: maybeNumericId },
+            data: {
+              ...(realName !== undefined ? { real_name: realName || null } : {}),
+              ...(phone !== undefined ? { phone: phone || null } : {}),
+              ...(normalizedNgoId !== undefined ? { ngo_id: normalizedNgoId } : {}),
+              ...(initialSkills !== undefined ? { initial_skills: initialSkills || null } : {}),
+              ...(dateOfBirth !== undefined ? { date_of_birth: dateOfBirth ? new Date(dateOfBirth) : null } : {}),
+              ...(location !== undefined ? { location: location || null } : {})
+            }
+          })
+
+      await cacheService.invalidatePattern('admin:users:')
+      await prisma.auditLog.create({
+        data: {
+          user_code: user.anonymous_code,
+          action: 'USER_UPDATED',
+          table_name: 'User',
+          record_id: String(user.id),
+          new_values: JSON.stringify({
+            realName: realName ?? null,
+            phone: phone ?? null,
+            ngoId: normalizedNgoId ?? null,
+            initialSkills: initialSkills ?? null,
+            dateOfBirth: dateOfBirth ?? null,
+            location: location ?? null
+          })
+        }
+      })
+
+      res.json({
+        success: true,
+        user: {
+          id: String(user.id),
+          anonymousCode: user.anonymous_code,
+          ngoId: user.ngo_id,
+          realName: user.real_name,
+          phone: user.phone,
+          initialSkills: user.initial_skills,
+          dateOfBirth: user.date_of_birth?.toISOString() ?? null,
+          location: user.location,
+          isActive: user.is_active
+        }
+      })
+    } catch (error) {
+      logger.error('Error updating user', { error: (error as Error).message, id })
+      res.status(500).json({ error: 'Erro ao atualizar benefici√°ria' })
     }
   }
 
@@ -369,7 +491,7 @@ class UsersController {
       if (!user) {
         res.status(404).json({
           success: false,
-          error: 'Usu·rio n„o encontrado'
+          error: 'Usu√°rio n√£o encontrado'
         })
         return
       }
@@ -401,7 +523,7 @@ class UsersController {
       })
     } catch (error) {
       logger.error('Error fetching user progress', { error: (error as Error).message, id })
-      res.status(500).json({ error: 'Erro ao buscar progresso do usu·rio' })
+      res.status(500).json({ error: 'Erro ao buscar progresso do usu√°rio' })
     }
   }
 
@@ -417,7 +539,7 @@ class UsersController {
       if (!user) {
         res.status(404).json({
           success: false,
-          error: 'Usu·rio n„o encontrado'
+          error: 'Usu√°rio n√£o encontrado'
         })
         return
       }
@@ -444,7 +566,7 @@ class UsersController {
       })
     } catch (error) {
       logger.error('Error fetching user certificates', { error: (error as Error).message, id })
-      res.status(500).json({ error: 'Erro ao buscar certificados do usu·rio' })
+      res.status(500).json({ error: 'Erro ao buscar certificados do usu√°rio' })
     }
   }
 }

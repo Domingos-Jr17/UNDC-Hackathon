@@ -17,7 +17,7 @@ type FilterType = 'all' | 'Ativo' | 'Inativo'
 export default function MonitorProgress() {
   const navigate = useNavigate()
   const { data, loading, error } = useUsers()
-  const users = data ?? []
+  const users = data?.users ?? []
   const [filter, setFilter] = useState<FilterType>('all')
 
   const filteredUsers = useMemo(() => {

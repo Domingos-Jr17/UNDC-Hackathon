@@ -6,7 +6,7 @@ interface AuthContextType {
   user: User | null;
   login: (code: string) => Promise<boolean>;
   staffLogin: (email: string, password: string) => Promise<boolean>;
-  logout: () => void;
+  logout: () => Promise<void>;
   isLoading: boolean;
   isAuthenticated: boolean;
 }

@@ -8,7 +8,10 @@ export interface User {
   phone?: string
   email?: string
   password?: string
-  ngo_id: string
+  date_of_birth?: string
+  initial_skills?: string
+  location?: string
+  ngo_id: string | null
   role: 'VICTIM' | 'STAFF' | 'ADMIN'
   email_verified: boolean
   created_at: string
@@ -80,6 +83,140 @@ export interface NGO {
   is_active: boolean
   created_at: string
   updated_at?: string
+}
+
+export type EmployerValidationStatus = 'PENDING' | 'VALIDATED' | 'REJECTED' | 'SUSPENDED'
+export type JobStatus = 'DRAFT' | 'VALIDATED' | 'OPEN' | 'CLOSED' | 'REJECTED'
+export type MatchStatus = 'SUGGESTED' | 'NGO_REVIEWED' | 'SOCIAL_REVIEWED' | 'VICTIM_CONFIRMED' | 'REJECTED' | 'SUBMITTED'
+export type ApplicationStatus =
+  | 'DRAFT'
+  | 'SUBMITTED'
+  | 'INTERVIEW_SCHEDULED'
+  | 'INTERVIEW_COMPLETED'
+  | 'OFFER_MADE'
+  | 'REJECTED'
+  | 'ACCEPTED'
+  | 'PLACED'
+  | 'WITHDRAWN'
+export type FollowUpChannel = 'SMS' | 'USSD' | 'APP' | 'MANUAL'
+export type CheckinStatus = 'PENDING' | 'RESPONDED' | 'MISSED'
+export type AlertSeverity = 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL'
+export type AlertStatus = 'OPEN' | 'IN_PROGRESS' | 'RESOLVED' | 'DISMISSED'
+
+export interface Employer {
+  id: string
+  name: string
+  sector?: string
+  nuit?: string
+  contact_name?: string
+  contact_phone?: string
+  contact_email?: string
+  location?: string
+  ngo_id?: string
+  validation_status: EmployerValidationStatus
+  validation_notes?: string
+  reviewed_by_code?: string
+  validation_reviewed_at?: string
+  notes?: string
+  is_active: boolean
+  created_at: string
+  updated_at?: string
+}
+
+export interface Job {
+  id: string
+  title: string
+  description: string
+  location: string
+  required_skills: string
+  contract_type: string
+  schedule?: string
+  salary_range?: string
+  availability?: string
+  work_type?: string
+  status: JobStatus
+  validation_notes?: string
+  is_active: boolean
+  ngo_id?: string
+  employer_id?: string
+  created_at: string
+  updated_at?: string
+}
+
+export interface JobMatch {
+  id: string
+  job_id: string
+  anonymous_code: string
+  ngo_id?: string
+  score: number
+  shared_skills?: string
+  rationale?: string
+  status: MatchStatus
+  review_type?: string
+  ngo_review_notes?: string
+  social_review_notes?: string
+  rejection_reason?: string
+  victim_confirmation_at?: string
+  created_at: string
+  updated_at?: string
+}
+
+export interface JobApplication {
+  id: number
+  job_id: string
+  anonymous_code: string
+  job_match_id?: string
+  ngo_id?: string
+  status: ApplicationStatus
+  score: number
+  notes?: string
+  transition_notes?: string
+  last_transition_by_code?: string
+  applied_at: string
+  submitted_at?: string
+  interview_scheduled_at?: string
+  interview_completed_at?: string
+  offer_made_at?: string
+  accepted_at?: string
+  placed_at?: string
+  withdrawn_at?: string
+  rejected_at?: string
+  updated_at?: string
+}
+
+export interface FollowUpCheckin {
+  id: string
+  job_application_id: number
+  anonymous_code: string
+  ngo_id?: string
+  period_label: string
+  channel: FollowUpChannel
+  prompt?: string
+  response?: string
+  response_code?: string
+  status: CheckinStatus
+  risk_severity: AlertSeverity
+  due_at: string
+  responded_at?: string
+  created_at: string
+  updated_at?: string
+}
+
+export interface Alert {
+  id: string
+  anonymous_code: string
+  ngo_id?: string
+  job_application_id?: number
+  checkin_id?: string
+  type: string
+  severity: AlertSeverity
+  source: string
+  status: AlertStatus
+  owner_code?: string
+  resolution_notes?: string
+  created_at: string
+  updated_at?: string
+  resolved_at?: string
 }
 
 export interface AuditLog {
@@ -206,7 +343,7 @@ export interface AuthenticatedRequest extends Request {
   user?: {
     anonymousCode: string
     ngoId: string
-    role?: string
+    role?: 'VICTIM' | 'STAFF' | 'ADMIN'
     email?: string
     sessionId: string
   }

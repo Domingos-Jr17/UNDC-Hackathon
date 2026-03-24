@@ -2,6 +2,7 @@
 import { useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { isFollowUpAlertsPhase2Enabled } from '@/config/features'
 import MetricCard from './ui/MetricCard'
 import StatusBadge from './ui/StatusBadge'
 import Layout from './layout/Layout'
@@ -9,8 +10,10 @@ import { LoadingOverlay } from '@/components/ui/loading-overlay'
 import { useDashboardStats, useRecentActivity, useUsers } from '@/hooks/useApi'
 import {
   Activity,
+  AlertTriangle,
   ArrowRight,
   Award,
+  BriefcaseBusiness,
   Clock3,
   FileText,
   GraduationCap,
@@ -51,10 +54,12 @@ function DashboardComponent() {
     activeUsers: 0,
     coursesCompleted: 0,
     certificatesIssued: 0,
-    averageCompletionTime: 0
+    averageCompletionTime: 0,
+    openAlerts: 0,
+    placedApplications: 0
   }
 
-  const users = usersState.data ?? []
+  const users = usersState.data?.users ?? []
   const recentActivity = activityState.data ?? []
 
   const derived = useMemo(() => {
@@ -93,7 +98,36 @@ function DashboardComponent() {
       description: 'Abra a lista completa e priorize casos com risco de abandono.',
       icon: Users,
       onClick: () => navigate('/users')
-    }
+    },
+    ...(isFollowUpAlertsPhase2Enabled
+      ? [
+          {
+            title: 'Atacar alertas abertos',
+            description: 'Entre na fila operacional de risco e atribua owner aos casos.',
+            icon: AlertTriangle,
+            onClick: () => navigate('/alerts')
+          },
+          {
+            title: 'Agendar follow-up',
+            description: 'Dispare check-ins para colocações já em curso.',
+            icon: BriefcaseBusiness,
+            onClick: () => navigate('/follow-up')
+          }
+        ]
+      : [
+          {
+            title: 'Gerir empregadores',
+            description: 'Valide parceiros e mantenha a rede ativa para novas colocações.',
+            icon: BriefcaseBusiness,
+            onClick: () => navigate('/employers')
+          },
+          {
+            title: 'Rever matches',
+            description: 'Confirme shortlist, revisão social e transições de candidatura.',
+            icon: AlertTriangle,
+            onClick: () => navigate('/matches')
+          }
+        ])
   ]
 
   return (
@@ -135,6 +169,44 @@ function DashboardComponent() {
           icon={Clock3}
           tone="warning"
         />
+      </section>
+
+      <section className="grid grid-cols-1 gap-4 md:grid-cols-2">
+        {isFollowUpAlertsPhase2Enabled ? (
+          <>
+            <MetricCard
+              title="Colocações"
+              value={stats.placedApplications ?? 0}
+              description="Candidaturas já em acompanhamento pós-colocação"
+              icon={BriefcaseBusiness}
+              tone="success"
+            />
+            <MetricCard
+              title="Alertas abertos"
+              value={stats.openAlerts ?? 0}
+              description="Casos operacionais que exigem resposta"
+              icon={AlertTriangle}
+              tone="warning"
+            />
+          </>
+        ) : (
+          <>
+            <MetricCard
+              title="Base inativa"
+              value={derived.inactiveUsers.length}
+              description="Beneficiárias sem activação ou sem uso recente"
+              icon={Users}
+              tone="neutral"
+            />
+            <MetricCard
+              title="Prioridade do dia"
+              value={derived.priorityUsers.length}
+              description="Casos que exigem atenção operacional imediata"
+              icon={BriefcaseBusiness}
+              tone="success"
+            />
+          </>
+        )}
       </section>
 
       <section className="grid gap-6 xl:grid-cols-[0.95fr_1.05fr]">

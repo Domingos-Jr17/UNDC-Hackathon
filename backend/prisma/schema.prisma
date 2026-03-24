@@ -20,6 +20,9 @@ model User {
   role            UserRole  @default(VICTIM)
   real_name       String?
   phone           String?
+  date_of_birth   DateTime?
+  initial_skills  String?
+  location        String?
   ngo_id          String?
   email_verified  Boolean   @default(false)
   created_at      DateTime  @default(now())
@@ -33,6 +36,9 @@ model User {
   certificates    Certificate[]
   audit_logs      AuditLog[]
   job_applications JobApplication[]
+  job_matches      JobMatch[]
+  follow_up_checkins FollowUpCheckin[]
+  alerts           Alert[]
 
   @@index([ngo_id])
   @@index([role, is_active])
@@ -57,6 +63,11 @@ model NGO {
   updated_at      DateTime? @updatedAt
   users           User[]
   jobs            Job[]
+  job_applications JobApplication[]
+  employers       Employer[]
+  job_matches     JobMatch[]
+  follow_up_checkins FollowUpCheckin[]
+  alerts          Alert[]
 }
 
 model Course {
@@ -155,6 +166,7 @@ model Certificate {
   user                User      @relation(fields: [anonymous_code], references: [anonymous_code])
   course              Course    @relation(fields: [course_id], references: [id])
 
+  @@unique([anonymous_code, course_id])
   @@index([anonymous_code, course_id])
 }
 
@@ -179,14 +191,25 @@ model AuditLog {
 model Employer {
   id            String   @id
   name          String
+  sector        String?
+  nuit          String?
   contact_name  String?
   contact_phone String?
   contact_email String?
   location      String?
+  ngo_id        String?
+  validation_status EmployerValidationStatus @default(PENDING)
+  validation_notes String?
+  reviewed_by_code String?
+  validation_reviewed_at DateTime?
+  notes         String?
   is_active     Boolean  @default(true)
   created_at    DateTime @default(now())
   updated_at    DateTime? @updatedAt
+  ngo           NGO?     @relation(fields: [ngo_id], references: [id])
   jobs          Job[]
+
+  @@index([ngo_id, validation_status, is_active])
 }
 
 model Job {
@@ -198,6 +221,10 @@ model Job {
   contract_type   String
   schedule        String?
   salary_range    String?
+  availability    String?
+  work_type       String?
+  status          JobStatus        @default(DRAFT)
+  validation_notes String?
   is_active       Boolean          @default(true)
   ngo_id          String?
   employer_id     String?
@@ -206,25 +233,117 @@ model Job {
   ngo             NGO?             @relation(fields: [ngo_id], references: [id])
   employer        Employer?        @relation(fields: [employer_id], references: [id])
   applications    JobApplication[]
+  matches         JobMatch[]
 
-  @@index([is_active, location])
+  @@index([is_active, status, location])
   @@index([ngo_id])
+}
+
+model JobMatch {
+  id                    String      @id
+  job_id                String
+  anonymous_code        String
+  ngo_id                String?
+  score                 Int         @default(0)
+  shared_skills         String?
+  rationale             String?
+  status                MatchStatus @default(SUGGESTED)
+  review_type           String?
+  ngo_review_notes      String?
+  social_review_notes   String?
+  rejection_reason      String?
+  victim_confirmation_at DateTime?
+  created_at            DateTime    @default(now())
+  updated_at            DateTime?   @updatedAt
+  job                   Job         @relation(fields: [job_id], references: [id])
+  user                  User        @relation(fields: [anonymous_code], references: [anonymous_code])
+  ngo                   NGO?        @relation(fields: [ngo_id], references: [id])
+  applications          JobApplication[]
+
+  @@unique([job_id, anonymous_code])
+  @@index([ngo_id, status])
+  @@index([anonymous_code, status])
 }
 
 model JobApplication {
   id             Int      @id @default(autoincrement())
   job_id         String
   anonymous_code String
-  status         String   @default("PENDING")
+  job_match_id   String?
+  ngo_id         String?
+  status         ApplicationStatus   @default(DRAFT)
   score          Int      @default(0)
   notes          String?
+  transition_notes String?
+  last_transition_by_code String?
   applied_at     DateTime @default(now())
+  submitted_at   DateTime?
+  interview_scheduled_at DateTime?
+  interview_completed_at DateTime?
+  offer_made_at  DateTime?
+  accepted_at    DateTime?
+  placed_at      DateTime?
+  withdrawn_at   DateTime?
+  rejected_at    DateTime?
   updated_at     DateTime? @updatedAt
   job            Job      @relation(fields: [job_id], references: [id])
   user           User     @relation(fields: [anonymous_code], references: [anonymous_code])
+  job_match      JobMatch? @relation(fields: [job_match_id], references: [id])
+  ngo            NGO?     @relation(fields: [ngo_id], references: [id])
+  follow_up_checkins FollowUpCheckin[]
+  alerts         Alert[]
 
   @@unique([job_id, anonymous_code])
   @@index([anonymous_code, status])
+}
+
+model FollowUpCheckin {
+  id                String          @id
+  job_application_id Int
+  anonymous_code    String
+  ngo_id            String?
+  period_label      String
+  channel           FollowUpChannel @default(SMS)
+  prompt            String?
+  response          String?
+  response_code     String?
+  status            CheckinStatus   @default(PENDING)
+  risk_severity     AlertSeverity   @default(LOW)
+  due_at            DateTime
+  responded_at      DateTime?
+  created_at        DateTime        @default(now())
+  updated_at        DateTime?       @updatedAt
+  job_application   JobApplication  @relation(fields: [job_application_id], references: [id])
+  user              User            @relation(fields: [anonymous_code], references: [anonymous_code])
+  ngo               NGO?            @relation(fields: [ngo_id], references: [id])
+  alerts            Alert[]
+
+  @@index([anonymous_code, status])
+  @@index([ngo_id, status])
+}
+
+model Alert {
+  id                 String        @id
+  anonymous_code     String
+  ngo_id             String?
+  job_application_id Int?
+  checkin_id         String?
+  type               String
+  severity           AlertSeverity
+  source             String
+  status             AlertStatus   @default(OPEN)
+  owner_code         String?
+  resolution_notes   String?
+  created_at         DateTime      @default(now())
+  updated_at         DateTime?     @updatedAt
+  resolved_at        DateTime?
+  user               User          @relation(fields: [anonymous_code], references: [anonymous_code])
+  ngo                NGO?          @relation(fields: [ngo_id], references: [id])
+  job_application    JobApplication? @relation(fields: [job_application_id], references: [id])
+  checkin            FollowUpCheckin? @relation(fields: [checkin_id], references: [id])
+
+  @@index([anonymous_code, status, severity])
+  @@index([ngo_id, status])
 }
 
 model UssdSession {
@@ -239,4 +358,67 @@ model UssdSession {
 
   @@index([phone_number])
   @@index([expires_at])
+}
+
+enum EmployerValidationStatus {
+  PENDING
+  VALIDATED
+  REJECTED
+  SUSPENDED
+}
+
+enum JobStatus {
+  DRAFT
+  VALIDATED
+  OPEN
+  CLOSED
+  REJECTED
+}
+
+enum MatchStatus {
+  SUGGESTED
+  NGO_REVIEWED
+  SOCIAL_REVIEWED
+  VICTIM_CONFIRMED
+  REJECTED
+  SUBMITTED
+}
+
+enum ApplicationStatus {
+  DRAFT
+  SUBMITTED
+  INTERVIEW_SCHEDULED
+  INTERVIEW_COMPLETED
+  OFFER_MADE
+  REJECTED
+  ACCEPTED
+  PLACED
+  WITHDRAWN
+}
+
+enum FollowUpChannel {
+  SMS
+  USSD
+  APP
+  MANUAL
+}
+
+enum CheckinStatus {
+  PENDING
+  RESPONDED
+  MISSED
+}
+
+enum AlertSeverity {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum AlertStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+  DISMISSED
 }

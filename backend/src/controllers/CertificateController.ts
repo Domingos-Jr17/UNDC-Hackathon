@@ -42,8 +42,20 @@ class CertificateController {
         return;
       }
 
+      const existingCertificate = await CertificateModel.findByUserAndCourse(anonymousCode, courseId)
+      if (existingCertificate && !existingCertificate.revoked) {
+        res.json({
+          success: true,
+          verificationCode: existingCertificate.verification_code,
+          qrCode: existingCertificate.qr_code,
+          message: 'Certificado já existente para este curso'
+        });
+        return;
+      }
+
       const verificationCode = `WIRA-${anonymousCode}-${courseId.toUpperCase()}-${new Date().getFullYear()}-${Date.now().toString().slice(-4)}`;
-      const qrCode = `${process.env.CERTIFICATE_VERIFY_BASE_URL ?? 'https://verify.wira.org'}/${verificationCode}`;
+      const verificationBaseUrl = (process.env.CERTIFICATE_VERIFY_BASE_URL ?? `${req.protocol}://${req.get('host')}/api/certificates/verify`).replace(/\/+$/, '')
+      const qrCode = `${verificationBaseUrl}/${verificationCode}`;
 
       const certificate = await CertificateModel.create({
         anonymous_code: anonymousCode,
@@ -138,7 +150,7 @@ class CertificateController {
     const { code } = req.params;
 
     try {
-      const result = await CertificateModel.verify(code);
+      const result = await CertificateModel.verify(code, req.ip);
 
       if (!result.valid) {
         res.status(404).json({

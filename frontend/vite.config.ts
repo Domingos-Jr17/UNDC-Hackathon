@@ -16,41 +16,6 @@ export default defineConfig({
       plugins: [tailwindcss(), autoprefixer()],
     },
   },
-  build: {
-    rollupOptions: {
-      output: {
-        manualChunks(id) {
-          if (!id.includes('node_modules')) {
-            return undefined
-          }
-
-          if (id.includes('react-dom') || id.includes('react-router-dom') || id.includes('react/')) {
-            return 'react-core'
-          }
-
-          if (id.includes('@radix-ui')) {
-            return 'radix-ui'
-          }
-
-          if (id.includes('lucide-react') || id.includes('lucide')) {
-            return 'icons'
-          }
-
-          if (id.includes('react-hook-form') || id.includes('@hookform') || id.includes('zod')) {
-            return 'forms'
-          }
-
-          if (id.includes('date-fns') || id.includes('react-day-picker')) {
-            return 'dates'
-          }
-
-          if (id.includes('sonner') || id.includes('react-toastify')) {
-            return 'feedback'
-          }
-
-          return 'vendor'
-        },
-      },
-    },
-  },
+  // Let Vite/Rollup decide chunk boundaries. The previous manual split created
+  // a runtime cycle between react-core and vendor in production preview builds.
 })

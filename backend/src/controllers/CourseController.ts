@@ -3,6 +3,14 @@ import CourseModel from '../models/Course';
 import cacheService from '../services/cache';
 import { logger } from '../middleware/security';
 
+const parseCachedPayload = <T>(value: string): T => {
+  try {
+    return JSON.parse(value) as T
+  } catch {
+    return value as unknown as T
+  }
+}
+
 class CourseController {
   static async getAll(_req: Request, res: Response): Promise<void> {
     try {
@@ -68,7 +76,7 @@ class CourseController {
       if (cachedModules) {
         res.json({
           success: true,
-          modules: cachedModules,
+          modules: parseCachedPayload(cachedModules),
           cached: true
         });
         return;
@@ -100,7 +108,7 @@ class CourseController {
       if (cachedQuiz) {
         res.json({
           success: true,
-          quiz: cachedQuiz,
+          quiz: parseCachedPayload(cachedQuiz),
           cached: true
         });
         return;
@@ -152,6 +160,7 @@ class CourseController {
 
       // For now, we'll simulate with our ORM-like method
       const course = await CourseModel.create(courseData);
+      await cacheService.invalidatePattern('route:GET:/api/courses')
 
       res.status(201).json({
         success: true,
@@ -188,6 +197,8 @@ class CourseController {
         return;
       }
 
+      await cacheService.invalidateCourseCache(id);
+      await cacheService.invalidatePattern('route:GET:/api/courses')
       res.json({
         success: true,
         course,
@@ -201,24 +212,31 @@ class CourseController {
     }
   }
 
-  static async delete(req: Request, res: Response): Promise<void> {
+  static async archive(req: Request, res: Response): Promise<void> {
     const { id } = req.params;
+    const { isActive = false } = req.body as { isActive?: boolean }
 
     try {
-      // In a real Prisma implementation, this would be:
-      // await prisma.course.delete({ where: { id } });
-
-      // For now, we'll simulate with our ORM-like method
-      await CourseModel.delete({ id });
+      const course = await CourseModel.update({ id }, { is_active: Boolean(isActive) })
+      if (!course) {
+        res.status(404).json({
+          success: false,
+          error: 'Curso nÃ£o encontrado'
+        });
+        return;
+      }
+      await cacheService.invalidateCourseCache(id);
+      await cacheService.invalidatePattern('route:GET:/api/courses')
 
       res.json({
         success: true,
-        message: 'Curso removido com sucesso'
+        course,
+        message: `Curso ${isActive ? 'reativado' : 'arquivado'} com sucesso`
       });
     } catch (error) {
-      logger.error('Error deleting course', { error: (error as Error).message, courseId: id });
+      logger.error('Error archiving course', { error: (error as Error).message, courseId: id });
       res.status(500).json({
-        error: 'Erro ao remover curso'
+        error: 'Erro ao arquivar curso'
       });
     }
   }

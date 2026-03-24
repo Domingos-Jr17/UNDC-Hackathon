@@ -13,6 +13,7 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import { Ionicons } from '@expo/vector-icons'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import { RootStackParamList } from '../types/navigation'
+import apiService from '../services/api'
 import sessionService from '../services/session'
 import { colors, shadows, spacing } from '../theme'
 
@@ -64,7 +65,11 @@ export default function AppShell({
   const bottomPadding = showBottomNav ? 116 : 32
 
   const handleLogout = async (): Promise<void> => {
-    await sessionService.clearSession()
+    try {
+      await apiService.logout()
+    } catch {
+      await sessionService.clearSession()
+    }
     navigation.reset({
       index: 0,
       routes: [{ name: 'Login' }]

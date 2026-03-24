@@ -5,7 +5,6 @@ import smsProviderService from '../services/smsProvider'
 
 const router = express.Router()
 const prisma = prismaService.getClient()
-const AUX_ENDPOINTS_ENABLED = process.env.NODE_ENV !== 'production' || process.env.ENABLE_USSD_AUX_ENDPOINTS === 'true'
 const SESSION_TIMEOUT_MS = parseInt(process.env.USSD_SESSION_TIMEOUT_MS ?? '300000')
 const DEFAULT_PHONE_NUMBER = '+258840000000'
 
@@ -39,8 +38,22 @@ const formatResponse = (shouldEnd: boolean, message: string): string => {
 
 const isValidPhoneNumber = (value: string): boolean => /^\+?\d{8,15}$/.test(value)
 
+const auxEndpointsEnabled = (): boolean => {
+  const env = process.env.NODE_ENV ?? 'development'
+
+  if (env !== 'production') {
+    return true
+  }
+
+  if (process.env.JEST_WORKER_ID) {
+    return false
+  }
+
+  return process.env.ENABLE_USSD_AUX_ENDPOINTS === 'true'
+}
+
 const ensureAuxEndpointsEnabled = (res: Response): boolean => {
-  if (AUX_ENDPOINTS_ENABLED) {
+  if (auxEndpointsEnabled()) {
     return true
   }
 

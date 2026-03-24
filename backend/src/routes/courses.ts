@@ -64,6 +64,22 @@ router.post(
   CourseController.create
 );
 
+router.put(
+  '/:id',
+  authenticateToken,
+  requireStaffRole,
+  body('title').optional().isString().trim().isLength({ min: 3, max: 120 }).withMessage('title invalido'),
+  body('description').optional({ nullable: true }).isString().isLength({ max: 4000 }).withMessage('description invalida'),
+  body('instructor').optional({ nullable: true }).isString().isLength({ max: 160 }).withMessage('instructor invalido'),
+  body('duration_hours').optional().isInt({ min: 1, max: 1000 }).withMessage('duration_hours invalido'),
+  body('modules_count').optional().isInt({ min: 1, max: 200 }).withMessage('modules_count invalido'),
+  body('level').optional().isString().trim().isLength({ min: 2, max: 40 }).withMessage('level invalido'),
+  body('skills').optional({ nullable: true }).isString().isLength({ max: 2000 }).withMessage('skills invalidas'),
+  body('is_active').optional().isBoolean().withMessage('is_active invalido'),
+  handleValidationErrors,
+  CourseController.update
+);
+
 // Get course by ID with caching
 router.get('/:id', cacheMiddleware(1800), CourseController.getById);
 
@@ -75,5 +91,6 @@ router.get('/:id/quiz', cacheMiddleware(3600), CourseController.getQuiz);
 
 // Invalidate cache for course when updated
 router.post('/:id/invalidate-cache', authenticateToken, requireStaffRole, CourseController.invalidateCache);
+router.patch('/:id/archive', authenticateToken, requireStaffRole, body('isActive').optional().isBoolean(), handleValidationErrors, CourseController.archive);
 
 export default router;

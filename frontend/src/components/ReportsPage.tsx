@@ -48,7 +48,7 @@ export default function ReportsPage() {
   const loading = statsState.loading || usersState.loading || activityState.loading
   const error = statsState.error || usersState.error || activityState.error
   const stats = statsState.data
-  const users = usersState.data ?? []
+  const users = usersState.data?.users ?? []
   const activity = activityState.data ?? []
 
   const [userFilters, setUserFilters] = useState<UserReportFilters>({

@@ -168,3 +168,10 @@ prisma/migrations/
 
 # Windows reserved device names
 nul
+
+#devkit
+.agents
+.ai
+.codex
+.claude
+.opencode

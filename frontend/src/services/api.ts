@@ -30,6 +30,19 @@ interface LoginPayload {
   expiresIn: string
 }
 
+interface ValidateSessionPayload {
+  success: boolean
+  valid: boolean
+  user: {
+    anonymousCode: string
+    ngoId: string
+    role: 'VICTIM' | 'STAFF' | 'ADMIN'
+    createdAt: string
+    email?: string
+    realName?: string
+  }
+}
+
 interface DashboardStatsEnvelope {
   success: boolean
   stats: DashboardStats
@@ -43,6 +56,13 @@ interface RecentActivityEnvelope {
 interface UsersEnvelope {
   success: boolean
   users: User[]
+  pagination?: {
+    total: number
+    page: number
+    pageSize: number
+    limit: number
+    offset: number
+  }
 }
 
 interface UserDetailEnvelope {
@@ -72,9 +92,78 @@ interface SmsEnvelope {
   }
 }
 
+interface SmsStatusEnvelope {
+  success: boolean
+  service: string
+  status: string
+  providerMode: string
+  provider: string
+  timestamp: string
+}
+
 interface CreateCourseEnvelope {
   success: boolean
   course: Course
+}
+
+interface EmployersEnvelope {
+  success: boolean
+  employers: Employer[]
+}
+
+interface EmployerEnvelope {
+  success: boolean
+  employer: Employer
+}
+
+interface JobsEnvelope {
+  success: boolean
+  jobs: Job[]
+}
+
+interface JobEnvelope {
+  success: boolean
+  job: Job
+}
+
+interface MatchesEnvelope {
+  success: boolean
+  matches: JobMatch[]
+}
+
+interface MatchEnvelope {
+  success: boolean
+  match: JobMatch
+}
+
+interface ApplicationsEnvelope {
+  success: boolean
+  applications: JobApplication[]
+}
+
+interface ApplicationEnvelope {
+  success: boolean
+  application: JobApplication
+}
+
+interface CheckinsEnvelope {
+  success: boolean
+  checkins: FollowUpCheckin[]
+}
+
+interface CheckinEnvelope {
+  success: boolean
+  checkin: FollowUpCheckin
+}
+
+interface AlertsEnvelope {
+  success: boolean
+  alerts: Alert[]
+}
+
+interface AlertEnvelope {
+  success: boolean
+  alert: Alert
 }
 
 export interface CourseModule {
@@ -315,6 +404,22 @@ class ApiService {
     return payload
   }
 
+  async validateSession(): Promise<ValidateSessionPayload> {
+    return this.request<ValidateSessionPayload>('/api/auth/validate', {
+      method: 'POST'
+    })
+  }
+
+  async logout(): Promise<void> {
+    try {
+      await this.request<{ success: boolean }>('/api/auth/logout', {
+        method: 'DELETE'
+      })
+    } finally {
+      this.clearToken()
+    }
+  }
+
   async getDashboardStats(): Promise<DashboardStats> {
     const payload = await this.request<DashboardStatsEnvelope>('/api/dashboard/stats')
     return payload.stats
@@ -325,10 +430,13 @@ class ApiService {
     return payload.activity
   }
 
-  async getUsers(filters?: { status?: string; limit?: number; offset?: number }): Promise<User[]> {
+  async getUsers(filters?: { status?: string; limit?: number; offset?: number; page?: number; pageSize?: number; search?: string; ngoId?: string }): Promise<UsersPageResult> {
     const query = filters ? `?${new URLSearchParams(filters as Record<string, string>).toString()}` : ''
     const payload = await this.request<UsersEnvelope>(`/api/users${query}`)
-    return payload.users
+    return {
+      users: payload.users,
+      pagination: payload.pagination
+    }
   }
 
   async getUserDetails(userId: string): Promise<User> {
@@ -342,6 +450,7 @@ class ApiService {
     dateOfBirth: string
     initialSkills?: string
     phone?: string
+    location?: string
   }): Promise<User> {
     const payload = await this.request<ActivateUserEnvelope>('/api/users/activate', {
       method: 'POST',
@@ -366,6 +475,21 @@ class ApiService {
       }
     })
     return payload.sms
+  }
+
+  async sendSms(phoneNumber: string, message: string): Promise<SmsEnvelope['sms']> {
+    const payload = await this.request<SmsEnvelope>('/api/sms/send', {
+      method: 'POST',
+      body: {
+        phoneNumber,
+        message
+      }
+    })
+    return payload.sms
+  }
+
+  async getSmsStatus(): Promise<SmsStatusEnvelope> {
+    return this.request<SmsStatusEnvelope>('/api/sms/status')
   }
 
   async getCourses(): Promise<Course[]> {
@@ -409,6 +533,175 @@ class ApiService {
 
   async verifyCertificate(code: string): Promise<VerifyCertificateEnvelope> {
     return this.request<VerifyCertificateEnvelope>(`/api/certificates/verify/${encodeURIComponent(code)}`)
+  }
+
+  async getEmployers(filters?: { status?: string; ngoId?: string; active?: boolean }): Promise<Employer[]> {
+    const query = filters ? `?${new URLSearchParams(Object.entries(filters).reduce<Record<string, string>>((acc, [key, value]) => {
+      if (value !== undefined && value !== null && value !== '') {
+        acc[key] = String(value)
+      }
+      return acc
+    }, {})).toString()}` : ''
+    const payload = await this.request<EmployersEnvelope>(`/api/employers${query}`)
+    return payload.employers
+  }
+
+  async createEmployer(data: EmployerMutationInput): Promise<Employer> {
+    const payload = await this.request<EmployerEnvelope>('/api/employers', {
+      method: 'POST',
+      body: data
+    })
+    return payload.employer
+  }
+
+  async updateEmployer(id: string, data: EmployerMutationInput): Promise<Employer> {
+    const payload = await this.request<EmployerEnvelope>(`/api/employers/${id}`, {
+      method: 'PUT',
+      body: data
+    })
+    return payload.employer
+  }
+
+  async getJobsAdmin(filters?: {
+    status?: string
+    ngoId?: string
+    employerId?: string
+    location?: string
+  }): Promise<Job[]> {
+    const query = filters ? `?${new URLSearchParams(Object.entries(filters).reduce<Record<string, string>>((acc, [key, value]) => {
+      if (value) {
+        acc[key] = value
+      }
+      return acc
+    }, {})).toString()}` : ''
+    const payload = await this.request<JobsEnvelope>(`/api/jobs${query}`)
+    return payload.jobs
+  }
+
+  async createJob(data: JobMutationInput): Promise<Job> {
+    const payload = await this.request<JobEnvelope>('/api/jobs', {
+      method: 'POST',
+      body: data
+    })
+    return payload.job
+  }
+
+  async updateJob(id: string, data: Partial<JobMutationInput> & { isActive?: boolean }): Promise<Job> {
+    const payload = await this.request<JobEnvelope>(`/api/jobs/${id}`, {
+      method: 'PUT',
+      body: data
+    })
+    return payload.job
+  }
+
+  async generateJobMatches(jobId: string): Promise<JobMatch[]> {
+    const payload = await this.request<{ success: boolean; matches: JobMatch[] }>(`/api/jobs/${jobId}/match`, {
+      method: 'POST'
+    })
+    return payload.matches
+  }
+
+  async getMatches(filters?: { jobId?: string; anonymousCode?: string; status?: string }): Promise<JobMatch[]> {
+    const query = filters ? `?${new URLSearchParams(Object.entries(filters).reduce<Record<string, string>>((acc, [key, value]) => {
+      if (value) {
+        acc[key] = value
+      }
+      return acc
+    }, {})).toString()}` : ''
+    const payload = await this.request<MatchesEnvelope>(`/api/matches${query}`)
+    return payload.matches
+  }
+
+  async reviewMatch(id: string, data: {
+    decision: 'approve' | 'reject'
+    reviewType: 'ngo' | 'social'
+    notes?: string
+    rejectionReason?: string
+  }): Promise<JobMatch> {
+    const payload = await this.request<MatchEnvelope>(`/api/matches/${id}/review`, {
+      method: 'POST',
+      body: data
+    })
+    return payload.match
+  }
+
+  async confirmVictimMatch(id: string, data: { confirmed: boolean; notes?: string }): Promise<JobMatch> {
+    const payload = await this.request<MatchEnvelope>(`/api/matches/${id}/confirm-victim`, {
+      method: 'POST',
+      body: data
+    })
+    return payload.match
+  }
+
+  async getApplications(filters?: { status?: string; jobId?: string; anonymousCode?: string }): Promise<JobApplication[]> {
+    const query = filters ? `?${new URLSearchParams(Object.entries(filters).reduce<Record<string, string>>((acc, [key, value]) => {
+      if (value) {
+        acc[key] = value
+      }
+      return acc
+    }, {})).toString()}` : ''
+    const payload = await this.request<ApplicationsEnvelope>(`/api/applications${query}`)
+    return payload.applications
+  }
+
+  async transitionApplication(id: number, data: { status: ApplicationStatus; notes?: string }): Promise<JobApplication> {
+    const payload = await this.request<ApplicationEnvelope>(`/api/applications/${id}/transition`, {
+      method: 'POST',
+      body: data
+    })
+    return payload.application
+  }
+
+  async getCheckins(filters?: { status?: string; channel?: string; jobApplicationId?: number; anonymousCode?: string }): Promise<FollowUpCheckin[]> {
+    const query = filters ? `?${new URLSearchParams(Object.entries(filters).reduce<Record<string, string>>((acc, [key, value]) => {
+      if (value !== undefined && value !== null && value !== '') {
+        acc[key] = String(value)
+      }
+      return acc
+    }, {})).toString()}` : ''
+    const payload = await this.request<CheckinsEnvelope>(`/api/checkins${query}`)
+    return payload.checkins
+  }
+
+  async scheduleCheckin(data: {
+    jobApplicationId: number
+    periodLabel: string
+    channel: FollowUpChannel
+    prompt?: string
+    dueAt?: string
+  }): Promise<FollowUpCheckin> {
+    const payload = await this.request<CheckinEnvelope>('/api/checkins/schedule', {
+      method: 'POST',
+      body: data
+    })
+    return payload.checkin
+  }
+
+  async respondCheckin(id: string, data: { response?: string; responseCode?: string }): Promise<FollowUpCheckin> {
+    const payload = await this.request<CheckinEnvelope>(`/api/checkins/${id}/respond`, {
+      method: 'POST',
+      body: data
+    })
+    return payload.checkin
+  }
+
+  async getAlerts(filters?: { status?: string; severity?: string; ngoId?: string; anonymousCode?: string }): Promise<Alert[]> {
+    const query = filters ? `?${new URLSearchParams(Object.entries(filters).reduce<Record<string, string>>((acc, [key, value]) => {
+      if (value) {
+        acc[key] = value
+      }
+      return acc
+    }, {})).toString()}` : ''
+    const payload = await this.request<AlertsEnvelope>(`/api/alerts${query}`)
+    return payload.alerts
+  }
+
+  async updateAlert(id: string, data: { status?: AlertStatus; resolutionNotes?: string; ownerCode?: string }): Promise<Alert> {
+    const payload = await this.request<AlertEnvelope>(`/api/alerts/${id}`, {
+      method: 'PUT',
+      body: data
+    })
+    return payload.alert
   }
 
   async healthCheck(): Promise<boolean> {
@@ -455,6 +748,16 @@ export interface User {
     issueDate: string
     score: number
   }>
+  realName?: string | null
+  phone?: string | null
+  dateOfBirth?: string | null
+  initialSkills?: string | null
+  location?: string | null
+}
+
+export interface UsersPageResult {
+  users: User[]
+  pagination?: UsersEnvelope['pagination']
 }
 
 export interface DashboardStats {
@@ -463,6 +766,8 @@ export interface DashboardStats {
   coursesCompleted: number
   certificatesIssued: number
   averageCompletionTime: number
+  openAlerts?: number
+  placedApplications?: number
 }
 
 export interface Activity {
@@ -495,6 +800,241 @@ export interface CertificateVerification {
     date: string
     score: number
   }
+}
+
+export type EmployerValidationStatus = 'PENDING' | 'VALIDATED' | 'REJECTED' | 'SUSPENDED'
+export type JobStatus = 'DRAFT' | 'VALIDATED' | 'OPEN' | 'CLOSED' | 'REJECTED'
+export type MatchStatus = 'SUGGESTED' | 'NGO_REVIEWED' | 'SOCIAL_REVIEWED' | 'VICTIM_CONFIRMED' | 'REJECTED' | 'SUBMITTED'
+export type ApplicationStatus =
+  | 'DRAFT'
+  | 'SUBMITTED'
+  | 'INTERVIEW_SCHEDULED'
+  | 'INTERVIEW_COMPLETED'
+  | 'OFFER_MADE'
+  | 'REJECTED'
+  | 'ACCEPTED'
+  | 'PLACED'
+  | 'WITHDRAWN'
+export type FollowUpChannel = 'SMS' | 'USSD' | 'APP' | 'MANUAL'
+export type CheckinStatus = 'PENDING' | 'RESPONDED' | 'MISSED'
+export type AlertSeverity = 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL'
+export type AlertStatus = 'OPEN' | 'IN_PROGRESS' | 'RESOLVED' | 'DISMISSED'
+
+export interface Employer {
+  id: string
+  name: string
+  sector?: string | null
+  nuit?: string | null
+  contact_name?: string | null
+  contact_phone?: string | null
+  contact_email?: string | null
+  location?: string | null
+  ngo_id?: string | null
+  validation_status: EmployerValidationStatus
+  validation_notes?: string | null
+  reviewed_by_code?: string | null
+  validation_reviewed_at?: string | null
+  notes?: string | null
+  is_active: boolean
+  created_at: string
+  updated_at?: string | null
+  jobs?: Array<{
+    id: string
+    title: string
+    status: JobStatus
+    is_active: boolean
+  }>
+  ngo?: {
+    id: string
+    name: string
+  }
+}
+
+export interface EmployerMutationInput {
+  name: string
+  sector?: string
+  nuit?: string
+  contactName?: string
+  contactPhone?: string
+  contactEmail?: string
+  location?: string
+  ngoId?: string
+  validationStatus?: EmployerValidationStatus
+  validationNotes?: string
+  notes?: string
+  isActive?: boolean
+}
+
+export interface Job {
+  id: string
+  title: string
+  description: string
+  location: string
+  required_skills: string
+  contract_type: string
+  schedule?: string | null
+  salary_range?: string | null
+  availability?: string | null
+  work_type?: string | null
+  status: JobStatus
+  validation_notes?: string | null
+  is_active: boolean
+  ngo_id?: string | null
+  employer_id?: string | null
+  created_at: string
+  updated_at?: string | null
+  employer?: {
+    id: string
+    name: string
+    location?: string | null
+    validation_status?: EmployerValidationStatus
+  } | null
+  matching?: {
+    score: number
+    sharedSkills: string[]
+    rationale?: string[]
+  }
+}
+
+export interface JobMutationInput {
+  title: string
+  description: string
+  location: string
+  requiredSkills: string
+  contractType: string
+  schedule?: string
+  salaryRange?: string
+  availability?: string
+  workType?: string
+  status?: JobStatus
+  validationNotes?: string
+  employerId?: string
+  ngoId?: string
+}
+
+export interface JobMatch {
+  id: string
+  job_id: string
+  anonymous_code: string
+  ngo_id?: string | null
+  score: number
+  shared_skills?: string | null
+  rationale?: string | null
+  status: MatchStatus
+  review_type?: string | null
+  ngo_review_notes?: string | null
+  social_review_notes?: string | null
+  rejection_reason?: string | null
+  victim_confirmation_at?: string | null
+  created_at: string
+  updated_at?: string | null
+  job?: {
+    id: string
+    title: string
+    location: string
+    status: JobStatus
+  }
+  user?: {
+    anonymous_code: string
+    ngo_id?: string | null
+    location?: string | null
+    initial_skills?: string | null
+  }
+  applications?: Array<{
+    id: number
+    status: ApplicationStatus
+    applied_at: string
+  }>
+}
+
+export interface JobApplication {
+  id: number
+  job_id: string
+  anonymous_code: string
+  job_match_id?: string | null
+  ngo_id?: string | null
+  status: ApplicationStatus
+  score: number
+  notes?: string | null
+  transition_notes?: string | null
+  last_transition_by_code?: string | null
+  applied_at: string
+  submitted_at?: string | null
+  interview_scheduled_at?: string | null
+  interview_completed_at?: string | null
+  offer_made_at?: string | null
+  accepted_at?: string | null
+  placed_at?: string | null
+  withdrawn_at?: string | null
+  rejected_at?: string | null
+  updated_at?: string | null
+  job?: {
+    id: string
+    title: string
+    location: string
+  }
+  user?: {
+    anonymous_code: string
+    ngo_id?: string | null
+    location?: string | null
+  }
+  job_match?: {
+    id: string
+    status: MatchStatus
+    score: number
+  } | null
+}
+
+export interface FollowUpCheckin {
+  id: string
+  job_application_id: number
+  anonymous_code: string
+  ngo_id?: string | null
+  period_label: string
+  channel: FollowUpChannel
+  prompt?: string | null
+  response?: string | null
+  response_code?: string | null
+  status: CheckinStatus
+  risk_severity: AlertSeverity
+  due_at: string
+  responded_at?: string | null
+  created_at: string
+  updated_at?: string | null
+  job_application?: {
+    id: number
+    status: ApplicationStatus
+    job?: {
+      id: string
+      title: string
+    }
+  }
+}
+
+export interface Alert {
+  id: string
+  anonymous_code: string
+  ngo_id?: string | null
+  job_application_id?: number | null
+  checkin_id?: string | null
+  type: string
+  severity: AlertSeverity
+  source: string
+  status: AlertStatus
+  owner_code?: string | null
+  resolution_notes?: string | null
+  created_at: string
+  updated_at?: string | null
+  resolved_at?: string | null
+  job_application?: {
+    id: number
+    status: ApplicationStatus
+  } | null
+  checkin?: {
+    id: string
+    period_label: string
+    status: CheckinStatus
+  } | null
 }
 
 export { ApiError }

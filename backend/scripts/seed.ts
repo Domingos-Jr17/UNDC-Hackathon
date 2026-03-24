@@ -112,18 +112,24 @@ async function seedBaseData(): Promise<void> {
       {
         id: 'emp-001',
         name: 'Textil Maputo Lda',
+        sector: 'Textil',
         location: 'Maputo',
         contact_name: 'RH 01',
         contact_phone: '+258821000001',
-        contact_email: 'rh@textilmaputo.co.mz'
+        contact_email: 'rh@textilmaputo.co.mz',
+        ngo_id: 'ngo-001',
+        validation_status: 'VALIDATED'
       },
       {
         id: 'emp-002',
         name: 'Sabores do Sul',
+        sector: 'Alimentacao',
         location: 'Matola',
         contact_name: 'RH 02',
         contact_phone: '+258821000002',
-        contact_email: 'rh@saboresdosul.co.mz'
+        contact_email: 'rh@saboresdosul.co.mz',
+        ngo_id: 'ngo-001',
+        validation_status: 'VALIDATED'
       }
     ],
     skipDuplicates: true
@@ -236,7 +242,7 @@ async function seedCertificates(): Promise<void> {
       course_id: 'costura',
       course_title: 'Costura Avançada',
       verification_code: 'WIRA-V0031-COSTURA-2026-001',
-      qr_code: 'https://verify.wira.org/WIRA-V0031-COSTURA-2026-001',
+      qr_code: `${resolveSeedPublicBaseUrl()}/api/certificates/verify/WIRA-V0031-COSTURA-2026-001`,
       instructor: 'Mentora Técnica 1',
       institution: 'WIRA Academy',
       score: 88,
@@ -260,6 +266,7 @@ async function seedJobs(): Promise<void> {
         contract_type: 'FULL_TIME',
         schedule: '08:00-17:00',
         salary_range: '11.000-15.000 MZN',
+        status: 'OPEN',
         ngo_id: 'ngo-001',
         employer_id: 'emp-001'
       },
@@ -272,6 +279,7 @@ async function seedJobs(): Promise<void> {
         contract_type: 'FULL_TIME',
         schedule: '07:00-16:00',
         salary_range: '10.500-13.000 MZN',
+        status: 'OPEN',
         ngo_id: 'ngo-001',
         employer_id: 'emp-002'
       }

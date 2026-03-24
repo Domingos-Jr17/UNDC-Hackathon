@@ -6,6 +6,7 @@ interface ImportMetaEnv {
   readonly VITE_APP_VERSION: string
   readonly VITE_DEV_MODE: string
   readonly VITE_DEBUG: string
+  readonly VITE_FOLLOW_UP_ALERTS_PHASE2_ENABLED?: string
 }
 
 interface ImportMeta {

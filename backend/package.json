@@ -16,7 +16,7 @@
         "build:watch": "tsc -p tsconfig.build.json --watch",
         "clean": "rimraf dist",
         "prebuild": "npm run clean",
-        "postbuild": "cp -r src/data dist/ && cp -r src/logs dist/ && cp .env dist/ || true",
+        "postbuild": "node scripts/postbuild.js",
         "pretest": "npm run prisma:generate",
         "test": "jest",
         "test:watch": "jest --watch",

@@ -3,7 +3,7 @@ import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import { RouteProp } from '@react-navigation/native'
 import { RootStackParamList } from '../types/navigation'
-import apiService, { QuizQuestion } from '../services/api'
+import apiService, { QuizQuestion, QuizSubmissionResult } from '../services/api'
 import sessionService from '../services/session'
 import { showAlert } from '../utils/alerts'
 
@@ -19,20 +19,10 @@ interface QuizResult {
   score: number
   correct: number
   passed: boolean
+  reviews?: QuizSubmissionResult['reviews']
 }
 
 const PASSING_SCORE = 70
-
-const normalizeAnswerIndex = (question: QuizQuestion): number => {
-  const optionsLength = question.options.length
-  if (question.correctAnswer >= 0 && question.correctAnswer < optionsLength) {
-    return question.correctAnswer
-  }
-  if (question.correctAnswer >= 1 && question.correctAnswer <= optionsLength) {
-    return question.correctAnswer - 1
-  }
-  return 0
-}
 
 export default function QuizScreen({ route, navigation }: QuizScreenProps) {
   const { courseId, moduleId } = route.params
@@ -93,12 +83,9 @@ export default function QuizScreen({ route, navigation }: QuizScreenProps) {
 
     const modulesCount = progressItem?.modulesCount ?? completed.size
     const percentage = Math.min(100, Math.round((completed.size / modulesCount) * 100))
-    const completedNumbers = [...completed].map(value => Number(value)).filter(value => !Number.isNaN(value))
-    const currentModule = completedNumbers.length > 0 ? Math.max(...completedNumbers) : 1
     const quizAttempts = (courseProgress?.quiz_attempts ?? 0) + 1
 
     await apiService.updateProgress(userCode, courseId, [...completed], percentage, {
-      currentModule,
       quizAttempts,
       lastQuizScore: score
     })
@@ -118,21 +105,16 @@ export default function QuizScreen({ route, navigation }: QuizScreenProps) {
       return
     }
 
-    const correct = questions.reduce((acc, question, index) => {
-      const expected = normalizeAnswerIndex(question)
-      return answers[index] === expected ? acc + 1 : acc
-    }, 0)
-
-    const score = Math.round((correct / questions.length) * 100)
-
     try {
       setSubmitting(true)
-      await persistProgress(score)
+      const submission = await apiService.submitQuiz(userCode, courseId, answers)
+      await persistProgress(submission.score)
       setHasSubmitted(true)
       setResult({
-        score,
-        correct,
-        passed: score >= PASSING_SCORE
+        score: submission.score,
+        correct: submission.correctAnswers,
+        passed: submission.passed,
+        reviews: submission.reviews
       })
     } catch (error) {
       setHasSubmitted(false)
@@ -245,9 +227,10 @@ export default function QuizScreen({ route, navigation }: QuizScreenProps) {
             </Text>
 
             {questions.map((item, index) => {
-              const expected = normalizeAnswerIndex(item)
-              const selected = answers[index] ?? -1
-              const isCorrect = selected === expected
+              const review = result.reviews?.[index]
+              const expected = review?.correctIndex ?? 0
+              const selected = review?.selectedIndex ?? answers[index] ?? -1
+              const isCorrect = review?.isCorrect ?? false
               const selectedOption = selected >= 0 && selected < item.options.length ? item.options[selected] : undefined
               const expectedOption = item.options[expected] ?? ''
               return (
@@ -261,8 +244,8 @@ export default function QuizScreen({ route, navigation }: QuizScreenProps) {
                   <Text style={styles.explanationMeta}>
                     Correta: {String.fromCharCode(65 + expected)}. {expectedOption}
                   </Text>
-                  {item.explanation ? (
-                    <Text style={styles.explanationText}>Explicacao: {item.explanation}</Text>
+                  {(review?.explanation || item.explanation) ? (
+                    <Text style={styles.explanationText}>Explicacao: {review?.explanation ?? item.explanation}</Text>
                   ) : null}
                 </View>
               )

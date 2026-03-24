@@ -1,16 +1,21 @@
 ﻿import React, { useEffect, useMemo, useState } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
 import {
+  AlertTriangle,
   BookOpen,
+  BriefcaseBusiness,
+  Building2,
   FileText,
   LayoutDashboard,
   Menu,
   Settings,
+  ShieldCheck,
   UserCheck,
   Users,
   X
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { isFollowUpAlertsPhase2Enabled } from '@/config/features'
 import { cn } from '@/lib/utils'
 
 interface SidebarItem {
@@ -20,6 +25,7 @@ interface SidebarItem {
   path: string
   description: string
   group: 'core' | 'support'
+  enabled?: boolean
 }
 
 const sidebarItems: SidebarItem[] = [
@@ -56,11 +62,61 @@ const sidebarItems: SidebarItem[] = [
     group: 'core'
   },
   {
+    id: 'employers',
+    label: 'Empregadores',
+    icon: Building2,
+    path: '/employers',
+    description: 'Parceiros e validação ética.',
+    group: 'core'
+  },
+  {
+    id: 'jobs',
+    label: 'Vagas',
+    icon: BriefcaseBusiness,
+    path: '/jobs',
+    description: 'Criação, estados e shortlist.',
+    group: 'core'
+  },
+  {
+    id: 'matches',
+    label: 'Matches',
+    icon: ShieldCheck,
+    path: '/matches',
+    description: 'Revisão ONG, social e confirmação.',
+    group: 'core'
+  },
+  {
+    id: 'follow-up',
+    label: 'Acompanhamento',
+    icon: UserCheck,
+    path: '/follow-up',
+    description: 'Check-ins e SMS operacional.',
+    group: 'core',
+    enabled: isFollowUpAlertsPhase2Enabled
+  },
+  {
+    id: 'alerts',
+    label: 'Alertas',
+    icon: AlertTriangle,
+    path: '/alerts',
+    description: 'Fila de risco e resolução.',
+    group: 'core',
+    enabled: isFollowUpAlertsPhase2Enabled
+  },
+  {
     id: 'reports',
     label: 'Relatórios',
     icon: FileText,
     path: '/reports',
     description: 'Exportações e indicadores institucionais.',
+    group: 'support'
+  },
+  {
+    id: 'monitor-progress',
+    label: 'Monitorização',
+    icon: Users,
+    path: '/monitor-progress',
+    description: 'Vista dedicada ao progresso.',
     group: 'support'
   },
   {
@@ -92,8 +148,8 @@ export default function Sidebar({
   }, [location.pathname, onMobileOpenChange])
 
   const groupedItems = useMemo(() => ({
-    core: sidebarItems.filter(item => item.group === 'core'),
-    support: sidebarItems.filter(item => item.group === 'support')
+    core: sidebarItems.filter(item => item.group === 'core' && item.enabled !== false),
+    support: sidebarItems.filter(item => item.group === 'support' && item.enabled !== false)
   }), [])
 
   const renderItems = (items: SidebarItem[]) => (

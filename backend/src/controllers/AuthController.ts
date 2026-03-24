@@ -31,6 +31,18 @@ class AuthController {
         });
         return;
       }
+
+      if (user.is_active === false) {
+        logger.warn('Login attempt on inactive account', {
+          anonymousCode: normalizedCode,
+          ip: req.ip
+        });
+        res.status(403).json({
+          error: 'Conta inactiva. Contacte a sua ONG de referência.'
+        });
+        return;
+      }
+
       // Check if account is locked
       if (user.locked_until && new Date(user.locked_until) > new Date()) {
         logger.warn('Login attempt on locked account', {
@@ -69,17 +81,23 @@ class AuthController {
       );
 
       // Do not block login response on secondary account housekeeping.
-      void UserModel.resetLoginAttempts(normalizedCode).catch((resetError: Error) => {
+      void Promise.resolve(UserModel.resetLoginAttempts(normalizedCode)).catch((resetError: Error) => {
         logger.warn('Failed to reset login attempts after login', {
           anonymousCode: normalizedCode,
           error: resetError.message
+        });
+      });
+      void Promise.resolve(UserModel.updateLastLogin(normalizedCode)).catch((updateError: Error) => {
+        logger.warn('Failed to update last login after victim login', {
+          anonymousCode: normalizedCode,
+          error: updateError.message
         });
       });
 
       // Remove sensitive data from response
       const safeUser = {
         anonymousCode: user.anonymous_code,
-        ngoId: user.ngo_id,
+        ngoId: user.ngo_id ?? '',
         role: user.role,
         createdAt: user.created_at
       };
@@ -174,7 +192,7 @@ class AuthController {
       );
 
       // Avoid blocking staff login on secondary bookkeeping work.
-      void UserModel.updateLastLogin(user.anonymous_code).catch((updateError: Error) => {
+      void Promise.resolve(UserModel.updateLastLogin(user.anonymous_code)).catch((updateError: Error) => {
         logger.warn('Failed to update last login after staff login', {
           anonymousCode: user.anonymous_code,
           error: updateError.message
@@ -184,7 +202,7 @@ class AuthController {
       // Remove sensitive data from response
       const safeUser = {
         anonymousCode: user.anonymous_code,
-        ngoId: user.ngo_id,
+        ngoId: user.ngo_id ?? '',
         role: user.role,
         createdAt: user.created_at
       };
@@ -245,6 +263,14 @@ class AuthController {
 
       const decoded = jwt.verify(token, jwtSecret) as JWTayload;
 
+      const user = await UserModel.findByAnonymousCode(decoded.anonymousCode)
+      if (!user || user.is_active === false) {
+        res.status(401).json({
+          error: 'Sessão inválida para esta conta'
+        })
+        return
+      }
+
       logger.info('Token validation successful', {
         anonymousCode: decoded.anonymousCode,
         sessionId: decoded.sessionId
@@ -255,7 +281,11 @@ class AuthController {
         valid: true,
         user: {
           anonymousCode: decoded.anonymousCode,
-          ngoId: decoded.ngoId
+          ngoId: decoded.ngoId ?? user.ngo_id ?? '',
+          role: decoded.role ?? user.role,
+          ...(decoded.email ? { email: decoded.email } : {}),
+          ...(user.real_name ? { realName: user.real_name } : {}),
+          createdAt: user.created_at
         }
       });
     } catch (error) {

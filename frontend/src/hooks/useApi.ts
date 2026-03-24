@@ -1,6 +1,21 @@
 import { useCallback, useEffect, useState } from 'react'
 import { toast } from 'sonner'
-import { apiService, ApiError, User, DashboardStats, Activity, Course, CourseModule } from '../services/api'
+import {
+  apiService,
+  ApiError,
+  User,
+  DashboardStats,
+  Activity,
+  Course,
+  CourseModule,
+  UsersPageResult,
+  Employer,
+  Job,
+  JobMatch,
+  JobApplication,
+  FollowUpCheckin,
+  Alert
+} from '../services/api'
 
 interface UseApiOptions {
   dependencies?: unknown[]
@@ -222,21 +237,34 @@ export function useAuth() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const raw = localStorage.getItem('wira_user')
-    if (!raw) {
-      setLoading(false)
-      return
+    const bootstrapAuth = async (): Promise<void> => {
+      const rawUser = localStorage.getItem('wira_user')
+      const rawToken = localStorage.getItem('wira_token')
+
+      if (!rawUser || !rawToken) {
+        localStorage.removeItem('wira_user')
+        localStorage.removeItem('wira_token')
+        setLoading(false)
+        return
+      }
+
+      try {
+        const payload = await apiService.validateSession()
+        const mapped = toFrontendUser(payload.user)
+        setUser(mapped)
+        setIsAuthenticated(true)
+        localStorage.setItem('wira_user', JSON.stringify(mapped))
+      } catch {
+        localStorage.removeItem('wira_user')
+        localStorage.removeItem('wira_token')
+        setUser(null)
+        setIsAuthenticated(false)
+      } finally {
+        setLoading(false)
+      }
     }
 
-    try {
-      const parsed = JSON.parse(raw) as User
-      setUser(parsed)
-      setIsAuthenticated(true)
-    } catch {
-      localStorage.removeItem('wira_user')
-    } finally {
-      setLoading(false)
-    }
+    void bootstrapAuth()
   }, [])
 
   const login = useCallback(async (code: string): Promise<boolean> => {
@@ -278,8 +306,13 @@ export function useAuth() {
     }
   }, [])
 
-  const logout = useCallback(() => {
+  const logout = useCallback(async () => {
     invalidateApiCache()
+    try {
+      await apiService.logout()
+    } catch {
+      // Session cleanup must continue even if logout fails server-side.
+    }
     localStorage.removeItem('wira_user')
     localStorage.removeItem('wira_token')
     setUser(null)
@@ -309,12 +342,18 @@ export function useRecentActivity() {
   })
 }
 
-export function useUsers(filters?: { status?: string }) {
-  return useApi<User[]>(
-    `users:${filters?.status ?? 'all'}`,
+export function useUsers(filters?: {
+  status?: string
+  page?: number
+  pageSize?: number
+  search?: string
+  ngoId?: string
+}) {
+  return useApi<UsersPageResult>(
+    `users:${filters?.status ?? 'all'}:${filters?.page ?? 1}:${filters?.pageSize ?? 50}:${filters?.search ?? ''}:${filters?.ngoId ?? ''}`,
     () => apiService.getUsers(filters),
     {
-      dependencies: [filters?.status],
+      dependencies: [filters?.status, filters?.page, filters?.pageSize, filters?.search, filters?.ngoId],
       staleTime: 60_000
     }
   )
@@ -352,6 +391,10 @@ export function useCourseModules(courseId: string) {
 
 export function useUserActivation() {
   const [loading, setLoading] = useState(false)
+  const toIsoDate = (value: string): string => {
+    const [day, month, year] = value.split('/')
+    return new Date(Date.UTC(Number(year), Number(month) - 1, Number(day))).toISOString()
+  }
 
   const activateUser = useCallback(async (userData: {
     realName: string
@@ -359,10 +402,15 @@ export function useUserActivation() {
     dateOfBirth: string
     initialSkills?: string
     phone?: string
+    location?: string
   }) => {
     setLoading(true)
     try {
-      const user = await apiService.activateUser(userData)
+      const payload = {
+        ...userData,
+        dateOfBirth: toIsoDate(userData.dateOfBirth)
+      }
+      const user = await apiService.activateUser(payload)
       invalidateApiCache(cacheKey =>
         cacheKey === 'dashboard-stats' ||
         cacheKey === 'recent-activity' ||
@@ -424,4 +472,70 @@ export function useApiHealth() {
     lastCheck: state.updatedAt ? new Date(state.updatedAt) : null,
     checkHealth: state.refetch
   }
+}
+
+export function useEmployers(filters?: { status?: string; ngoId?: string; active?: boolean }) {
+  return useApi<Employer[]>(
+    `employers:${filters?.status ?? 'all'}:${filters?.ngoId ?? ''}:${filters?.active ?? 'all'}`,
+    () => apiService.getEmployers(filters),
+    {
+      dependencies: [filters?.status, filters?.ngoId, filters?.active],
+      staleTime: 60_000
+    }
+  )
+}
+
+export function useJobsAdmin(filters?: { status?: string; ngoId?: string; employerId?: string; location?: string }) {
+  return useApi<Job[]>(
+    `jobs-admin:${filters?.status ?? 'all'}:${filters?.ngoId ?? ''}:${filters?.employerId ?? ''}:${filters?.location ?? ''}`,
+    () => apiService.getJobsAdmin(filters),
+    {
+      dependencies: [filters?.status, filters?.ngoId, filters?.employerId, filters?.location],
+      staleTime: 60_000
+    }
+  )
+}
+
+export function useMatches(filters?: { jobId?: string; anonymousCode?: string; status?: string }) {
+  return useApi<JobMatch[]>(
+    `matches:${filters?.jobId ?? ''}:${filters?.anonymousCode ?? ''}:${filters?.status ?? 'all'}`,
+    () => apiService.getMatches(filters),
+    {
+      dependencies: [filters?.jobId, filters?.anonymousCode, filters?.status],
+      staleTime: 45_000
+    }
+  )
+}
+
+export function useApplications(filters?: { status?: string; jobId?: string; anonymousCode?: string }) {
+  return useApi<JobApplication[]>(
+    `applications:${filters?.status ?? 'all'}:${filters?.jobId ?? ''}:${filters?.anonymousCode ?? ''}`,
+    () => apiService.getApplications(filters),
+    {
+      dependencies: [filters?.status, filters?.jobId, filters?.anonymousCode],
+      staleTime: 45_000
+    }
+  )
+}
+
+export function useCheckins(filters?: { status?: string; channel?: string; jobApplicationId?: number; anonymousCode?: string }) {
+  return useApi<FollowUpCheckin[]>(
+    `checkins:${filters?.status ?? 'all'}:${filters?.channel ?? 'all'}:${filters?.jobApplicationId ?? ''}:${filters?.anonymousCode ?? ''}`,
+    () => apiService.getCheckins(filters),
+    {
+      dependencies: [filters?.status, filters?.channel, filters?.jobApplicationId, filters?.anonymousCode],
+      staleTime: 45_000
+    }
+  )
+}
+
+export function useAlerts(filters?: { status?: string; severity?: string; ngoId?: string; anonymousCode?: string }) {
+  return useApi<Alert[]>(
+    `alerts:${filters?.status ?? 'all'}:${filters?.severity ?? 'all'}:${filters?.ngoId ?? ''}:${filters?.anonymousCode ?? ''}`,
+    () => apiService.getAlerts(filters),
+    {
+      dependencies: [filters?.status, filters?.severity, filters?.ngoId, filters?.anonymousCode],
+      staleTime: 45_000
+    }
+  )
 }

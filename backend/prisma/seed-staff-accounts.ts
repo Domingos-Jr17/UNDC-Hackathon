@@ -10,7 +10,7 @@ const STAFF_ACCOUNTS = [
     password: 'admin123',
     role: 'ADMIN',
     real_name: 'Administrador WIRA',
-    ngo_id: 'ONG-001',
+    ngo_id: 'ngo-001',
     phone: '+25882123456789'
   },
   {
@@ -19,7 +19,7 @@ const STAFF_ACCOUNTS = [
     password: 'staff123',
     role: 'STAFF',
     real_name: 'Equipa A',
-    ngo_id: 'ONG-001',
+    ngo_id: 'ngo-001',
     phone: '+25882123456780'
   },
   {
@@ -28,7 +28,7 @@ const STAFF_ACCOUNTS = [
     password: 'joao123',
     role: 'STAFF',
     real_name: 'Equipa B',
-    ngo_id: 'ONG-002',
+    ngo_id: 'ngo-002',
     phone: '+25882123456781'
   },
   {
@@ -37,14 +37,14 @@ const STAFF_ACCOUNTS = [
     password: 'ana123',
     role: 'STAFF',
     real_name: 'Equipa C',
-    ngo_id: 'ONG-001',
+    ngo_id: 'ngo-001',
     phone: '+25882123456782'
   }
 ];
 
 const NGOS = [
   {
-    id: 'ONG-001',
+    id: 'ngo-001',
     name: 'Centro de Acolhimento Maputo',
     contact_person: 'Contacto A',
     phone: '+25882123456789',
@@ -53,7 +53,7 @@ const NGOS = [
     license_number: 'ONG-2025-001'
   },
   {
-    id: 'ONG-002',
+    id: 'ngo-002',
     name: 'Projeto Esperança',
     contact_person: 'Contacto B',
     phone: '+25882123456790',

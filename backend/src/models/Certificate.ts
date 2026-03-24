@@ -45,7 +45,8 @@ class CertificateModel {
       const certificate = await prisma.certificate.findFirst({
         where: {
           anonymous_code: anonymousCode,
-          course_id: courseId
+          course_id: courseId,
+          revoked: false
         }
       });
 
@@ -81,8 +82,26 @@ class CertificateModel {
 
   static async create(certificateData: Partial<CertificateInterface>): Promise<CertificateInterface> {
     try {
-      const certificate = await prisma.certificate.create({
-        data: {
+      const certificate = await prisma.certificate.upsert({
+        where: {
+          anonymous_code_course_id: {
+            anonymous_code: certificateData.anonymous_code!,
+            course_id: certificateData.course_id!
+          }
+        },
+        update: {
+          course_title: certificateData.course_title!,
+          verification_code: certificateData.verification_code!,
+          qr_code: certificateData.qr_code!,
+          instructor: certificateData.instructor || null,
+          institution: certificateData.institution || null,
+          score: certificateData.score!,
+          max_score: certificateData.max_score ?? 100,
+          verified: certificateData.verified ?? false,
+          revoked: false,
+          revocation_reason: null
+        },
+        create: {
           id: certificateData.id ?? `cert-${Date.now()}`,
           anonymous_code: certificateData.anonymous_code!,
           course_id: certificateData.course_id!,
@@ -127,7 +146,7 @@ class CertificateModel {
     }
   }
 
-  static async verify(verificationCode: string): Promise<{ valid: boolean; certificate?: CertificateInterface }> {
+  static async verify(verificationCode: string, verificationIp?: string): Promise<{ valid: boolean; certificate?: CertificateInterface }> {
     try {
       const certificate = await prisma.certificate.findUnique({
         where: { verification_code: verificationCode }
@@ -138,36 +157,36 @@ class CertificateModel {
       }
 
       // Update verification info
-      await prisma.certificate.update({
+      const updatedCertificate = await prisma.certificate.update({
         where: { verification_code: verificationCode },
         data: {
           verified: true,
           verification_date: new Date(),
-          verification_ip: '127.0.0.1' // Would use actual IP in production
+          verification_ip: verificationIp ?? null
         }
       });
 
       const result: CertificateInterface = {
-        id: certificate.id,
-        anonymous_code: certificate.anonymous_code,
-        course_id: certificate.course_id,
-        course_title: certificate.course_title,
-        issue_date: certificate.issue_date.toISOString(),
-        verification_code: certificate.verification_code,
-        qr_code: certificate.qr_code,
-        score: certificate.score,
-        max_score: certificate.max_score,
-        verified: certificate.verified,
-        revoked: certificate.revoked,
-        created_at: certificate.created_at.toISOString()
+        id: updatedCertificate.id,
+        anonymous_code: updatedCertificate.anonymous_code,
+        course_id: updatedCertificate.course_id,
+        course_title: updatedCertificate.course_title,
+        issue_date: updatedCertificate.issue_date.toISOString(),
+        verification_code: updatedCertificate.verification_code,
+        qr_code: updatedCertificate.qr_code,
+        score: updatedCertificate.score,
+        max_score: updatedCertificate.max_score,
+        verified: updatedCertificate.verified,
+        revoked: updatedCertificate.revoked,
+        created_at: updatedCertificate.created_at.toISOString()
       };
 
       // Add optional fields only if they exist
-      if (certificate.instructor) result.instructor = certificate.instructor;
-      if (certificate.institution) result.institution = certificate.institution;
-      if (certificate.verification_date) result.verification_date = certificate.verification_date.toISOString();
-      if (certificate.revocation_reason) result.revocation_reason = certificate.revocation_reason;
-      if (certificate.verification_ip) result.verification_ip = certificate.verification_ip;
+      if (updatedCertificate.instructor) result.instructor = updatedCertificate.instructor;
+      if (updatedCertificate.institution) result.institution = updatedCertificate.institution;
+      if (updatedCertificate.verification_date) result.verification_date = updatedCertificate.verification_date.toISOString();
+      if (updatedCertificate.revocation_reason) result.revocation_reason = updatedCertificate.revocation_reason;
+      if (updatedCertificate.verification_ip) result.verification_ip = updatedCertificate.verification_ip;
 
       return {
         valid: true,
@@ -184,7 +203,8 @@ class CertificateModel {
         where: { verification_code: verificationCode },
         data: {
           revoked: true,
-          revocation_reason: reason
+          revocation_reason: reason,
+          verification_date: new Date()
         }
       });
     } catch (error) {

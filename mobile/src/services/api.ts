@@ -238,6 +238,25 @@ export interface QuizQuestion {
   explanation: string
 }
 
+export interface QuizReview {
+  questionId: number
+  question: string
+  selectedIndex: number
+  correctIndex: number
+  isCorrect: boolean
+  explanation: string
+}
+
+export interface QuizSubmissionResult {
+  courseId: string
+  anonymousCode: string
+  totalQuestions: number
+  correctAnswers: number
+  score: number
+  passed: boolean
+  reviews: QuizReview[]
+}
+
 export interface ProgressCourse {
   courseId: string
   title: string
@@ -442,10 +461,10 @@ const fetchWithBaseUrlFallback = async (path: string, init: RequestInit): Promis
   }
 
   const attempted = candidates.join(', ')
-    throw new Error(
-      `Não foi possível conectar ao backend (${attempted}). Inicie a API e confira EXPO_PUBLIC_API_BASE_URL. ` +
-      `Detalhe: ${lastNetworkError?.message ?? 'erro de rede'}`
-    )
+  throw new Error(
+    `Não foi possível conectar ao backend (${attempted}). Inicie a API e confira EXPO_PUBLIC_API_BASE_URL. ` +
+    `Detalhe: ${lastNetworkError?.message ?? 'erro de rede'}`
+  )
 }
 
 const parseJson = async <T>(response: Response): Promise<T> => {
@@ -549,6 +568,16 @@ class ApiService {
       },
       false
     )
+  }
+
+  async logout(): Promise<void> {
+    try {
+      await this.request<{ success: boolean }>('/api/auth/logout', {
+        method: 'DELETE'
+      })
+    } finally {
+      await sessionService.clearSession()
+    }
   }
 
   async getCourses(): Promise<CourseItem[]> {
@@ -685,6 +714,18 @@ class ApiService {
     })
     await invalidateCache(`certificates:${userCode}`)
     return payload
+  }
+
+  async submitQuiz(anonymousCode: string, courseId: string, answers: number[]): Promise<QuizSubmissionResult> {
+    const response = await this.request<{ success: boolean; result: QuizSubmissionResult }>('/api/quizzes/submit', {
+      method: 'POST',
+      body: JSON.stringify({
+        anonymousCode,
+        courseId,
+        answers
+      })
+    })
+    return response.result
   }
 
   async getJobs(): Promise<JobRecord[]> {

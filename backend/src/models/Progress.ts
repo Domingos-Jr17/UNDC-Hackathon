@@ -104,13 +104,32 @@ class ProgressModel {
     quizAttempts?: number,
     lastQuizScore?: number
   ): Promise<Progress> {
+    const course = await prisma.course.findUnique({
+      where: { id: courseId },
+      select: { modules_count: true }
+    })
     const completedModulesStr = JSON.stringify(moduleIds)
+    const completedNumbers = moduleIds
+      .map(value => Number(value))
+      .filter(value => Number.isInteger(value) && value > 0)
+      .sort((left, right) => left - right)
+    const modulesCount = course?.modules_count ?? Math.max(completedNumbers.length, currentModule ?? 1)
+    const nextPendingModule = (() => {
+      for (let index = 1; index <= modulesCount; index += 1) {
+        if (!completedNumbers.includes(index)) {
+          return index
+        }
+      }
+      return modulesCount
+    })()
+
     const payload: Partial<Progress> = {
       completed_modules: completedModulesStr,
-      percentage
+      percentage,
+      current_module: percentage >= 100 ? modulesCount : nextPendingModule
     }
 
-    if (currentModule !== undefined) {
+    if (currentModule !== undefined && !payload.current_module) {
       payload.current_module = currentModule
     }
 
