@@ -1,4 +1,4 @@
-﻿import sqlite3 from 'sqlite3'
+import sqlite3 from 'sqlite3'
 import path from 'path'
 import fs from 'fs'
 import winston from 'winston'
@@ -44,29 +44,61 @@ const logger = winston.createLogger({
   ]
 })
 
-// Initialize database connection with security settings
-const db = new sqlite3.Database(DB_PATH, (err) => {
-  if (err) {
-    logger.error('Database connection error', {
-      error: err.message,
-      path: DB_PATH
-    })
-  } else {
-    logger.info('Database connected successfully', {
-      path: DB_PATH,
-      environment: process.env.NODE_ENV
-    })
-    initializeDatabase()
+// Determine whether to use local SQLite or rely on Supabase/PostgreSQL
+const shouldUseLocalDatabase = (): boolean => {
+  if (process.env.USE_LOCAL_DATABASE === 'true') {
+    return true
   }
-})
+  if (process.env.USE_LOCAL_DATABASE === 'false') {
+    return false
+  }
+  const hasSupabaseUrl = Boolean(process.env.DATABASE_URL?.includes('supabase'))
+  return !hasSupabaseUrl
+}
 
-// Enable foreign keys and WAL mode for better performance
-db.configure('busyTimeout', 10000)
-db.run('PRAGMA foreign_keys = ON')
-db.run('PRAGMA journal_mode = WAL')
+const useLocalDb = shouldUseLocalDatabase()
+
+if (!useLocalDb) {
+  logger.info('Supabase/PostgreSQL detected - skipping local SQLite initialization', {
+    databaseUrl: process.env.DATABASE_URL?.replace(/:[^:]+@/, ':****@')
+  })
+  logger.info('Using Supabase/PostgreSQL as primary database - local SQLite disabled', {
+    environment: process.env.NODE_ENV
+  })
+}
+
+// Database instance - null when using Supabase
+let db: sqlite3.Database | null = null
+
+if (useLocalDb) {
+  db = new sqlite3.Database(DB_PATH, (err) => {
+    if (err) {
+      logger.error('Database connection error', {
+        error: err.message,
+        path: DB_PATH
+      })
+    } else {
+      logger.info('Local SQLite database connected successfully', {
+        path: DB_PATH,
+        environment: process.env.NODE_ENV
+      })
+
+      db!.configure('busyTimeout', 10000)
+      db!.run('PRAGMA foreign_keys = ON')
+      db!.run('PRAGMA journal_mode = WAL')
+
+      initializeDatabase()
+    }
+  })
+}
 
 // Initialize database tables with security considerations
 function initializeDatabase(): void {
+  if (!db) {
+    logger.warn('initializeDatabase called but db is null')
+    return
+  }
+
   logger.info('Initializing database schema')
 
   // Create users table with encrypted fields
@@ -74,9 +106,9 @@ function initializeDatabase(): void {
     CREATE TABLE IF NOT EXISTS users (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       anonymous_code TEXT UNIQUE NOT NULL,
-      real_name TEXT, -- AES-256 encrypted JSON
-      phone TEXT, -- AES-256 encrypted JSON
-      email TEXT, -- AES-256 encrypted JSON
+      real_name TEXT,
+      phone TEXT,
+      email TEXT,
       ngo_id TEXT,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -103,7 +135,7 @@ function initializeDatabase(): void {
       duration_hours INTEGER,
       modules_count INTEGER,
       level TEXT,
-      skills TEXT, -- JSON array
+      skills TEXT,
       is_active BOOLEAN DEFAULT 1,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
@@ -116,13 +148,13 @@ function initializeDatabase(): void {
     }
   })
 
-  // Create progress table with enhanced tracking
+  // Create progress table
   db.run(`
     CREATE TABLE IF NOT EXISTS progress (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       user_code TEXT,
       course_id TEXT,
-      completed_modules TEXT, -- JSON array
+      completed_modules TEXT,
       percentage INTEGER DEFAULT 0,
       current_module INTEGER DEFAULT 1,
       quiz_attempts INTEGER DEFAULT 0,
@@ -141,38 +173,7 @@ function initializeDatabase(): void {
     }
   })
 
-  // Create certificates table with enhanced security
-  db.run(`
-    CREATE TABLE IF NOT EXISTS certificates (
-      id TEXT PRIMARY KEY,
-      anonymous_code TEXT NOT NULL,
-      course_id TEXT NOT NULL,
-      course_title TEXT NOT NULL,
-      issue_date DATETIME DEFAULT CURRENT_TIMESTAMP,
-      verification_code TEXT UNIQUE NOT NULL,
-      qr_code TEXT NOT NULL,
-      instructor TEXT,
-      institution TEXT,
-      score INTEGER NOT NULL,
-      max_score INTEGER DEFAULT 100,
-      verified BOOLEAN DEFAULT 0,
-      verification_date DATETIME,
-      verification_ip TEXT,
-      revoked BOOLEAN DEFAULT 0,
-      revocation_reason TEXT,
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (anonymous_code) REFERENCES users(anonymous_code) ON DELETE CASCADE,
-      FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE
-    )
-  `, (err) => {
-    if (err) {
-      logger.error('Error creating certificates table', { error: err.message })
-    } else {
-      logger.info('Certificates table created successfully')
-    }
-  })
-
-  // Create ngos table
+  // Create NGOs table
   db.run(`
     CREATE TABLE IF NOT EXISTS ngos (
       id TEXT PRIMARY KEY,
@@ -188,13 +189,42 @@ function initializeDatabase(): void {
     )
   `, (err) => {
     if (err) {
-      logger.error('Error creating ngos table', { error: err.message })
+      logger.error('Error creating NGOs table', { error: err.message })
     } else {
       logger.info('NGOs table created successfully')
     }
   })
 
-  // Create audit log table for security
+  // Create certificates table
+  db.run(`
+    CREATE TABLE IF NOT EXISTS certificates (
+      id TEXT PRIMARY KEY,
+      anonymous_code TEXT NOT NULL,
+      course_id TEXT NOT NULL,
+      course_title TEXT NOT NULL,
+      issue_date DATETIME DEFAULT CURRENT_TIMESTAMP,
+      verification_code TEXT UNIQUE NOT NULL,
+      qr_code TEXT,
+      instructor TEXT,
+      institution TEXT,
+      score INTEGER,
+      max_score INTEGER DEFAULT 100,
+      verified BOOLEAN DEFAULT 0,
+      verification_date DATETIME,
+      verification_ip TEXT,
+      revoked BOOLEAN DEFAULT 0,
+      revocation_reason TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `, (err) => {
+    if (err) {
+      logger.error('Error creating certificates table', { error: err.message })
+    } else {
+      logger.info('Certificates table created successfully')
+    }
+  })
+
+  // Create audit logs table
   db.run(`
     CREATE TABLE IF NOT EXISTS audit_logs (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -202,12 +232,11 @@ function initializeDatabase(): void {
       action TEXT NOT NULL,
       table_name TEXT,
       record_id TEXT,
-      old_values TEXT, -- JSON
-      new_values TEXT, -- JSON
+      old_values TEXT,
+      new_values TEXT,
       ip_address TEXT,
       user_agent TEXT,
-      timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (user_code) REFERENCES users(anonymous_code) ON DELETE SET NULL
+      timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
     )
   `, (err) => {
     if (err) {
@@ -217,12 +246,12 @@ function initializeDatabase(): void {
     }
   })
 
-  // Wait a bit for tables to be created, then create indexes
+  // Wait for tables to be created, then create indexes
   setTimeout(() => {
     createIndexes()
     // Insert sample data (only in development)
     if (process.env.NODE_ENV === 'development') {
-      void insertSampleData().catch(error => {
+      void insertSampleData().catch((error) => {
         logger.error('Error inserting sample data for development', {
           error: (error as Error).message
         })
@@ -235,6 +264,8 @@ function initializeDatabase(): void {
 
 // Create database indexes for better performance
 function createIndexes(): void {
+  if (!db) return
+
   const indexes: string[] = [
     'CREATE INDEX IF NOT EXISTS idx_users_anonymous_code ON users(anonymous_code)',
     'CREATE INDEX IF NOT EXISTS idx_users_ngo_id ON users(ngo_id)',
@@ -248,6 +279,7 @@ function createIndexes(): void {
   ]
 
   indexes.forEach((indexSql, i) => {
+    if (!db) return
     db.run(indexSql, (err) => {
       if (err) {
         logger.error(`Error creating index ${i}`, { error: err.message })
@@ -260,11 +292,14 @@ function createIndexes(): void {
 
 // Secure user insertion with encryption
 function insertSecureUser(userData: Partial<User>): Promise<number> {
+  if (!db) {
+    return Promise.reject(new Error('Local database not available'))
+  }
   return new Promise((resolve, reject) => {
     try {
       const encryptedData = encryptionService.encryptUserData(userData)
 
-      db.run(`
+      db!.run(`
         INSERT INTO users (anonymous_code, real_name, phone, email, ngo_id, created_at)
         VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
       `, [
@@ -311,6 +346,11 @@ function logAudit(
     get?: (header: string) => string | undefined;
   } | undefined
 ): void {
+  if (!db) {
+    logger.debug('Audit log skipped - local SQLite disabled', { action, tableName })
+    return
+  }
+
   const auditData = {
     user_code: userCode,
     action,
@@ -333,33 +373,42 @@ function logAudit(
 }
 
 // Database query helpers with proper typing
-function get <T = unknown>(sql: string, params: unknown[] = []): Promise<T | null> {
+function get<T = unknown>(sql: string, params: unknown[] = []): Promise<T | null> {
+  if (!db) {
+    return Promise.resolve(null)
+  }
   return new Promise((resolve, reject) => {
-    db.get(sql, params, (err, row) => {
+    db!.get(sql, params, (err, row) => {
       if (err) {
         reject(err)
       } else {
-        resolve(row as T || null)
+        resolve((row as T) || null)
       }
     })
   })
 }
 
-function all <T = unknown>(sql: string, params: unknown[] = []): Promise<T[]> {
+function all<T = unknown>(sql: string, params: unknown[] = []): Promise<T[]> {
+  if (!db) {
+    return Promise.resolve([])
+  }
   return new Promise((resolve, reject) => {
-    db.all(sql, params, (err, rows) => {
+    db!.all(sql, params, (err, rows) => {
       if (err) {
         reject(err)
       } else {
-        resolve(rows as T[])
+        resolve((rows as T[]) || [])
       }
     })
   })
 }
 
 function run(sql: string, params: unknown[] = []): Promise<sqlite3.RunResult> {
+  if (!db) {
+    return Promise.resolve({} as sqlite3.RunResult)
+  }
   return new Promise((resolve, reject) => {
-    db.run(sql, params, function (err) {
+    db!.run(sql, params, function (err) {
       if (err) {
         reject(err)
       } else {
@@ -371,6 +420,8 @@ function run(sql: string, params: unknown[] = []): Promise<sqlite3.RunResult> {
 
 // Insert sample data for demonstration (development only)
 async function insertSampleData(): Promise<void> {
+  if (!db) return
+
   logger.info('Inserting sample data for development')
 
   // Insert sample NGOs
@@ -486,6 +537,8 @@ async function insertSampleData(): Promise<void> {
 
 // Insert sample progress data for demonstration
 async function insertSampleProgress(): Promise<void> {
+  if (!db) return
+
   logger.info('Inserting sample progress data')
 
   const sampleProgress = [
@@ -554,14 +607,19 @@ async function insertSampleProgress(): Promise<void> {
 // Graceful shutdown
 process.on('SIGINT', () => {
   logger.info('Received SIGINT, closing database connection')
-  db.close((err) => {
-    if (err) {
-      logger.error('Error closing database', { error: err.message })
-    } else {
-      logger.info('Database connection closed')
-    }
+  if (db) {
+    db.close((err) => {
+      if (err) {
+        logger.error('Error closing database', { error: err.message })
+      } else {
+        logger.info('Local SQLite database connection closed')
+      }
+      process.exit(0)
+    })
+  } else {
+    logger.info('No local SQLite database to close (using Supabase)')
     process.exit(0)
-  })
+  }
 })
 
 // Export database instance and utilities
@@ -576,5 +634,3 @@ export {
 }
 
 export default db
-
-
