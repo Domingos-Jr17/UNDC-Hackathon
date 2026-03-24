@@ -1,7 +1,17 @@
 import prismaService from '../services/prisma'
+import { all, get } from '../database'
+import { isDatabaseUnavailableError, logDatabaseFallback } from '../services/databaseFallback'
 import { Course as CourseInterface, CourseModule, QuizQuestion } from '../types'
 
 const prisma = prismaService.getClient()
+
+const toIsoString = (value: Date | string | null | undefined): string | undefined => {
+  if (!value) {
+    return undefined
+  }
+
+  return value instanceof Date ? value.toISOString() : new Date(value).toISOString()
+}
 
 const toCourse = (course: {
   id: string
@@ -13,21 +23,82 @@ const toCourse = (course: {
   level: string
   skills: string | null
   is_active: boolean
-  created_at: Date
-  updated_at: Date | null
-}): CourseInterface => ({
-  id: course.id,
-  title: course.title,
-  duration_hours: course.duration_hours,
-  modules_count: course.modules_count,
-  level: course.level,
-  is_active: course.is_active,
-  created_at: course.created_at.toISOString(),
-  ...(course.description !== null ? { description: course.description } : {}),
-  ...(course.instructor !== null ? { instructor: course.instructor } : {}),
-  ...(course.skills !== null ? { skills: course.skills } : {}),
-  ...(course.updated_at ? { updated_at: course.updated_at.toISOString() } : {})
-})
+  created_at: Date | string
+  updated_at: Date | string | null
+}): CourseInterface => {
+  const createdAt = toIsoString(course.created_at) ?? new Date().toISOString()
+  const updatedAt = toIsoString(course.updated_at)
+
+  return {
+    id: course.id,
+    title: course.title,
+    duration_hours: course.duration_hours,
+    modules_count: course.modules_count,
+    level: course.level,
+    is_active: course.is_active,
+    created_at: createdAt,
+    ...(course.description !== null ? { description: course.description } : {}),
+    ...(course.instructor !== null ? { instructor: course.instructor } : {}),
+    ...(course.skills !== null ? { skills: course.skills } : {}),
+    ...(updatedAt ? { updated_at: updatedAt } : {})
+  }
+}
+
+const getFallbackCourses = async (): Promise<CourseInterface[]> => {
+  const courses = await all<{
+    id: string
+    title: string
+    description: string | null
+    instructor: string | null
+    duration_hours: number
+    modules_count: number
+    level: string
+    skills: string | null
+    is_active: number | boolean
+    created_at: string
+    updated_at: string | null
+  }>(`
+    SELECT id, title, description, instructor, duration_hours, modules_count, level, skills, is_active, created_at, updated_at
+    FROM courses
+    WHERE is_active = 1
+    ORDER BY created_at ASC
+  `)
+
+  return courses.map(course => toCourse({
+    ...course,
+    is_active: Boolean(course.is_active)
+  }))
+}
+
+const getFallbackCourseById = async (id: string): Promise<CourseInterface | null> => {
+  const course = await get<{
+    id: string
+    title: string
+    description: string | null
+    instructor: string | null
+    duration_hours: number
+    modules_count: number
+    level: string
+    skills: string | null
+    is_active: number | boolean
+    created_at: string
+    updated_at: string | null
+  }>(`
+    SELECT id, title, description, instructor, duration_hours, modules_count, level, skills, is_active, created_at, updated_at
+    FROM courses
+    WHERE id = ?
+    LIMIT 1
+  `, [id])
+
+  if (!course) {
+    return null
+  }
+
+  return toCourse({
+    ...course,
+    is_active: Boolean(course.is_active)
+  })
+}
 
 const toCourseModule = (row: {
   module_number: number
@@ -91,24 +162,42 @@ const toQuizQuestion = (row: {
 
 class CourseModel {
   static async findAll(): Promise<CourseInterface[]> {
-    const courses = await prisma.course.findMany({
-      where: { is_active: true },
-      orderBy: { created_at: 'asc' }
-    })
+    try {
+      const courses = await prisma.course.findMany({
+        where: { is_active: true },
+        orderBy: { created_at: 'asc' }
+      })
 
-    return courses.map(toCourse)
+      return courses.map(toCourse)
+    } catch (error) {
+      if (!isDatabaseUnavailableError(error)) {
+        throw error
+      }
+
+      logDatabaseFallback('courses.findAll', error)
+      return getFallbackCourses()
+    }
   }
 
   static async findById(id: string): Promise<CourseInterface | null> {
-    const course = await prisma.course.findUnique({
-      where: { id }
-    })
+    try {
+      const course = await prisma.course.findUnique({
+        where: { id }
+      })
 
-    if (!course) {
-      return null
+      if (!course) {
+        return null
+      }
+
+      return toCourse(course)
+    } catch (error) {
+      if (!isDatabaseUnavailableError(error)) {
+        throw error
+      }
+
+      logDatabaseFallback(`courses.findById:${id}`, error)
+      return getFallbackCourseById(id)
     }
-
-    return toCourse(course)
   }
 
   static async findModulesByCourseId(courseId: string): Promise<CourseModule[]> {

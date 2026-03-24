@@ -222,7 +222,11 @@ function initializeDatabase(): void {
     createIndexes()
     // Insert sample data (only in development)
     if (process.env.NODE_ENV === 'development') {
-      insertSampleData()
+      void insertSampleData().catch(error => {
+        logger.error('Error inserting sample data for development', {
+          error: (error as Error).message
+        })
+      })
     } else {
       logger.info('Skipping sample data insertion in production')
     }
@@ -366,7 +370,7 @@ function run(sql: string, params: unknown[] = []): Promise<sqlite3.RunResult> {
 }
 
 // Insert sample data for demonstration (development only)
-function insertSampleData(): void {
+async function insertSampleData(): Promise<void> {
   logger.info('Inserting sample data for development')
 
   // Insert sample NGOs
@@ -395,12 +399,12 @@ function insertSampleData(): void {
     }
   ]
 
-  ngos.forEach(ngo => {
-    db.run(`
+  for (const ngo of ngos) {
+    await run(`
       INSERT OR IGNORE INTO ngos (id, name, contact_person, phone, email, address, license_number)
       VALUES (?, ?, ?, ?, ?, ?, ?)
     `, [ngo.id, ngo.name, ngo.contact_person, ngo.phone, ngo.email, ngo.address, ngo.license_number])
-  })
+  }
 
   // Insert sample users with encryption
   const users: Partial<User>[] = [
@@ -409,11 +413,11 @@ function insertSampleData(): void {
     { anonymous_code: 'V0031', ngo_id: 'ong-002', real_name: 'Beneficiario C', phone: '+258 84 555 6666' }
   ]
 
-  users.forEach(user => {
+  for (const user of users) {
     try {
       const encryptedData = encryptionService.encryptUserData(user)
 
-      db.run(`
+      await run(`
         INSERT OR IGNORE INTO users (anonymous_code, real_name, phone, ngo_id)
         VALUES (?, ?, ?, ?)
       `, [encryptedData.anonymous_code, encryptedData.real_name, encryptedData.phone, encryptedData.ngo_id])
@@ -425,7 +429,7 @@ function insertSampleData(): void {
         anonymousCode: user.anonymous_code
       })
     }
-  })
+  }
 
   // Insert sample courses
   const courses: Course[] = [
@@ -467,21 +471,21 @@ function insertSampleData(): void {
     }
   ]
 
-  courses.forEach(course => {
-    db.run(`
+  for (const course of courses) {
+    await run(`
       INSERT OR IGNORE INTO courses (id, title, description, instructor, duration_hours, modules_count, level, skills)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     `, [course.id, course.title, course.description, course.instructor, course.duration_hours, course.modules_count, course.level, course.skills])
-  })
+  }
 
   logger.info('Sample data insertion completed')
 
   // Insert sample progress data for demonstration
-  insertSampleProgress()
+  await insertSampleProgress()
 }
 
 // Insert sample progress data for demonstration
-function insertSampleProgress(): void {
+async function insertSampleProgress(): Promise<void> {
   logger.info('Inserting sample progress data')
 
   const sampleProgress = [
@@ -527,8 +531,8 @@ function insertSampleProgress(): void {
     }
   ]
 
-  sampleProgress.forEach(progress => {
-    db.run(`
+  for (const progress of sampleProgress) {
+    await run(`
       INSERT OR REPLACE INTO progress
       (user_code, course_id, completed_modules, percentage, current_module, quiz_attempts, last_quiz_score, last_activity)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?)
@@ -542,7 +546,7 @@ function insertSampleProgress(): void {
       progress.last_quiz_score,
       progress.last_activity
     ])
-  })
+  }
 
   logger.info('Sample progress data inserted')
 }

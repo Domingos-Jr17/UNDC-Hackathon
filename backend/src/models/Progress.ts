@@ -1,7 +1,18 @@
 import prismaService from '../services/prisma'
+import { all, get, run } from '../database'
+import { isDatabaseUnavailableError, logDatabaseFallback } from '../services/databaseFallback'
+import CourseModel from './Course'
 import { Progress } from '../types'
 
 const prisma = prismaService.getClient()
+
+const toIsoString = (value: Date | string | null | undefined): string | undefined => {
+  if (!value) {
+    return undefined
+  }
+
+  return value instanceof Date ? value.toISOString() : new Date(value).toISOString()
+}
 
 const toProgress = (row: {
   id: number
@@ -12,8 +23,8 @@ const toProgress = (row: {
   current_module: number
   quiz_attempts: number
   last_quiz_score: number | null
-  last_activity: Date
-  completed_at: Date | null
+  last_activity: Date | string
+  completed_at: Date | string | null
 }): Progress => {
   const progress: Progress = {
     id: row.id,
@@ -23,7 +34,7 @@ const toProgress = (row: {
     percentage: row.percentage,
     current_module: row.current_module,
     quiz_attempts: row.quiz_attempts,
-    last_activity: row.last_activity.toISOString()
+    last_activity: toIsoString(row.last_activity) ?? new Date().toISOString()
   }
 
   if (row.last_quiz_score !== null) {
@@ -31,7 +42,10 @@ const toProgress = (row: {
   }
 
   if (row.completed_at) {
-    progress.completed_at = row.completed_at.toISOString()
+    const completedAt = toIsoString(row.completed_at)
+    if (completedAt) {
+      progress.completed_at = completedAt
+    }
   }
 
   return progress
@@ -39,60 +53,163 @@ const toProgress = (row: {
 
 class ProgressModel {
   static async findByUserAndCourse(userCode: string, courseId: string): Promise<Progress | null> {
-    const progress = await prisma.progress.findUnique({
-      where: {
-        user_code_course_id: {
-          user_code: userCode,
-          course_id: courseId
+    try {
+      const progress = await prisma.progress.findUnique({
+        where: {
+          user_code_course_id: {
+            user_code: userCode,
+            course_id: courseId
+          }
         }
-      }
-    })
+      })
 
-    return progress ? toProgress(progress) : null
+      return progress ? toProgress(progress) : null
+    } catch (error) {
+      if (!isDatabaseUnavailableError(error)) {
+        throw error
+      }
+
+      logDatabaseFallback(`progress.findByUserAndCourse:${userCode}:${courseId}`, error)
+
+      const progress = await get<{
+        id: number
+        user_code: string
+        course_id: string
+        completed_modules: string
+        percentage: number
+        current_module: number
+        quiz_attempts: number
+        last_quiz_score: number | null
+        last_activity: string
+        completed_at: string | null
+      }>(`
+        SELECT id, user_code, course_id, completed_modules, percentage, current_module, quiz_attempts, last_quiz_score, last_activity, completed_at
+        FROM progress
+        WHERE user_code = ? AND course_id = ?
+        LIMIT 1
+      `, [userCode, courseId])
+
+      return progress ? toProgress(progress) : null
+    }
   }
 
   static async findByUser(userCode: string): Promise<Progress[]> {
-    const rows = await prisma.progress.findMany({
-      where: { user_code: userCode },
-      orderBy: { last_activity: 'desc' }
-    })
-    return rows.map(toProgress)
+    try {
+      const rows = await prisma.progress.findMany({
+        where: { user_code: userCode },
+        orderBy: { last_activity: 'desc' }
+      })
+      return rows.map(toProgress)
+    } catch (error) {
+      if (!isDatabaseUnavailableError(error)) {
+        throw error
+      }
+
+      logDatabaseFallback(`progress.findByUser:${userCode}`, error)
+
+      const rows = await all<{
+        id: number
+        user_code: string
+        course_id: string
+        completed_modules: string
+        percentage: number
+        current_module: number
+        quiz_attempts: number
+        last_quiz_score: number | null
+        last_activity: string
+        completed_at: string | null
+      }>(`
+        SELECT id, user_code, course_id, completed_modules, percentage, current_module, quiz_attempts, last_quiz_score, last_activity, completed_at
+        FROM progress
+        WHERE user_code = ?
+        ORDER BY last_activity DESC
+      `, [userCode])
+
+      return rows.map(toProgress)
+    }
   }
 
   static async createOrUpdate(userCode: string, courseId: string, progressData: Partial<Progress>): Promise<Progress> {
     const completedModules = progressData.completed_modules ?? JSON.stringify([])
     const percentage = progressData.percentage ?? 0
+    const currentModule = progressData.current_module ?? 1
+    const quizAttempts = progressData.quiz_attempts ?? 0
+    const lastQuizScore = progressData.last_quiz_score ?? null
+    const completedAt = percentage >= 100 ? new Date() : null
 
-    const row = await prisma.progress.upsert({
-      where: {
-        user_code_course_id: {
+    try {
+      const row = await prisma.progress.upsert({
+        where: {
+          user_code_course_id: {
+            user_code: userCode,
+            course_id: courseId
+          }
+        },
+        update: {
+          completed_modules: completedModules,
+          percentage,
+          current_module: currentModule,
+          quiz_attempts: quizAttempts,
+          last_quiz_score: lastQuizScore,
+          last_activity: new Date(),
+          completed_at: completedAt
+        },
+        create: {
           user_code: userCode,
-          course_id: courseId
+          course_id: courseId,
+          completed_modules: completedModules,
+          percentage,
+          current_module: currentModule,
+          quiz_attempts: quizAttempts,
+          last_quiz_score: lastQuizScore,
+          last_activity: new Date(),
+          completed_at: completedAt
         }
-      },
-      update: {
-        completed_modules: completedModules,
-        percentage,
-        current_module: progressData.current_module ?? 1,
-        quiz_attempts: progressData.quiz_attempts ?? 0,
-        last_quiz_score: progressData.last_quiz_score ?? null,
-        last_activity: new Date(),
-        completed_at: percentage >= 100 ? new Date() : null
-      },
-      create: {
-        user_code: userCode,
-        course_id: courseId,
-        completed_modules: completedModules,
-        percentage,
-        current_module: progressData.current_module ?? 1,
-        quiz_attempts: progressData.quiz_attempts ?? 0,
-        last_quiz_score: progressData.last_quiz_score ?? null,
-        last_activity: new Date(),
-        completed_at: percentage >= 100 ? new Date() : null
-      }
-    })
+      })
 
-    return toProgress(row)
+      return toProgress(row)
+    } catch (error) {
+      if (!isDatabaseUnavailableError(error)) {
+        throw error
+      }
+
+      logDatabaseFallback(`progress.createOrUpdate:${userCode}:${courseId}`, error)
+
+      await run(
+        `
+          INSERT INTO progress (
+            user_code, course_id, completed_modules, percentage, current_module, quiz_attempts, last_quiz_score, last_activity, completed_at
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+          ON CONFLICT(user_code, course_id) DO UPDATE SET
+            completed_modules = excluded.completed_modules,
+            percentage = excluded.percentage,
+            current_module = excluded.current_module,
+            quiz_attempts = excluded.quiz_attempts,
+            last_quiz_score = excluded.last_quiz_score,
+            last_activity = excluded.last_activity,
+            completed_at = excluded.completed_at
+        `,
+        [
+          userCode,
+          courseId,
+          completedModules,
+          percentage,
+          currentModule,
+          quizAttempts,
+          lastQuizScore,
+          new Date().toISOString(),
+          completedAt?.toISOString() ?? null
+        ]
+      )
+
+      const fallbackRow = await this.findByUserAndCourse(userCode, courseId)
+
+      if (!fallbackRow) {
+        throw new Error('Could not persist progress using fallback database')
+      }
+
+      return fallbackRow
+    }
   }
 
   static async updateProgress(
@@ -104,10 +221,7 @@ class ProgressModel {
     quizAttempts?: number,
     lastQuizScore?: number
   ): Promise<Progress> {
-    const course = await prisma.course.findUnique({
-      where: { id: courseId },
-      select: { modules_count: true }
-    })
+    const course = await CourseModel.findById(courseId)
     const completedModulesStr = JSON.stringify(moduleIds)
     const completedNumbers = moduleIds
       .map(value => Number(value))
