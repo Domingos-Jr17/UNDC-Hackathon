@@ -7,10 +7,13 @@ All significant changes to the WIRA Platform project will be documented in this 
 ### Added
 - Mobile settings screen with local preferences, cache cleanup and direct session management
 - Quick access to mobile settings from the learning home screen and shared app header actions
+- Dedicated web certificates hub for staff with issuance, validation and beneficiary-level history
 
 ### Changed
 - Restored the mobile footer navigation during course detail, lesson consumption, quiz and certificate flows
 - Unified the mobile quiz experience with the same application shell used across the rest of the app
+- Improved mobile shell spacing and footer behavior for smaller screens during learning flows
+- Added direct navigation from beneficiary detail pages to the new certificates hub
 
 ### Verified
 - Certificate generation remains available after a passing mobile quiz submission, with a dedicated certificate view

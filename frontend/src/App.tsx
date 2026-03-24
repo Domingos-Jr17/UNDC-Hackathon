@@ -12,6 +12,7 @@ import CreateCoursePage from './components/CreateCoursePage.tsx';
 import CourseDetail from './components/CourseDetail.tsx';
 import SettingsPage from './components/SettingsPage.tsx';
 import UserDetail from './components/UserDetail.tsx';
+import CertificatesPage from './components/CertificatesPage.tsx';
 import EmployersPage from './components/EmployersPage.tsx';
 import JobsManagementPage from './components/JobsManagementPage.tsx';
 import JobMatchesPage from './components/JobMatchesPage.tsx';
@@ -89,6 +90,13 @@ function App() {
               <ProtectedRoute allowedRoles={['STAFF', 'ADMIN']}>
                 <ErrorBoundary>
                   <ReportsPage />
+                </ErrorBoundary>
+              </ProtectedRoute>
+            } />
+            <Route path="/certificates" element={
+              <ProtectedRoute allowedRoles={['STAFF', 'ADMIN']}>
+                <ErrorBoundary>
+                  <CertificatesPage />
                 </ErrorBoundary>
               </ProtectedRoute>
             } />

@@ -6,10 +6,11 @@ import {
   StyleSheet,
   Text,
   TouchableOpacity,
+  useWindowDimensions,
   View,
   ViewStyle,
 } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Ionicons } from '@expo/vector-icons'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import { RootStackParamList } from '../types/navigation'
@@ -64,7 +65,10 @@ export default function AppShell({
   showLogout = true,
   showSettings = true
 }: AppShellProps) {
-  const bottomPadding = showBottomNav ? 116 : 32
+  const insets = useSafeAreaInsets()
+  const { width } = useWindowDimensions()
+  const isCompactScreen = width < 390
+  const bottomPadding = showBottomNav ? 108 + insets.bottom : 32 + insets.bottom
 
   const handleLogout = async (): Promise<void> => {
     try {
@@ -79,7 +83,7 @@ export default function AppShell({
   }
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
+    <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right', 'bottom']}>
       <View style={styles.root}>
         {headerVariant === 'hero' ? (
           <View style={styles.heroHeader}>
@@ -114,7 +118,7 @@ export default function AppShell({
               {subtitle ? <Text style={styles.compactSubtitle}>{subtitle}</Text> : null}
             </View>
             {(showSettings || showLogout) ? (
-              <View style={styles.compactHeaderActions}>
+              <View style={[styles.compactHeaderActions, isCompactScreen && styles.compactHeaderActionsCompact]}>
                 {showSettings ? (
                   <TouchableOpacity style={styles.headerIconButton} onPress={() => navigation.navigate('Settings')}>
                     <Ionicons name="settings-outline" size={20} color={colors.primaryDark} />
@@ -140,14 +144,14 @@ export default function AppShell({
         </ScrollView>
 
         {showBottomNav ? (
-          <View style={styles.bottomNavWrap}>
+          <View style={[styles.bottomNavWrap, { bottom: Math.max(insets.bottom, 12) }]}> 
             <View style={styles.bottomNav}>
               {navItems.map(item => {
                 const isActive = item.route === activeRoute
                 return (
                   <TouchableOpacity
                     key={item.route}
-                    style={[styles.navItem, isActive && styles.navItemActive]}
+                    style={[styles.navItem, isCompactScreen && styles.navItemCompact, isActive && styles.navItemActive]}
                     onPress={() => navigation.navigate(item.route)}
                   >
                     <Ionicons
@@ -155,7 +159,7 @@ export default function AppShell({
                       size={20}
                       color={isActive ? colors.primary : colors.textMuted}
                     />
-                    <Text style={[styles.navLabel, isActive && styles.navLabelActive]}>{item.label}</Text>
+                    <Text style={[styles.navLabel, isCompactScreen && styles.navLabelCompact, isActive && styles.navLabelActive]}>{item.label}</Text>
                   </TouchableOpacity>
                 )
               })}
@@ -269,6 +273,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 10
   },
+  compactHeaderActionsCompact: {
+    alignSelf: 'flex-start'
+  },
   compactTitle: {
     color: colors.text,
     fontSize: 22,
@@ -298,8 +305,7 @@ const styles = StyleSheet.create({
   bottomNavWrap: {
     position: 'absolute',
     left: spacing.screen,
-    right: spacing.screen,
-    bottom: 18
+    right: spacing.screen
   },
   bottomNav: {
     flexDirection: 'row',
@@ -320,6 +326,10 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     gap: 4
   },
+  navItemCompact: {
+    paddingVertical: 8,
+    gap: 3
+  },
   navItemActive: {
     backgroundColor: colors.primarySoft
   },
@@ -327,6 +337,9 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '600',
     color: colors.textMuted
+  },
+  navLabelCompact: {
+    fontSize: 10
   },
   navLabelActive: {
     color: colors.primary

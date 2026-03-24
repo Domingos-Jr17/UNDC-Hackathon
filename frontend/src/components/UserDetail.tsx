@@ -66,11 +66,17 @@ export default function UserDetail() {
   return (
     <Layout title="Detalhes da Beneficiária" subtitle={`Código ${user.anonymousCode}`}>
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <Button variant="outline" onClick={() => navigate('/users')}>
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Voltar para beneficiárias
-          </Button>
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex flex-wrap items-center gap-3">
+            <Button variant="outline" onClick={() => navigate('/users')}>
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Voltar para beneficiárias
+            </Button>
+            <Button variant="outline" onClick={() => navigate('/certificates', { state: { userId: String(user.id) } })}>
+              <Award className="mr-2 h-4 w-4" />
+              Abrir central de certificados
+            </Button>
+          </div>
           <Button onClick={() => navigate('/reports')}>Abrir Relatórios</Button>
         </div>
 

@@ -247,7 +247,7 @@ const styles = StyleSheet.create({
   },
   preferenceRow: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     gap: 12,
     borderRadius: 22,
     backgroundColor: colors.surfaceMuted,
@@ -278,7 +278,8 @@ const styles = StyleSheet.create({
   preferenceState: {
     borderRadius: 999,
     paddingHorizontal: 10,
-    paddingVertical: 6
+    paddingVertical: 6,
+    alignSelf: 'flex-start'
   },
   preferenceStateOn: {
     backgroundColor: colors.successSoft
@@ -298,7 +299,7 @@ const styles = StyleSheet.create({
   },
   utilityRow: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     justifyContent: 'space-between',
     gap: 14,
     borderRadius: 22,
@@ -315,7 +316,7 @@ const styles = StyleSheet.create({
     fontSize: 13,
     lineHeight: 18,
     marginTop: 4,
-    maxWidth: 250
+    flexShrink: 1
   },
   logoutButton: {
     borderRadius: 20,

@@ -24,6 +24,7 @@ const resolveLabel = (pathname: string, segment: string): string => {
   if (pathname === '/courses/create') return 'Criar curso'
   if (/^\/courses\/[^/]+$/.test(pathname)) return 'Detalhe do curso'
   if (pathname === '/reports') return 'Relatórios'
+  if (pathname === '/certificates') return 'Certificados'
   if (pathname === '/settings') return 'Configurações'
   if (pathname === '/settings/profile') return 'Perfil'
   return segment.charAt(0).toUpperCase() + segment.slice(1)

@@ -2,6 +2,7 @@
 import { NavLink, useLocation } from 'react-router-dom'
 import {
   AlertTriangle,
+  Award,
   BookOpen,
   BriefcaseBusiness,
   Building2,
@@ -102,6 +103,14 @@ const sidebarItems: SidebarItem[] = [
     description: 'Fila de risco e resolução.',
     group: 'core',
     enabled: isFollowUpAlertsPhase2Enabled
+  },
+  {
+    id: 'certificates',
+    label: 'Certificados',
+    icon: Award,
+    path: '/certificates',
+    description: 'Emissão, validação e histórico por beneficiária.',
+    group: 'support'
   },
   {
     id: 'reports',

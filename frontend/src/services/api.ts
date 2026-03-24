@@ -198,6 +198,18 @@ interface VerifyCertificateEnvelope {
   }
 }
 
+interface UserCertificatesEnvelope {
+  success: boolean
+  certificates: CertificateRecord[]
+}
+
+interface GenerateCertificateEnvelope {
+  success: boolean
+  verificationCode: string
+  qrCode: string
+  message: string
+}
+
 class ApiError extends Error {
   public status: number
   public code?: string
@@ -527,8 +539,20 @@ class ApiService {
     return this.request(`/api/users/${userId}/progress`)
   }
 
-  async getCertificates(userId: string): Promise<unknown> {
-    return this.request(`/api/users/${userId}/certificates`)
+  async getUserCertificates(userId: string): Promise<CertificateRecord[]> {
+    const payload = await this.request<UserCertificatesEnvelope>(`/api/users/${encodeURIComponent(userId)}/certificates`)
+    return payload.certificates
+  }
+
+  async generateCertificate(data: {
+    anonymousCode: string
+    courseId: string
+    score: number
+  }): Promise<GenerateCertificateEnvelope> {
+    return this.request<GenerateCertificateEnvelope>('/api/certificates/generate', {
+      method: 'POST',
+      body: data
+    })
   }
 
   async verifyCertificate(code: string): Promise<VerifyCertificateEnvelope> {
@@ -800,6 +824,16 @@ export interface CertificateVerification {
     date: string
     score: number
   }
+}
+
+export interface CertificateRecord {
+  id: string | number
+  verificationCode: string
+  courseId: string
+  courseTitle: string
+  issueDate: string
+  score: number
+  qrCode: string
 }
 
 export type EmployerValidationStatus = 'PENDING' | 'VALIDATED' | 'REJECTED' | 'SUSPENDED'

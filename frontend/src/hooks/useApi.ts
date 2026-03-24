@@ -9,6 +9,7 @@ import {
   Course,
   CourseModule,
   UsersPageResult,
+  CertificateRecord,
   Employer,
   Job,
   JobMatch,
@@ -363,6 +364,18 @@ export function useUserDetails(userId: string) {
   return useApi<User>(
     `user-details:${userId}`,
     () => apiService.getUserDetails(userId),
+    {
+      dependencies: [userId],
+      enabled: Boolean(userId),
+      staleTime: 60_000
+    }
+  )
+}
+
+export function useUserCertificates(userId: string) {
+  return useApi<CertificateRecord[]>(
+    `user-certificates:${userId}`,
+    () => apiService.getUserCertificates(userId),
     {
       dependencies: [userId],
       enabled: Boolean(userId),
