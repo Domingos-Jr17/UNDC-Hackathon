@@ -443,7 +443,12 @@ class ApiService {
   }
 
   async getUsers(filters?: { status?: string; limit?: number; offset?: number; page?: number; pageSize?: number; search?: string; ngoId?: string }): Promise<UsersPageResult> {
-    const query = filters ? `?${new URLSearchParams(filters as Record<string, string>).toString()}` : ''
+    const query = filters ? `?${new URLSearchParams(Object.entries(filters).reduce<Record<string, string>>((acc, [key, value]) => {
+      if (value !== undefined && value !== null && value !== '') {
+        acc[key] = String(value)
+      }
+      return acc
+    }, {})).toString()}` : ''
     const payload = await this.request<UsersEnvelope>(`/api/users${query}`)
     return {
       users: payload.users,

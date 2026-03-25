@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { toast } from 'sonner'
 import {
   apiService,
@@ -94,6 +94,9 @@ export function useApi<T>(
     }
   })
 
+  const apiCallRef = useRef(apiCall)
+  apiCallRef.current = apiCall
+
   const fetchData = useCallback(async ({
     force = false,
     background = false
@@ -127,7 +130,7 @@ export function useApi<T>(
     let request = (!force ? inFlightRequests.get(cacheKey) : undefined) as Promise<T> | undefined
 
     if (!request) {
-      const pendingRequest = apiCall()
+      const pendingRequest = apiCallRef.current()
         .then(result => {
           const entry: CacheEntry<T> = {
             data: result,
@@ -165,7 +168,7 @@ export function useApi<T>(
       }))
       throw error
     }
-  }, [apiCall, cacheKey, enabled, staleTime, ...dependencies])
+  }, [cacheKey, enabled, staleTime, ...dependencies])
 
   const refetch = useCallback(async () => {
     await fetchData({ force: true })

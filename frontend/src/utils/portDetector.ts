@@ -41,7 +41,7 @@ export async function detectBackendPort(): Promise<number> {
           headers: {
             'Content-Type': 'application/json',
           },
-          signal: AbortSignal.timeout(2000), // Timeout de 2 segundos
+          signal: AbortSignal.timeout(500), // Timeout de 500ms por porta
         });
 
         if (response.ok) {
