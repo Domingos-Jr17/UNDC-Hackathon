@@ -10,3 +10,6 @@ Backend/API anonymous codes:
 
 Seed principal em desenvolvimento: staff@wira.org / Staff@2026
 Conta admin seedada noutro script: admin@wira.org / admin123
+
+email: 'admin@wira.org',
+password: 'admin123',
